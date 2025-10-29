@@ -1,0 +1,73 @@
+@model RegistroLlegadaViewModel
+@{
+    ViewData["Title"] = "Registrar Llegada de Vehículo";
+}
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+   <div class="card">
+      <div class="card-header bg-primary text-white">
+     <h4 class="mb-0"><i class="bi bi-box-arrow-in-down"></i> Registrar Llegada de Vehículo</h4>
+      </div>
+     <div class="card-body">
+    <form asp-action="RegistrarLlegada" method="post">
+   <div class="mb-3">
+         <label asp-for="VehiculoId" class="form-label">Seleccione el Vehículo</label>
+  <select asp-for="VehiculoId" class="form-select" required>
+       <option value="">-- Seleccione un vehículo --</option>
+       @foreach (var vehiculo in Model.VehiculosDisponibles)
+     {
+   <option value="@vehiculo.Id">@vehiculo.Patente - @vehiculo.Marca @vehiculo.Modelo</option>
+  }
+    </select>
+      </div>
+
+      <div class="mb-3">
+    <label asp-for="FechaHoraLlegada" class="form-label">Fecha y Hora de Llegada</label>
+     <input asp-for="FechaHoraLlegada" type="datetime-local" class="form-control" required />
+        </div>
+
+   <div class="mb-3">
+   <label asp-for="MotivoIngreso" class="form-label">Motivo del Ingreso</label>
+          <select asp-for="MotivoIngreso" class="form-select" required>
+          <option value="">-- Seleccione --</option>
+    <option value="Mantenimiento Preventivo">Mantenimiento Preventivo</option>
+   <option value="Reparación">Reparación</option>
+  <option value="Siniestro">Siniestro</option>
+    <option value="Inspección">Inspección</option>
+        </select>
+  </div>
+
+  <div class="mb-3">
+    <label asp-for="DescripcionProblema" class="form-label">Descripción del Problema</label>
+           <textarea asp-for="DescripcionProblema" class="form-control" rows="3" placeholder="Describa el problema o motivo del ingreso" required></textarea>
+ </div>
+
+       <div class="mb-3">
+    <label asp-for="ObservacionesChofer" class="form-label">Observaciones Adicionales</label>
+      <textarea asp-for="ObservacionesChofer" class="form-control" rows="2" placeholder="Ingrese cualquier observación adicional (opcional)"></textarea>
+   </div>
+
+  <div class="mb-3">
+     <label asp-for="KilometrajeIngreso" class="form-label">Kilometraje Actual</label>
+  <input asp-for="KilometrajeIngreso" type="number" class="form-control" placeholder="Ej: 125000" required />
+      </div>
+
+ <div class="mb-3 form-check">
+     <input asp-for="RequiereRepuestos" type="checkbox" class="form-check-input" />
+      <label asp-for="RequiereRepuestos" class="form-check-label">¿Requiere repuestos?</label>
+        </div>
+
+    <div class="d-grid gap-2">
+    <button type="submit" class="btn btn-primary btn-lg">
+       <i class="bi bi-save"></i> Registrar Llegada
+    </button>
+      <a asp-action="MisIngresos" class="btn btn-secondary">
+      <i class="bi bi-arrow-left"></i> Cancelar
+ </a>
+      </div>
+       </form>
+            </div>
+        </div>
+    </div>
+</div>

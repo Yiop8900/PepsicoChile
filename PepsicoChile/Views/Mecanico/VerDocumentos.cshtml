@@ -1,0 +1,80 @@
+@model List<Documento>
+@{
+    ViewData["Title"] = "Documentos del Ingreso";
+    var ingresoId = ViewBag.IngresoId;
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+   <h1><i class="bi bi-file-earmark"></i> Documentos del Ingreso</h1>
+        <a asp-action="SubirDocumento" asp-route-ingresoId="@ingresoId" class="btn btn-primary">
+     <i class="bi bi-upload"></i> Subir Nuevo Documento
+        </a>
+  <a asp-action="MisTareas" class="btn btn-secondary">
+   <i class="bi bi-arrow-left"></i> Volver a Mis Tareas
+ </a>
+ </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+   @if (Model.Any())
+        {
+   <div class="row">
+      @foreach (var doc in Model)
+   {
+   <div class="col-md-6 col-lg-4 mb-3">
+   <div class="card h-100">
+    <div class="card-body">
+     <h5 class="card-title">
+      @switch (doc.TipoDocumento)
+    {
+    case "Foto":
+     <i class="bi bi-image text-primary"></i>
+            break;
+     case "Informe":
+    <i class="bi bi-file-earmark-text text-danger"></i>
+        break;
+ case "Presupuesto":
+        <i class="bi bi-file-earmark-spreadsheet text-success"></i>
+        break;
+       default:
+        <i class="bi bi-file-earmark text-secondary"></i>
+        break;
+   }
+    @doc.NombreArchivo
+    </h5>
+  <p class="card-text">
+    <strong>Tipo:</strong> @doc.TipoDocumento<br />
+       <strong>Subido:</strong> @doc.FechaSubida.ToString("dd/MM/yyyy HH:mm")<br />
+   <strong>Por:</strong> @doc.UsuarioSubida?.Nombre @doc.UsuarioSubida?.Apellido<br />
+     @if (!string.IsNullOrEmpty(doc.Descripcion))
+ {
+    <strong>Descripción:</strong> @doc.Descripcion<br />
+     }
+        <strong>Tamaño:</strong> @(doc.TamañoBytes / 1024) KB
+  </p>
+     </div>
+       <div class="card-footer">
+       <div class="btn-group w-100" role="group">
+      <button class="btn btn-sm btn-primary" onclick="alert('Ver documento')">
+     <i class="bi bi-eye"></i> Ver
+ </button>
+    <button class="btn btn-sm btn-success" onclick="alert('Descargar documento')">
+   <i class="bi bi-download"></i> Descargar
+</button>
+      </div>
+        </div>
+       </div>
+    </div>
+        }
+   </div>
+ }
+ else
+ {
+ <div class="alert alert-info">
+   <i class="bi bi-info-circle"></i> No hay documentos adjuntos para este ingreso.
+   </div>
+        }
+ </div>
+</div>

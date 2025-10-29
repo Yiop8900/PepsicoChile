@@ -1,0 +1,248 @@
+@model List<TareaTaller>
+@{
+    ViewData["Title"] = "Mis Tareas";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+      <h1><i class="bi bi-list-task"></i> Mis Tareas Asignadas</h1>
+<p class="lead">Gestión de tareas del taller</p>
+    </div>
+</div>
+
+<!-- Resumen de Tareas -->
+<div class="row mb-4">
+    <div class="col-md-4">
+   <div class="card text-white bg-warning">
+  <div class="card-body text-center">
+   <h5 class="card-title">Pendientes</h5>
+      <p class="display-4">@Model.Count(t => t.Estado == "Pendiente")</p>
+       </div>
+  </div>
+    </div>
+ <div class="col-md-4">
+     <div class="card text-white bg-info">
+            <div class="card-body text-center">
+   <h5 class="card-title">En Proceso</h5>
+  <p class="display-4">@Model.Count(t => t.Estado == "En Proceso")</p>
+ </div>
+     </div>
+    </div>
+    <div class="col-md-4">
+   <div class="card text-white bg-success">
+  <div class="card-body text-center">
+  <h5 class="card-title">Completadas</h5>
+        <p class="display-4">@Model.Count(t => t.Estado == "Completada")</p>
+  </div>
+        </div>
+  </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="card">
+   <div class="card-body">
+            <div class="row">
+       <div class="col-md-4">
+   <label class="form-label">Filtrar por Estado</label>
+        <select class="form-select">
+  <option value="">Todos</option>
+           <option value="Pendiente">Pendiente</option>
+    <option value="En Proceso" selected>En Proceso</option>
+         <option value="Completada">Completada</option>
+   </select>
+      </div>
+   <div class="col-md-4">
+      <label class="form-label">Filtrar por Prioridad</label>
+  <select class="form-select">
+     <option value="">Todas</option>
+       <option value="Alta">Alta</option>
+    <option value="Media">Media</option>
+  <option value="Baja">Baja</option>
+      </select>
+ </div>
+     <div class="col-md-4 d-flex align-items-end">
+      <button class="btn btn-primary w-100">
+       <i class="bi bi-search"></i> Filtrar
+    </button>
+   </div>
+     </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tareas Pendientes -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-warning">
+   <div class="card-header bg-warning text-dark">
+     <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Tareas Pendientes</h5>
+   </div>
+ <div class="card-body">
+   @{
+     var tareasPendientes = Model.Where(t => t.Estado == "Pendiente").ToList();
+      }
+    @if (tareasPendientes.Any())
+    {
+    <div class="row">
+  @foreach (var tarea in tareasPendientes)
+         {
+      <div class="col-md-6 mb-3">
+   <div class="card">
+  <div class="card-body">
+     <h5 class="card-title">
+    @tarea.Descripcion
+         @if (tarea.Prioridad == "Alta")
+           {
+ <span class="badge bg-danger">Alta Prioridad</span>
+ }
+       </h5>
+      <p class="card-text">
+        <strong>Vehículo:</strong> @tarea.IngresoTaller?.Vehiculo?.Patente<br />
+          <strong>Tiempo estimado:</strong> @tarea.TiempoEstimadoHoras horas<br />
+  <strong>Asignada:</strong> @tarea.FechaAsignacion.ToString("dd/MM/yyyy HH:mm")
+  </p>
+   <div class="d-grid gap-2">
+    <a asp-action="DetalleTarea" asp-route-id="@tarea.Id" class="btn btn-info">
+   <i class="bi bi-eye"></i> Ver Detalle
+     </a>
+      <a asp-action="IniciarTarea" asp-route-id="@tarea.Id" class="btn btn-success">
+   <i class="bi bi-play-fill"></i> Iniciar Tarea
+ </a>
+      </div>
+  </div>
+      </div>
+       </div>
+ }
+    </div>
+  }
+   else
+            {
+      <p class="text-muted">No hay tareas pendientes.</p>
+      }
+   </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tareas en Proceso -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-info">
+      <div class="card-header bg-info text-white">
+  <h5 class="mb-0"><i class="bi bi-gear-fill"></i> Tareas en Proceso</h5>
+ </div>
+            <div class="card-body">
+         @{
+     var tareasEnProceso = Model.Where(t => t.Estado == "En Proceso").ToList();
+     }
+      @if (tareasEnProceso.Any())
+     {
+     <div class="table-responsive">
+  <table class="table table-hover">
+      <thead>
+  <tr>
+          <th>Descripción</th>
+      <th>Vehículo</th>
+     <th>Prioridad</th>
+        <th>Tiempo Est.</th>
+   <th>Acciones</th>
+  </tr>
+</thead>
+   <tbody>
+      @foreach (var tarea in tareasEnProceso)
+   {
+      <tr>
+    <td>@tarea.Descripcion</td>
+     <td>@tarea.IngresoTaller?.Vehiculo?.Patente</td>
+     <td>
+      @switch (tarea.Prioridad)
+   {
+     case "Alta":
+   <span class="badge bg-danger">@tarea.Prioridad</span>
+         break;
+     case "Media":
+<span class="badge bg-warning">@tarea.Prioridad</span>
+  break;
+        default:
+   <span class="badge bg-secondary">@tarea.Prioridad</span>
+    break;
+  }
+     </td>
+         <td>@tarea.TiempoEstimadoHoras h</td>
+   <td>
+   <a asp-action="DetalleTarea" asp-route-id="@tarea.Id" class="btn btn-sm btn-info">
+   <i class="bi bi-eye"></i> Ver
+</a>
+  <a asp-action="FinalizarTarea" asp-route-id="@tarea.Id" class="btn btn-sm btn-success">
+            <i class="bi bi-check-circle"></i> Finalizar
+           </a>
+   </td>
+   </tr>
+    }
+           </tbody>
+    </table>
+       </div>
+       }
+       else
+     {
+  <p class="text-muted">No hay tareas en proceso.</p>
+      }
+   </div>
+ </div>
+ </div>
+</div>
+
+<!-- Tareas Completadas -->
+<div class="row">
+    <div class="col-12">
+   <div class="card border-success">
+        <div class="card-header bg-success text-white">
+    <h5 class="mb-0"><i class="bi bi-check-circle"></i> Tareas Completadas Recientemente</h5>
+       </div>
+            <div class="card-body">
+    @{
+ var tareasCompletadas = Model.Where(t => t.Estado == "Completada").ToList();
+  }
+      @if (tareasCompletadas.Any())
+    {
+         <div class="table-responsive">
+     <table class="table table-sm">
+   <thead>
+   <tr>
+   <th>Descripción</th>
+    <th>Vehículo</th>
+    <th>Finalizada</th>
+<th>Tiempo Real</th>
+  <th>Acciones</th>
+        </tr>
+       </thead>
+   <tbody>
+      @foreach (var tarea in tareasCompletadas)
+       {
+  <tr>
+     <td>@tarea.Descripcion</td>
+  <td>@tarea.IngresoTaller?.Vehiculo?.Patente</td>
+      <td>@tarea.FechaFinalizacion?.ToString("dd/MM/yyyy HH:mm")</td>
+      <td>@tarea.TiempoRealHoras h</td>
+    <td>
+     <a asp-action="DetalleTarea" asp-route-id="@tarea.Id" class="btn btn-sm btn-info">
+      <i class="bi bi-eye"></i> Ver
+       </a>
+  </td>
+     </tr>
+ }
+      </tbody>
+      </table>
+       </div>
+   }
+    else
+        {
+           <p class="text-muted">No hay tareas completadas recientemente.</p>
+  }
+            </div>
+        </div>
+  </div>
+</div>

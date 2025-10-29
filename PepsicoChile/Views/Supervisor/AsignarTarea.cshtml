@@ -1,0 +1,67 @@
+@model TareaTaller
+@{
+    ViewData["Title"] = "Asignar Tarea";
+ var ingresoId = ViewBag.IngresoId;
+    var mecanicos = ViewBag.Mecanicos as List<Usuario> ?? new List<Usuario>();
+}
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+       <div class="card-header bg-success text-white">
+<h4 class="mb-0"><i class="bi bi-plus-circle"></i> Asignar Nueva Tarea</h4>
+       </div>
+       <div class="card-body">
+         <form asp-action="AsignarTarea" method="post">
+    <input type="hidden" asp-for="IngresoTallerId" value="@ingresoId" />
+    
+   <div class="mb-3">
+   <label asp-for="Descripcion" class="form-label">Descripción de la Tarea</label>
+  <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Describa la tarea a realizar" required></textarea>
+ </div>
+
+ <div class="row">
+          <div class="col-md-6 mb-3">
+      <label asp-for="MecanicoAsignadoId" class="form-label">Asignar a Mecánico</label>
+     <select asp-for="MecanicoAsignadoId" class="form-select">
+    <option value="">-- Sin asignar --</option>
+       @foreach (var mecanico in mecanicos)
+   {
+ <option value="@mecanico.Id">@mecanico.Nombre @mecanico.Apellido</option>
+        }
+  </select>
+  </div>
+
+     <div class="col-md-6 mb-3">
+   <label asp-for="Prioridad" class="form-label">Prioridad</label>
+   <select asp-for="Prioridad" class="form-select" required>
+  <option value="Baja">Baja</option>
+  <option value="Media" selected>Media</option>
+   <option value="Alta">Alta</option>
+    </select>
+      </div>
+   </div>
+
+    <div class="mb-3">
+    <label asp-for="TiempoEstimadoHoras" class="form-label">Tiempo Estimado (horas)</label>
+         <input asp-for="TiempoEstimadoHoras" type="number" class="form-control" min="1" value="1" required />
+  </div>
+
+     <div class="mb-3">
+      <label asp-for="Observaciones" class="form-label">Observaciones</label>
+  <textarea asp-for="Observaciones" class="form-control" rows="2" placeholder="Observaciones adicionales (opcional)"></textarea>
+        </div>
+
+        <div class="d-grid gap-2">
+     <button type="submit" class="btn btn-success btn-lg">
+  <i class="bi bi-save"></i> Asignar Tarea
+      </button>
+   <a asp-action="GestionarIngreso" asp-route-id="@ingresoId" class="btn btn-secondary">
+      <i class="bi bi-arrow-left"></i> Cancelar
+       </a>
+   </div>
+    </form>
+  </div>
+  </div>
+    </div>
+</div>

@@ -1,0 +1,93 @@
+@model IngresoTaller
+@{
+    ViewData["Title"] = "Programar Ingreso";
+ var vehiculos = ViewBag.Vehiculos as List<Vehiculo> ?? new List<Vehiculo>();
+    var choferes = ViewBag.Choferes as List<Usuario> ?? new List<Usuario>();
+}
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+  <div class="card">
+       <div class="card-header bg-success text-white">
+           <h4 class="mb-0"><i class="bi bi-calendar-plus"></i> Programar Ingreso al Taller</h4>
+   </div>
+    <div class="card-body">
+    <form asp-action="ProgramarIngreso" method="post">
+      <div class="row">
+  <div class="col-md-6 mb-3">
+         <label asp-for="VehiculoId" class="form-label">Vehículo</label>
+        <select asp-for="VehiculoId" class="form-select" required>
+   <option value="">-- Seleccione un vehículo --</option>
+         @foreach (var vehiculo in vehiculos)
+       {
+      <option value="@vehiculo.Id">@vehiculo.Patente - @vehiculo.Marca @vehiculo.Modelo</option>
+    }
+       </select>
+          </div>
+
+      <div class="col-md-6 mb-3">
+           <label asp-for="ChoferId" class="form-label">Chofer</label>
+     <select asp-for="ChoferId" class="form-select" required>
+           <option value="">-- Seleccione un chofer --</option>
+      @foreach (var chofer in choferes)
+            {
+   <option value="@chofer.Id">@chofer.Nombre @chofer.Apellido</option>
+        }
+    </select>
+          </div>
+   </div>
+
+       <div class="row">
+    <div class="col-md-6 mb-3">
+     <label asp-for="FechaProgramada" class="form-label">Fecha y Hora Programada</label>
+      <input asp-for="FechaProgramada" type="datetime-local" class="form-control" required />
+     <small class="form-text text-muted">Seleccione la fecha y hora del ingreso</small>
+  </div>
+
+     <div class="col-md-6 mb-3">
+       <label asp-for="MotivoIngreso" class="form-label">Motivo del Ingreso</label>
+   <select asp-for="MotivoIngreso" class="form-select" required>
+  <option value="">-- Seleccione --</option>
+     <option value="Mantenimiento Preventivo">Mantenimiento Preventivo</option>
+  <option value="Reparación">Reparación</option>
+  <option value="Siniestro">Siniestro</option>
+       <option value="Inspección">Inspección</option>
+           </select>
+     </div>
+         </div>
+
+       <div class="mb-3">
+<label asp-for="DescripcionProblema" class="form-label">Descripción/Motivo Detallado</label>
+       <textarea asp-for="DescripcionProblema" class="form-control" rows="3" placeholder="Describa el trabajo a realizar"></textarea>
+     </div>
+
+        <div class="row">
+     <div class="col-md-6 mb-3">
+  <label asp-for="FechaSalidaEstimada" class="form-label">Fecha de Salida Estimada</label>
+        <input asp-for="FechaSalidaEstimada" type="datetime-local" class="form-control" />
+    </div>
+
+   <div class="col-md-6 mb-3">
+        <label asp-for="KilometrajeIngreso" class="form-label">Kilometraje Estimado</label>
+    <input asp-for="KilometrajeIngreso" type="number" class="form-control" placeholder="Ej: 125000" />
+ </div>
+       </div>
+
+     <div class="mb-3 form-check">
+   <input asp-for="RequiereRepuestos" type="checkbox" class="form-check-input" />
+   <label asp-for="RequiereRepuestos" class="form-check-label">¿Requiere repuestos?</label>
+   </div>
+
+<div class="d-grid gap-2">
+     <button type="submit" class="btn btn-success btn-lg">
+   <i class="bi bi-save"></i> Programar Ingreso
+  </button>
+       <a asp-action="Agenda" class="btn btn-secondary">
+          <i class="bi bi-arrow-left"></i> Volver a Agenda
+       </a>
+   </div>
+  </form>
+  </div>
+   </div>
+    </div>
+</div>

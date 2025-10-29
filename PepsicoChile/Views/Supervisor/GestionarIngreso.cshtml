@@ -1,0 +1,229 @@
+@model GestionIngresoViewModel
+@{
+    ViewData["Title"] = "Gestionar Ingreso";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1><i class="bi bi-gear"></i> Gestionar Ingreso - @Model.Ingreso.Vehiculo?.Patente</h1>
+ <a asp-action="Agenda" class="btn btn-secondary">
+  <i class="bi bi-arrow-left"></i> Volver a Agenda
+        </a>
+    </div>
+</div>
+
+<!-- Información General del Ingreso -->
+<div class="row mb-4">
+    <div class="col-md-6">
+ <div class="card">
+  <div class="card-header bg-primary text-white">
+       <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información del Ingreso</h5>
+            </div>
+      <div class="card-body">
+  <dl class="row mb-0">
+    <dt class="col-sm-5">Vehículo:</dt>
+   <dd class="col-sm-7"><strong>@Model.Ingreso.Vehiculo?.Patente - @Model.Ingreso.Vehiculo?.Marca</strong></dd>
+    
+     <dt class="col-sm-5">Chofer:</dt>
+      <dd class="col-sm-7">@Model.Ingreso.Chofer?.Nombre @Model.Ingreso.Chofer?.Apellido</dd>
+    
+   <dt class="col-sm-5">Estado:</dt>
+   <dd class="col-sm-7">
+      @switch (Model.Ingreso.Estado)
+   {
+  case "En Proceso":
+ <span class="badge bg-warning">@Model.Ingreso.Estado</span>
+     break;
+  case "Programado":
+ <span class="badge bg-info">@Model.Ingreso.Estado</span>
+      break;
+  case "Pausado":
+        <span class="badge bg-danger">@Model.Ingreso.Estado</span>
+ break;
+        case "Completado":
+       <span class="badge bg-success">@Model.Ingreso.Estado</span>
+   break;
+   default:
+     <span class="badge bg-secondary">@Model.Ingreso.Estado</span>
+     break;
+ }
+       </dd>
+    
+       <dt class="col-sm-5">Motivo:</dt>
+    <dd class="col-sm-7">@Model.Ingreso.MotivoIngreso</dd>
+  
+  <dt class="col-sm-5">Fecha Programada:</dt>
+  <dd class="col-sm-7">@Model.Ingreso.FechaProgramada.ToString("dd/MM/yyyy HH:mm")</dd>
+       </dl>
+   </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+<div class="card">
+       <div class="card-header bg-info text-white">
+  <h5 class="mb-0"><i class="bi bi-lightning"></i> Acciones Rápidas</h5>
+  </div>
+ <div class="card-body">
+       <div class="d-grid gap-2">
+ <a asp-action="AsignarTarea" asp-route-ingresoId="@Model.Ingreso.Id" class="btn btn-success">
+              <i class="bi bi-plus-circle"></i> Asignar Nueva Tarea
+</a>
+<a asp-action="RegistrarPausa" asp-route-ingresoId="@Model.Ingreso.Id" class="btn btn-warning">
+  <i class="bi bi-pause-circle"></i> Registrar Pausa
+        </a>
+      <button class="btn btn-primary" onclick="alert('Funcionalidad de notificación')">
+      <i class="bi bi-bell"></i> Enviar Notificación
+           </button>
+         </div>
+       </div>
+     </div>
+ </div>
+</div>
+
+<!-- Tareas Asignadas -->
+<div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+      <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+       <h5 class="mb-0"><i class="bi bi-list-task"></i> Tareas Asignadas</h5>
+         <a asp-action="AsignarTarea" asp-route-ingresoId="@Model.Ingreso.Id" class="btn btn-sm btn-light">
+       <i class="bi bi-plus"></i> Nueva Tarea
+   </a>
+   </div>
+ <div class="card-body">
+          @if (Model.Tareas.Any())
+     {
+         <div class="table-responsive">
+      <table class="table table-hover">
+           <thead>
+    <tr>
+    <th>Descripción</th>
+       <th>Mecánico</th>
+  <th>Prioridad</th>
+       <th>Estado</th>
+   <th>Tiempo Est.</th>
+     <th>Acciones</th>
+ </tr>
+  </thead>
+   <tbody>
+      @foreach (var tarea in Model.Tareas)
+    {
+       <tr>
+      <td>@tarea.Descripcion</td>
+   <td>@tarea.MecanicoAsignado?.Nombre @tarea.MecanicoAsignado?.Apellido</td>
+       <td>
+   @switch (tarea.Prioridad)
+        {
+     case "Alta":
+   <span class="badge bg-danger">@tarea.Prioridad</span>
+   break;
+       case "Media":
+   <span class="badge bg-warning">@tarea.Prioridad</span>
+      break;
+           default:
+     <span class="badge bg-secondary">@tarea.Prioridad</span>
+       break;
+   }
+      </td>
+      <td>
+     @switch (tarea.Estado)
+ {
+  case "Completada":
+<span class="badge bg-success">@tarea.Estado</span>
+ break;
+    case "En Proceso":
+  <span class="badge bg-warning">@tarea.Estado</span>
+           break;
+     default:
+       <span class="badge bg-secondary">@tarea.Estado</span>
+  break;
+     }
+    </td>
+     <td>@tarea.TiempoEstimadoHoras h</td>
+         <td>
+  <button class="btn btn-sm btn-info" onclick="alert('Ver detalle de tarea')">
+   <i class="bi bi-eye"></i>
+      </button>
+ </td>
+      </tr>
+       }
+       </tbody>
+  </table>
+ </div>
+      }
+            else
+            {
+    <p class="text-muted">No hay tareas asignadas aún.</p>
+       }
+    </div>
+ </div>
+ </div>
+</div>
+
+<!-- Pausas y Documentos -->
+<div class="row">
+    <div class="col-md-6">
+   <div class="card">
+        <div class="card-header bg-warning">
+     <h5 class="mb-0"><i class="bi bi-pause-circle"></i> Pausas Registradas</h5>
+   </div>
+  <div class="card-body">
+       @if (Model.Pausas.Any())
+       {
+         <ul class="list-group">
+ @foreach (var pausa in Model.Pausas)
+         {
+   <li class="list-group-item">
+       <strong>@pausa.Motivo</strong>
+             <br />
+       <small>Inicio: @pausa.FechaInicio.ToString("dd/MM/yyyy HH:mm")</small>
+   @if (pausa.FechaFin.HasValue)
+      {
+          <br />
+  <small>Fin: @pausa.FechaFin.Value.ToString("dd/MM/yyyy HH:mm")</small>
+    }
+       else
+         {
+   <br />
+  <span class="badge bg-danger">Activa</span>
+    }
+    </li>
+        }
+  </ul>
+      }
+   else
+   {
+     <p class="text-muted">No hay pausas registradas.</p>
+      }
+   </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+      <div class="card-header bg-secondary text-white">
+    <h5 class="mb-0"><i class="bi bi-file-earmark"></i> Documentos</h5>
+   </div>
+   <div class="card-body">
+    @if (Model.Documentos.Any())
+  {
+     <ul class="list-group">
+         @foreach (var doc in Model.Documentos)
+      {
+        <li class="list-group-item">
+    <i class="bi bi-file-earmark-pdf"></i> @doc.NombreArchivo
+  <br />
+        <small class="text-muted">@doc.TipoDocumento - @doc.FechaSubida.ToString("dd/MM/yyyy")</small>
+  </li>
+   }
+      </ul>
+      }
+   else
+            {
+ <p class="text-muted">No hay documentos adjuntos.</p>
+            }
+       </div>
+        </div>
+  </div>
+</div>

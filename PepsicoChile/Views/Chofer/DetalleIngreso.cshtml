@@ -1,0 +1,129 @@
+@model IngresoTaller
+@{
+    ViewData["Title"] = "Detalle del Ingreso";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1><i class="bi bi-info-circle"></i> Detalle del Ingreso</h1>
+        <a asp-action="MisIngresos" class="btn btn-secondary">
+       <i class="bi bi-arrow-left"></i> Volver a Mis Ingresos
+        </a>
+ </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+      <div class="card mb-3">
+ <div class="card-header bg-primary text-white">
+<h5 class="mb-0"><i class="bi bi-truck"></i> Información del Vehículo</h5>
+            </div>
+            <div class="card-body">
+      <dl class="row">
+              <dt class="col-sm-4">Patente:</dt>
+       <dd class="col-sm-8"><strong>@Model.Vehiculo?.Patente</strong></dd>
+        
+    <dt class="col-sm-4">Marca/Modelo:</dt>
+      <dd class="col-sm-8">@Model.Vehiculo?.Marca @Model.Vehiculo?.Modelo</dd>
+            
+ <dt class="col-sm-4">Kilometraje:</dt>
+  <dd class="col-sm-8">@Model.KilometrajeIngreso?.ToString("N0") km</dd>
+          </dl>
+       </div>
+        </div>
+        
+        <div class="card">
+     <div class="card-header bg-info text-white">
+<h5 class="mb-0"><i class="bi bi-person"></i> Información del Chofer</h5>
+ </div>
+     <div class="card-body">
+         <dl class="row">
+           <dt class="col-sm-4">Nombre:</dt>
+        <dd class="col-sm-8">@Model.Chofer?.Nombre @Model.Chofer?.Apellido</dd>
+   
+     <dt class="col-sm-4">Email:</dt>
+           <dd class="col-sm-8">@Model.Chofer?.Email</dd>
+        </dl>
+        </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-3">
+<div class="card-header bg-success text-white">
+    <h5 class="mb-0"><i class="bi bi-calendar-check"></i> Detalles del Ingreso</h5>
+    </div>
+            <div class="card-body">
+     <dl class="row">
+       <dt class="col-sm-5">Estado:</dt>
+         <dd class="col-sm-7">
+ @switch (Model.Estado)
+        {
+  case "En Proceso":
+       <span class="badge bg-warning">@Model.Estado</span>
+      break;
+   case "Programado":
+       <span class="badge bg-info">@Model.Estado</span>
+          break;
+            case "Completado":
+            <span class="badge bg-success">@Model.Estado</span>
+  break;
+   case "Pausado":
+       <span class="badge bg-danger">@Model.Estado</span>
+       break;
+   default:
+               <span class="badge bg-secondary">@Model.Estado</span>
+  break;
+            }
+            </dd>
+
+  <dt class="col-sm-5">Motivo:</dt>
+       <dd class="col-sm-7">@Model.MotivoIngreso</dd>
+            
+                  <dt class="col-sm-5">Fecha Programada:</dt>
+       <dd class="col-sm-7">@Model.FechaProgramada.ToString("dd/MM/yyyy HH:mm")</dd>
+       
+        <dt class="col-sm-5">Fecha Ingreso Real:</dt>
+        <dd class="col-sm-7">
+   @if (Model.FechaIngresoReal.HasValue)
+       {
+           @Model.FechaIngresoReal.Value.ToString("dd/MM/yyyy HH:mm")
+        }
+     else
+       {
+           <span class="text-muted">Pendiente</span>
+      }
+      </dd>
+     
+    <dt class="col-sm-5">Requiere Repuestos:</dt>
+  <dd class="col-sm-7">
+@if (Model.RequiereRepuestos)
+           {
+       <span class="badge bg-warning">Sí</span>
+         }
+      else
+    {
+   <span class="badge bg-success">No</span>
+      }
+  </dd>
+        </dl>
+       </div>
+        </div>
+        
+        <div class="card">
+     <div class="card-header bg-warning">
+      <h5 class="mb-0"><i class="bi bi-chat-left-text"></i> Observaciones</h5>
+       </div>
+         <div class="card-body">
+      <h6>Descripción del Problema:</h6>
+        <p>@Model.DescripcionProblema</p>
+   
+           @if (!string.IsNullOrEmpty(Model.ObservacionesChofer))
+    {
+   <h6>Observaciones del Chofer:</h6>
+         <p>@Model.ObservacionesChofer</p>
+}
+        </div>
+        </div>
+    </div>
+</div>

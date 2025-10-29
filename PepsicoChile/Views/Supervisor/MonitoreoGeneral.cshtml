@@ -1,0 +1,131 @@
+@model List<IngresoTaller>
+@{
+    ViewData["Title"] = "Monitoreo General";
+}
+
+<div class="row mb-4">
+ <div class="col-12">
+        <h1><i class="bi bi-display"></i> Monitoreo General de Ingresos</h1>
+  <p class="lead">Vista general del estado de todos los ingresos al taller</p>
+    </div>
+</div>
+
+<!-- Resumen de Estados -->
+<div class="row mb-4">
+    <div class="col-md-3">
+   <div class="card text-white bg-info">
+   <div class="card-body text-center">
+    <h5 class="card-title">Programados</h5>
+ <p class="display-4">@Model.Count(i => i.Estado == "Programado")</p>
+  </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+      <div class="card-body text-center">
+<h5 class="card-title">En Proceso</h5>
+    <p class="display-4">@Model.Count(i => i.Estado == "En Proceso")</p>
+   </div>
+   </div>
+ </div>
+    <div class="col-md-3">
+   <div class="card text-white bg-danger">
+       <div class="card-body text-center">
+  <h5 class="card-title">Pausados</h5>
+  <p class="display-4">@Model.Count(i => i.Estado == "Pausado")</p>
+       </div>
+        </div>
+    </div>
+  <div class="col-md-3">
+    <div class="card text-white bg-success">
+       <div class="card-body text-center">
+   <h5 class="card-title">Total Activos</h5>
+  <p class="display-4">@Model.Count</p>
+  </div>
+      </div>
+ </div>
+</div>
+
+<!-- Tabla de Ingresos -->
+<div class="row">
+    <div class="col-12">
+   <div class="card">
+     <div class="card-header bg-primary text-white">
+    <h5 class="mb-0"><i class="bi bi-list"></i> Todos los Ingresos</h5>
+     </div>
+     <div class="card-body">
+    @if (Model.Any())
+{
+    <div class="table-responsive">
+     <table class="table table-striped table-hover">
+  <thead class="table-dark">
+    <tr>
+<th>ID</th>
+     <th>Patente</th>
+  <th>Vehículo</th>
+         <th>Fecha Programada</th>
+      <th>Motivo</th>
+         <th>Estado</th>
+     <th>Acciones</th>
+   </tr>
+    </thead>
+      <tbody>
+      @foreach (var ingreso in Model)
+      {
+  <tr class="@(ingreso.Estado == "Pausado" ? "table-danger" : ingreso.Estado == "En Proceso" ? "table-warning" : "")">
+       <td>@ingreso.Id</td>
+      <td><strong>@ingreso.Vehiculo?.Patente</strong></td>
+ <td>@ingreso.Vehiculo?.Marca @ingreso.Vehiculo?.Modelo</td>
+   <td>@ingreso.FechaProgramada.ToString("dd/MM/yyyy HH:mm")</td>
+      <td>@ingreso.MotivoIngreso</td>
+  <td>
+  @switch (ingreso.Estado)
+           {
+  case "Programado":
+    <span class="badge bg-info">@ingreso.Estado</span>
+     break;
+    case "En Proceso":
+  <span class="badge bg-warning">@ingreso.Estado</span>
+  break;
+        case "Pausado":
+  <span class="badge bg-danger">@ingreso.Estado</span>
+ break;
+      default:
+  <span class="badge bg-secondary">@ingreso.Estado</span>
+     break;
+   }
+    </td>
+   <td>
+     <div class="btn-group" role="group">
+           <a asp-action="GestionarIngreso" asp-route-id="@ingreso.Id" class="btn btn-sm btn-primary" title="Gestionar">
+        <i class="bi bi-gear"></i>
+   </a>
+  <button class="btn btn-sm btn-info" onclick="verDetalle(@ingreso.Id)" title="Ver detalle">
+      <i class="bi bi-eye"></i>
+   </button>
+          </div>
+        </td>
+  </tr>
+         }
+   </tbody>
+     </table>
+          </div>
+  }
+      else
+    {
+  <div class="alert alert-info">
+  <i class="bi bi-info-circle"></i> No hay ingresos activos en el taller.
+   </div>
+ }
+  </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function verDetalle(id) {
+    alert('Ver detalle del ingreso ID: ' + id);
+    }
+</script>
+}

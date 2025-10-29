@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - PepsiCo Chile - Gestión de Taller</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-dark bg-primary border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-truck"></i> PepsiCo Chile - Taller
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    @{
+                        var usuarioNombre = Context.Session.GetString("UsuarioNombre") ?? "Invitado";
+                        var usuarioRol = Context.Session.GetString("UsuarioRol") ?? "";
+                    }
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">
+                                <i class="bi bi-house-door"></i> Dashboard
+                            </a>
+                        </li>
+
+                        @if (usuarioRol == "Mecanico" || usuarioRol == "Supervisor")
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-tools"></i> Mecánico
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Mecanico" asp-action="MisTareas">
+                                            <i class="bi bi-list-task"></i> Mis Tareas
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+
+                        @if (usuarioRol == "JefeTaller" || usuarioRol == "Supervisor")
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-person-workspace"></i> Jefe Taller
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Supervisor" asp-action="Agenda">
+                                            <i class="bi bi-calendar3"></i> Agenda
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Supervisor" asp-action="ProgramarIngreso">
+                                            <i class="bi bi-calendar-plus"></i> Programar Ingreso
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Supervisor" asp-action="MonitoreoGeneral">
+                                            <i class="bi bi-display"></i> Monitoreo General
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+
+                        @if (usuarioRol == "CoordinadorZona" || usuarioRol == "Supervisor")
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-geo-alt"></i> Coordinador
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Reportes" asp-action="VehiculosEstado">
+                                            <i class="bi bi-truck"></i> Estado Vehículos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Reportes" asp-action="Repuestos">
+                                            <i class="bi bi-box-seam"></i> Control Repuestos
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+
+                        @if (usuarioRol == "Recepcionista" || usuarioRol == "Supervisor")
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-clipboard-data"></i> Recepción
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Chofer" asp-action="RegistrarLlegada">
+                                            <i class="bi bi-box-arrow-in-down"></i> Registrar Ingreso
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Chofer" asp-action="MisIngresos">
+                                            <i class="bi bi-list-check"></i> Ver Ingresos
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+
+                        @if (usuarioRol == "AsistenteRepuestos" || usuarioRol == "Supervisor")
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-box-seam"></i> Repuestos
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Reportes" asp-action="Repuestos">
+                                            <i class="bi bi-list"></i> Inventario
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+
+                        @if (usuarioRol == "GuardiaAcceso" || usuarioRol == "Supervisor")
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-shield-check"></i> Vigilancia
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Vehiculos" asp-action="Index">
+                                            <i class="bi bi-list"></i> Control Vehículos
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-truck-front"></i> Vehículos
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Vehiculos" asp-action="Index">
+                                        <i class="bi bi-list"></i> Todos los Vehículos
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        @if (usuarioRol == "Supervisor" || usuarioRol == "JefeTaller" || usuarioRol == "CoordinadorZona")
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-graph-up"></i> Reportes
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Reportes" asp-action="TiemposProceso">
+                                            <i class="bi bi-clock-history"></i> Tiempos de Proceso
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Reportes" asp-action="Productividad">
+                                            <i class="bi bi-bar-chart"></i> Productividad
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Reportes" asp-action="Repuestos">
+                                            <i class="bi bi-box-seam"></i> Repuestos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Reportes" asp-action="VehiculosEstado">
+                                            <i class="bi bi-truck"></i> Estado de Vehículos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Reportes" asp-action="HistoricoPausas">
+                                            <i class="bi bi-pause-circle"></i> Histórico de Pausas
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                    </ul>
+
+                    <div class="d-flex align-items-center">
+                        <span class="text-white me-3">
+                            <i class="bi bi-person-circle"></i> @usuarioNombre
+                            @if (!string.IsNullOrEmpty(usuarioRol))
+                            {
+                                <span class="badge bg-light text-primary">@usuarioRol</span>
+                            }
+                        </span>
+                        <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-light btn-sm">
+                            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container-fluid">
+        @if (TempData["Mensaje"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle"></i> @TempData["Mensaje"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2025 - PepsiCo Chile - Gestión de Taller - <a asp-controller="Home" asp-action="Index">Inicio</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,174 @@
+@model TareaTaller
+@{
+ViewData["Title"] = "Detalle de Tarea";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+    <h1><i class="bi bi-info-circle"></i> Detalle de la Tarea</h1>
+<a asp-action="MisTareas" class="btn btn-secondary">
+   <i class="bi bi-arrow-left"></i> Volver a Mis Tareas
+ </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+ <!-- Información de la Tarea -->
+<div class="card mb-3">
+  <div class="card-header bg-primary text-white">
+     <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Información de la Tarea</h5>
+</div>
+      <div class="card-body">
+     <dl class="row">
+  <dt class="col-sm-4">Descripción:</dt>
+  <dd class="col-sm-8"><strong>@Model.Descripcion</strong></dd>
+    
+   <dt class="col-sm-4">Estado:</dt>
+     <dd class="col-sm-8">
+     @switch (Model.Estado)
+  {
+        case "Completada":
+       <span class="badge bg-success">@Model.Estado</span>
+     break;
+     case "En Proceso":
+       <span class="badge bg-warning">@Model.Estado</span>
+     break;
+  case "Pendiente":
+ <span class="badge bg-secondary">@Model.Estado</span>
+    break;
+      default:
+         <span class="badge bg-secondary">@Model.Estado</span>
+        break;
+   }
+  </dd>
+    
+<dt class="col-sm-4">Prioridad:</dt>
+  <dd class="col-sm-8">
+   @switch (Model.Prioridad)
+  {
+ case "Alta":
+      <span class="badge bg-danger">@Model.Prioridad</span>
+     break;
+   case "Media":
+       <span class="badge bg-warning">@Model.Prioridad</span>
+          break;
+ default:
+         <span class="badge bg-secondary">@Model.Prioridad</span>
+    break;
+  }
+    </dd>
+
+       <dt class="col-sm-4">Fecha Asignación:</dt>
+  <dd class="col-sm-8">@Model.FechaAsignacion.ToString("dd/MM/yyyy HH:mm")</dd>
+   
+      @if (Model.FechaInicio.HasValue)
+  {
+      <dt class="col-sm-4">Fecha Inicio:</dt>
+<dd class="col-sm-8">@Model.FechaInicio.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+   }
+    
+   @if (Model.FechaFinalizacion.HasValue)
+    {
+      <dt class="col-sm-4">Fecha Finalización:</dt>
+     <dd class="col-sm-8">@Model.FechaFinalizacion.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+     }
+    
+    <dt class="col-sm-4">Tiempo Estimado:</dt>
+ <dd class="col-sm-8">@Model.TiempoEstimadoHoras horas</dd>
+       
+   @if (Model.TiempoRealHoras.HasValue)
+     {
+        <dt class="col-sm-4">Tiempo Real:</dt>
+        <dd class="col-sm-8">@Model.TiempoRealHoras horas</dd>
+      }
+  </dl>
+ 
+    @if (!string.IsNullOrEmpty(Model.Observaciones))
+  {
+     <hr />
+    <h6><i class="bi bi-chat-left-text"></i> Observaciones:</h6>
+      <p>@Model.Observaciones</p>
+ }
+   </div>
+  </div>
+
+        <!-- Información del Vehículo -->
+        <div class="card mb-3">
+       <div class="card-header bg-info text-white">
+   <h5 class="mb-0"><i class="bi bi-truck"></i> Información del Vehículo</h5>
+      </div>
+    <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-4">Patente:</dt>
+    <dd class="col-sm-8"><strong>@Model.IngresoTaller?.Vehiculo?.Patente</strong></dd>
+    
+  <dt class="col-sm-4">Marca/Modelo:</dt>
+<dd class="col-sm-8">@Model.IngresoTaller?.Vehiculo?.Marca @Model.IngresoTaller?.Vehiculo?.Modelo</dd>
+   
+<dt class="col-sm-4">Motivo Ingreso:</dt>
+<dd class="col-sm-8">@Model.IngresoTaller?.MotivoIngreso</dd>
+     </dl>
+  </div>
+   </div>
+    </div>
+    
+    <div class="col-md-4">
+   <!-- Acciones -->
+    <div class="card mb-3">
+            <div class="card-header bg-success text-white">
+     <h5 class="mb-0"><i class="bi bi-lightning"></i> Acciones</h5>
+            </div>
+      <div class="card-body">
+     <div class="d-grid gap-2">
+      @if (Model.Estado == "Pendiente")
+        {
+    <a asp-action="IniciarTarea" asp-route-id="@Model.Id" class="btn btn-success">
+  <i class="bi bi-play-fill"></i> Iniciar Tarea
+  </a>
+     }
+    
+   @if (Model.Estado == "En Proceso")
+     {
+      <a asp-action="FinalizarTarea" asp-route-id="@Model.Id" class="btn btn-primary">
+   <i class="bi bi-check-circle"></i> Finalizar Tarea
+       </a>
+      }
+   
+    <a asp-action="SubirDocumento" asp-route-ingresoId="@Model.IngresoTallerId" class="btn btn-warning">
+        <i class="bi bi-upload"></i> Subir Foto/Documento
+   </a>
+   
+   <a asp-action="SolicitarRepuesto" asp-route-tareaId="@Model.Id" class="btn btn-info">
+          <i class="bi bi-box-seam"></i> Solicitar Repuesto
+      </a>
+     
+        <a asp-action="RegistrarObservacion" asp-route-tareaId="@Model.Id" class="btn btn-secondary">
+      <i class="bi bi-chat-left-text"></i> Agregar Observación
+      </a>
+      </div>
+   </div>
+        </div>
+
+  <!-- Enlaces Rápidos -->
+   <div class="card">
+  <div class="card-header bg-secondary text-white">
+    <h5 class="mb-0"><i class="bi bi-link"></i> Enlaces Rápidos</h5>
+ </div>
+        <div class="card-body">
+     <ul class="list-group list-group-flush">
+  <li class="list-group-item">
+  <a asp-action="VerDocumentos" asp-route-ingresoId="@Model.IngresoTallerId">
+     <i class="bi bi-file-earmark"></i> Ver Documentos del Ingreso
+      </a>
+   </li>
+    <li class="list-group-item">
+          <a asp-controller="Vehiculos" asp-action="Historial" asp-route-id="@Model.IngresoTaller?.VehiculoId">
+       <i class="bi bi-clock-history"></i> Historial del Vehículo
+     </a>
+   </li>
+ </ul>
+    </div>
+        </div>
+    </div>
+</div>

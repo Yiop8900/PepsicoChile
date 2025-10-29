@@ -1,0 +1,56 @@
+@model Documento
+@{
+    ViewData["Title"] = "Subir Documento";
+    var ingresoId = ViewBag.IngresoId;
+}
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+ <div class="card">
+   <div class="card-header bg-warning">
+    <h4 class="mb-0"><i class="bi bi-upload"></i> Subir Documento o Fotografía</h4>
+      </div>
+  <div class="card-body">
+       <form asp-action="SubirDocumento" method="post" enctype="multipart/form-data">
+      <input type="hidden" asp-for="IngresoTallerId" value="@ingresoId" />
+         
+    <div class="mb-3">
+    <label asp-for="TipoDocumento" class="form-label">Tipo de Documento</label>
+     <select asp-for="TipoDocumento" class="form-select" required>
+     <option value="">-- Seleccione el tipo --</option>
+ <option value="Foto">Fotografía</option>
+   <option value="Informe">Informe Técnico</option>
+      <option value="Presupuesto">Presupuesto</option>
+    <option value="Orden de Trabajo">Orden de Trabajo</option>
+   <option value="Otro">Otro</option>
+       </select>
+   </div>
+
+  <div class="mb-3">
+       <label for="archivo" class="form-label">Seleccionar Archivo</label>
+   <input type="file" class="form-control" id="archivo" name="archivo" accept="image/*,.pdf,.doc,.docx" required />
+  <small class="form-text text-muted">Formatos permitidos: Imágenes, PDF, Word</small>
+   </div>
+
+        <div class="mb-3">
+ <label asp-for="Descripcion" class="form-label">Descripción</label>
+        <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Describa brevemente el contenido del documento"></textarea>
+ </div>
+
+<div class="alert alert-info">
+       <i class="bi bi-info-circle"></i> El archivo se asociará al ingreso y estará disponible para todos los usuarios autorizados.
+   </div>
+
+     <div class="d-grid gap-2">
+       <button type="submit" class="btn btn-warning btn-lg">
+<i class="bi bi-upload"></i> Subir Documento
+       </button>
+    <a asp-action="VerDocumentos" asp-route-ingresoId="@ingresoId" class="btn btn-secondary">
+       <i class="bi bi-arrow-left"></i> Cancelar
+   </a>
+     </div>
+  </form>
+ </div>
+  </div>
+  </div>
+</div>

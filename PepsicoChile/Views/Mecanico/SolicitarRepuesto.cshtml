@@ -1,0 +1,57 @@
+@model Repuesto
+@{
+    ViewData["Title"] = "Solicitar Repuesto";
+    var tareaId = ViewBag.TareaId;
+}
+
+<div class="row">
+<div class="col-md-8 offset-md-2">
+   <div class="card">
+<div class="card-header bg-info text-white">
+    <h4 class="mb-0"><i class="bi bi-box-seam"></i> Solicitar Repuesto</h4>
+   </div>
+      <div class="card-body">
+   <form asp-action="SolicitarRepuesto" method="post">
+        <input type="hidden" asp-for="TareaTallerId" value="@tareaId" />
+   <input type="hidden" asp-for="FechaSolicitud" value="@DateTime.Now" />
+       <input type="hidden" asp-for="Estado" value="Solicitado" />
+    
+   <div class="mb-3">
+   <label asp-for="Nombre" class="form-label">Nombre del Repuesto</label>
+ <input asp-for="Nombre" type="text" class="form-control" placeholder="Ej: Filtro de aceite" required />
+     </div>
+
+     <div class="mb-3">
+ <label asp-for="CodigoRepuesto" class="form-label">Código del Repuesto</label>
+     <input asp-for="CodigoRepuesto" type="text" class="form-control" placeholder="Código o referencia del fabricante" />
+   </div>
+
+     <div class="row">
+  <div class="col-md-6 mb-3">
+  <label asp-for="Cantidad" class="form-label">Cantidad</label>
+     <input asp-for="Cantidad" type="number" class="form-control" min="1" value="1" required />
+     </div>
+
+     <div class="col-md-6 mb-3">
+   <label asp-for="Proveedor" class="form-label">Proveedor (opcional)</label>
+   <input asp-for="Proveedor" type="text" class="form-control" placeholder="Nombre del proveedor" />
+       </div>
+ </div>
+
+   <div class="alert alert-warning">
+  <i class="bi bi-exclamation-triangle"></i> <strong>Nota:</strong> La solicitud será enviada al supervisor para su aprobación y gestión.
+  </div>
+
+        <div class="d-grid gap-2">
+  <button type="submit" class="btn btn-info btn-lg">
+ <i class="bi bi-send"></i> Enviar Solicitud
+ </button>
+  <a asp-action="DetalleTarea" asp-route-id="@tareaId" class="btn btn-secondary">
+      <i class="bi bi-arrow-left"></i> Cancelar
+   </a>
+   </div>
+   </form>
+  </div>
+  </div>
+    </div>
+</div>

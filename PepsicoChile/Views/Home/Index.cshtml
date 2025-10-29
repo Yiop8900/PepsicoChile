@@ -1,0 +1,230 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-4">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </h1>
+        <p class="lead">Bienvenido, <strong>@Model.NombreUsuario</strong> - Rol: <span class="badge bg-primary">@Model.RolUsuario</span></p>
+    </div>
+</div>
+
+<!-- Tarjetas de Resumen -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Vehículos en Taller</h5>
+                        <p class="display-4 mb-0">@Model.VehiculosEnTaller</p>
+                    </div>
+                    <i class="bi bi-truck display-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Programados</h5>
+                        <p class="display-4 mb-0">@Model.VehiculosProgramados</p>
+                    </div>
+                    <i class="bi bi-calendar3 display-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-danger mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Tareas Pendientes</h5>
+                        <p class="display-4 mb-0">@Model.TareasPendientes</p>
+                    </div>
+                    <i class="bi bi-exclamation-triangle display-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">En Proceso</h5>
+                        <p class="display-4 mb-0">@Model.TareasEnProceso</p>
+                    </div>
+                    <i class="bi bi-gear-fill display-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ingresos Recientes y Tareas Urgentes -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Ingresos Recientes</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Patente</th>
+                                <th>Modelo</th>
+                                <th>Motivo</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var ingreso in Model.IngresosRecientes)
+                            {
+                                <tr>
+                                    <td><strong>@ingreso.Vehiculo?.Patente</strong></td>
+                                    <td>@ingreso.Vehiculo?.Marca @ingreso.Vehiculo?.Modelo</td>
+                                    <td>@ingreso.MotivoIngreso</td>
+                                    <td>
+                                        @if (ingreso.Estado == "En Proceso")
+                                        {
+                                            <span class="badge bg-warning">@ingreso.Estado</span>
+                                        }
+                                        else if (ingreso.Estado == "Programado")
+                                        {
+                                            <span class="badge bg-info">@ingreso.Estado</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">@ingreso.Estado</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-exclamation-circle"></i> Tareas Urgentes</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Descripción</th>
+                                <th>Prioridad</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var tarea in Model.TareasUrgentes)
+                            {
+                                <tr>
+                                    <td>@tarea.Descripcion</td>
+                                    <td><span class="badge bg-danger">@tarea.Prioridad</span></td>
+                                    <td>
+                                        @if (tarea.Estado == "En Proceso")
+                                        {
+                                            <span class="badge bg-warning">@tarea.Estado</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">@tarea.Estado</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Accesos Rápidos según Rol -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="bi bi-lightning-fill"></i> Accesos Rápidos</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    @if (Model.RolUsuario == "Chofer")
+                    {
+                        <div class="col-md-4 mb-3">
+                            <a asp-controller="Chofer" asp-action="RegistrarLlegada" class="btn btn-lg btn-primary w-100">
+                                <i class="bi bi-box-arrow-in-down display-4 d-block mb-2"></i>
+                                Registrar Llegada
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a asp-controller="Chofer" asp-action="MisIngresos" class="btn btn-lg btn-info w-100">
+                                <i class="bi bi-list-check display-4 d-block mb-2"></i>
+                                Mis Ingresos
+                            </a>
+                        </div>
+                    }
+                    @if (Model.RolUsuario == "Supervisor")
+                    {
+                        <div class="col-md-3 mb-3">
+                            <a asp-controller="Supervisor" asp-action="ProgramarIngreso" class="btn btn-lg btn-success w-100">
+                                <i class="bi bi-calendar-plus display-4 d-block mb-2"></i>
+                                Programar Ingreso
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a asp-controller="Supervisor" asp-action="Agenda" class="btn btn-lg btn-primary w-100">
+                                <i class="bi bi-calendar3 display-4 d-block mb-2"></i>
+                                Ver Agenda
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a asp-controller="Supervisor" asp-action="MonitoreoGeneral" class="btn btn-lg btn-warning w-100">
+                                <i class="bi bi-display display-4 d-block mb-2"></i>
+                                Monitoreo
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a asp-controller="Reportes" asp-action="Index" class="btn btn-lg btn-info w-100">
+                                <i class="bi bi-graph-up display-4 d-block mb-2"></i>
+                                Reportes
+                            </a>
+                        </div>
+                    }
+                    @if (Model.RolUsuario == "Mecanico")
+                    {
+                        <div class="col-md-6 mb-3">
+                            <a asp-controller="Mecanico" asp-action="MisTareas" class="btn btn-lg btn-primary w-100">
+                                <i class="bi bi-list-task display-4 d-block mb-2"></i>
+                                Mis Tareas
+                            </a>
+                        </div>
+                    }
+                    <div class="col-md-@(Model.RolUsuario == "Supervisor" ? "12" : "6") mb-3">
+                        <a asp-controller="Vehiculos" asp-action="Index" class="btn btn-lg btn-secondary w-100">
+                            <i class="bi bi-truck-front display-4 d-block mb-2"></i>
+                            Ver Vehículos
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
