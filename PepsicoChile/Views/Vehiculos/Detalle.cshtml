@@ -1,0 +1,380 @@
+@model Vehiculo
+@{
+    ViewData["Title"] = $"Detalle Vehículo - {Model.Patente}";
+    var documentos = ViewBag.Documentos as List<DocumentoVehiculo>;
+    var ingresos = ViewBag.Ingresos as List<IngresoTaller>;
+}
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>
+    <i class="bi bi-truck-front-fill"></i> Detalle del Vehículo
+        </h2>
+     <h3 class="text-primary">@Model.Patente</h3>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group">
+       <a asp-action="Editar" asp-route-id="@Model.Id" class="btn btn-primary">
+      <i class="bi bi-pencil"></i> Editar
+            </a>
+     <a asp-action="Index" class="btn btn-secondary">
+           <i class="bi bi-arrow-left"></i> Volver
+         </a>
+  </div>
+    </div>
+</div>
+
+<!-- Estado y Acciones Rápidas -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-@(Model.Estado == "Disponible" ? "success" : Model.Estado == "En Taller" ? "warning" : Model.Estado == "En Ruta" ? "info" : "secondary")">
+         <div class="card-body">
+            <div class="row align-items-center">
+       <div class="col-md-4">
+             <h5 class="mb-0">Estado Actual</h5>
+       <h3 class="mb-0">
+         <span class="badge bg-@(Model.Estado == "Disponible" ? "success" : Model.Estado == "En Taller" ? "warning" : Model.Estado == "En Ruta" ? "info" : "secondary")">
+     <i class="bi bi-@(Model.Estado == "Disponible" ? "check-circle" : Model.Estado == "En Taller" ? "tools" : Model.Estado == "En Ruta" ? "geo-alt" : "x-circle")"></i>
+    @Model.Estado
+       </span>
+      </h3>
+        </div>
+               <div class="col-md-8 text-end">
+        <div class="btn-group">
+         <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+     <i class="bi bi-arrow-repeat"></i> Cambiar Estado
+ </button>
+                <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="#" onclick="cambiarEstado(@Model.Id, 'Disponible'); return false;">
+     <i class="bi bi-check-circle text-success"></i> Disponible
+        </a></li>
+         <li><a class="dropdown-item" href="#" onclick="cambiarEstado(@Model.Id, 'En Taller'); return false;">
+           <i class="bi bi-tools text-warning"></i> En Taller
+</a></li>
+   <li><a class="dropdown-item" href="#" onclick="cambiarEstado(@Model.Id, 'En Ruta'); return false;">
+       <i class="bi bi-geo-alt text-info"></i> En Ruta
+     </a></li>
+     <li><a class="dropdown-item" href="#" onclick="cambiarEstado(@Model.Id, 'Inactivo'); return false;">
+  <i class="bi bi-x-circle text-danger"></i> Inactivo
+          </a></li>
+    </ul>
+      </div>
+           </div>
+  </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <!-- Columna Izquierda -->
+ <div class="col-lg-6">
+      <!-- Información General -->
+        <div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+ <h5 class="mb-0"><i class="bi bi-info-circle-fill"></i> Información General</h5>
+        </div>
+            <div class="card-body">
+      <div class="row g-3">
+          <div class="col-md-6">
+         <strong><i class="bi bi-card-text"></i> Patente:</strong>
+         <p class="mb-0 fs-5 text-primary fw-bold">@Model.Patente</p>
+        </div>
+          <div class="col-md-6">
+        <strong><i class="bi bi-hash"></i> Número de Flota:</strong>
+  <p class="mb-0">@(Model.NumeroFlota ?? "N/A")</p>
+                 </div>
+ <div class="col-md-6">
+   <strong><i class="bi bi-truck"></i> Marca:</strong>
+          <p class="mb-0">@Model.Marca</p>
+          </div>
+          <div class="col-md-6">
+     <strong><i class="bi bi-tag"></i> Modelo:</strong>
+                 <p class="mb-0">@Model.Modelo</p>
+           </div>
+          <div class="col-md-6">
+      <strong><i class="bi bi-calendar"></i> Año:</strong>
+        <p class="mb-0">@Model.Año</p>
+   </div>
+        <div class="col-md-6">
+         <strong><i class="bi bi-ui-radios"></i> Tipo de Vehículo:</strong>
+       <p class="mb-0"><span class="badge bg-secondary">@Model.TipoVehiculo</span></p>
+     </div>
+           <div class="col-md-6">
+   <strong><i class="bi bi-palette"></i> Color:</strong>
+          <p class="mb-0">@(Model.Color ?? "N/A")</p>
+                    </div>
+     <div class="col-md-6">
+      <strong><i class="bi bi-fuel-pump"></i> Combustible:</strong>
+    <p class="mb-0">@(Model.Combustible ?? "N/A")</p>
+        </div>
+            </div>
+      </div>
+  </div>
+
+        <!-- Información Técnica -->
+        <div class="card mb-4">
+      <div class="card-header bg-secondary text-white">
+    <h5 class="mb-0"><i class="bi bi-gear-fill"></i> Información Técnica</h5>
+            </div>
+    <div class="card-body">
+  <div class="row g-3">
+          <div class="col-md-6">
+        <strong><i class="bi bi-speedometer"></i> Motor:</strong>
+                  <p class="mb-0">@(Model.Motor ?? "N/A")</p>
+     </div>
+    <div class="col-md-6">
+   <strong><i class="bi bi-upc"></i> Chasis:</strong>
+            <p class="mb-0">@(Model.Chasis ?? "N/A")</p>
+      </div>
+   <div class="col-md-6">
+         <strong><i class="bi bi-speedometer2"></i> Kilometraje Actual:</strong>
+         <p class="mb-0 fs-5 text-info fw-bold">@(Model.KilometrajeActual?.ToString("N0") ?? "N/A") km</p>
+     </div>
+           <div class="col-md-6">
+       <strong><i class="bi bi-box"></i> Capacidad de Carga:</strong>
+ <p class="mb-0">@(Model.CapacidadCarga?.ToString("N2") ?? "N/A") ton</p>
+</div>
+       </div>
+      </div>
+        </div>
+
+   <!-- Mantenimiento -->
+     <div class="card mb-4">
+         <div class="card-header bg-warning">
+            <h5 class="mb-0"><i class="bi bi-wrench"></i> Mantenimiento</h5>
+      </div>
+            <div class="card-body">
+       <div class="row g-3">
+      <div class="col-md-6">
+         <strong><i class="bi bi-calendar-check"></i> Último Mantenimiento:</strong>
+          <p class="mb-0">
+   @if (Model.UltimoMantenimiento.HasValue)
+{
+  <span>@Model.UltimoMantenimiento.Value.ToString("dd/MM/yyyy")</span>
+       }
+           else
+{
+        <span class="text-muted">Sin registros</span>
+  }
+     </p>
+       </div>
+   <div class="col-md-6">
+    <strong><i class="bi bi-calendar-event"></i> Próximo Mantenimiento:</strong>
+   <p class="mb-0">
+   @if (Model.ProximoMantenimiento.HasValue)
+      {
+          var diasParaMantenimiento = (Model.ProximoMantenimiento.Value - DateTime.Now).Days;
+         var esCercano = diasParaMantenimiento <= 30 && diasParaMantenimiento >= 0;
+          var esVencido = diasParaMantenimiento < 0;
+   
+      <span class="badge bg-@(esVencido ? "danger" : esCercano ? "warning" : "success")">
+  @Model.ProximoMantenimiento.Value.ToString("dd/MM/yyyy")
+  @if (esVencido)
+        {
+     <text>(VENCIDO)</text>
+  }
+      else if (esCercano)
+          {
+        <text>(@diasParaMantenimiento días)</text>
+   }
+      </span>
+            }
+        else
+           {
+   <span class="text-muted">No programado</span>
+ }
+     </p>
+        </div>
+     @if (!string.IsNullOrEmpty(Model.Observaciones))
+     {
+       <div class="col-12">
+     <strong><i class="bi bi-chat-text"></i> Observaciones:</strong>
+      <p class="mb-0 mt-2 p-3 bg-light rounded">@Model.Observaciones</p>
+  </div>
+        }
+                </div>
+            </div>
+ </div>
+    </div>
+
+    <!-- Columna Derecha -->
+    <div class="col-lg-6">
+ <!-- Documentos del Vehículo -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+           <h5 class="mb-0"><i class="bi bi-file-earmark-text-fill"></i> Documentos (@(documentos?.Count ?? 0))</h5>
+    <a asp-action="Editar" asp-route-id="@Model.Id" class="btn btn-sm btn-light">
+        <i class="bi bi-plus-circle"></i> Agregar
+     </a>
+            </div>
+  <div class="card-body">
+          @if (documentos != null && documentos.Any())
+   {
+         <div class="list-group list-group-flush">
+@foreach (var doc in documentos)
+          {
+              var esVencido = doc.FechaVencimiento.HasValue && doc.FechaVencimiento.Value < DateTime.Now;
+   var porVencer = doc.FechaVencimiento.HasValue && 
+                  doc.FechaVencimiento.Value >= DateTime.Now && 
+            doc.FechaVencimiento.Value <= DateTime.Now.AddDays(30);
+
+         <div class="list-group-item @(esVencido ? "border-start border-danger border-4" : porVencer ? "border-start border-warning border-4" : "")">
+  <div class="d-flex justify-content-between align-items-start">
+    <div class="flex-grow-1">
+   <h6 class="mb-1">
+    <i class="bi bi-@(doc.TipoDocumento == "RevisionTecnica" ? "file-check" :
+              doc.TipoDocumento == "SeguroObligatorio" ? "shield-check" :
+           doc.TipoDocumento == "PermisoCirculacion" ? "card-checklist" :
+            doc.TipoDocumento == "Contrato" ? "file-text" :
+         doc.TipoDocumento == "Manual" ? "book" : "file-earmark")"></i>
+   @doc.TipoDocumento
+    </h6>
+      <p class="mb-1 small text-muted">
+  <i class="bi bi-file"></i> @doc.NombreArchivo
+               </p>
+      @if (doc.FechaVencimiento.HasValue)
+    {
+<p class="mb-1 small">
+  <strong>Vence:</strong>
+          <span class="badge bg-@(esVencido ? "danger" : porVencer ? "warning" : "success")">
+         @doc.FechaVencimiento.Value.ToString("dd/MM/yyyy")
+    @if (esVencido)
+      {
+       <text>(VENCIDO)</text>
+    }
+    else if (porVencer)
+  {
+               <text>(Próximo a vencer)</text>
+               }
+          </span>
+          </p>
+          }
+  <p class="mb-0 small text-muted">
+       <i class="bi bi-clock"></i> Subido: @doc.FechaSubida.ToString("dd/MM/yyyy HH:mm")
+         </p>
+       </div>
+           <div>
+    <a href="@doc.RutaArchivo" target="_blank" class="btn btn-sm btn-outline-primary">
+             <i class="bi bi-download"></i>
+       </a>
+            </div>
+   </div>
+         </div>
+ }
+        </div>
+      <div class="mt-3 text-center">
+            <a asp-action="VerDocumentos" asp-route-id="@Model.Id" class="btn btn-outline-info">
+ <i class="bi bi-eye"></i> Ver Todos los Documentos
+       </a>
+       </div>
+    }
+     else
+     {
+ <div class="alert alert-info mb-0">
+        <i class="bi bi-info-circle"></i> No hay documentos registrados.
+        <a asp-action="Editar" asp-route-id="@Model.Id" class="alert-link">Agregar documentos</a>
+</div>
+          }
+            </div>
+        </div>
+
+        <!-- Historial de Ingresos -->
+        <div class="card mb-4">
+   <div class="card-header bg-success text-white">
+       <h5 class="mb-0"><i class="bi bi-clock-history"></i> Últimos Ingresos al Taller</h5>
+     </div>
+            <div class="card-body">
+              @if (ingresos != null && ingresos.Any())
+            {
+        <div class="timeline">
+       @foreach (var ingreso in ingresos)
+  {
+   <div class="mb-3 pb-3 border-bottom">
+    <div class="d-flex justify-content-between align-items-start">
+       <div>
+          <h6 class="mb-1">
+      <span class="badge bg-@(ingreso.Estado == "Completado" ? "success" : ingreso.Estado == "En Proceso" ? "warning" : "secondary")">
+       @ingreso.Estado
+           </span>
+ </h6>
+     <p class="mb-1"><strong>@ingreso.MotivoIngreso</strong></p>
+         <p class="mb-1 small text-muted">
+    <i class="bi bi-calendar"></i> @ingreso.FechaProgramada.ToString("dd/MM/yyyy")
+    </p>
+    @if (!string.IsNullOrEmpty(ingreso.DescripcionProblema))
+          {
+       <p class="mb-0 small">@ingreso.DescripcionProblema</p>
+         }
+     </div>
+       </div>
+          </div>
+        }
+ </div>
+      }
+else
+    {
+       <div class="alert alert-info mb-0">
+       <i class="bi bi-info-circle"></i> No hay registros de ingresos al taller.
+    </div>
+       }
+   </div>
+ </div>
+
+      <!-- Información del Sistema -->
+        <div class="card">
+        <div class="card-header bg-dark text-white">
+      <h5 class="mb-0"><i class="bi bi-database"></i> Información del Sistema</h5>
+ </div>
+  <div class="card-body">
+ <p class="mb-2 small">
+      <strong><i class="bi bi-calendar-plus"></i> Fecha de Registro:</strong><br />
+        @Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
+       </p>
+        <p class="mb-0 small">
+    <strong><i class="bi bi-pencil-square"></i> Última Actualización:</strong><br />
+          @Model.FechaActualizacion.ToString("dd/MM/yyyy HH:mm")
+    </p>
+         </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+     function cambiarEstado(id, estado) {
+   if (confirm(`¿Cambiar estado del vehículo a "${estado}"?`)) {
+     var form = document.createElement('form');
+            form.method = 'POST';
+        form.action = '@Url.Action("CambiarEstado", "Vehiculos")';
+
+                var inputId = document.createElement('input');
+            inputId.type = 'hidden';
+         inputId.name = 'id';
+      inputId.value = id;
+       form.appendChild(inputId);
+
+         var inputEstado = document.createElement('input');
+   inputEstado.type = 'hidden';
+        inputEstado.name = 'estado';
+      inputEstado.value = estado;
+          form.appendChild(inputEstado);
+
+          var token = document.querySelector('input[name="__RequestVerificationToken"]');
+        if (token) {
+   var inputToken = document.createElement('input');
+       inputToken.type = 'hidden';
+        inputToken.name = '__RequestVerificationToken';
+         inputToken.value = token.value;
+         form.appendChild(inputToken);
+            }
+
+          document.body.appendChild(form);
+                form.submit();
+   }
+       return false;
+     }
+  </script>
+}

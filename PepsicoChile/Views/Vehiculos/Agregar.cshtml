@@ -1,0 +1,268 @@
+@model AgregarVehiculoViewModel
+@{
+    ViewData["Title"] = ViewBag.VehiculoId != null ? "Editar Vehículo" : "Agregar Vehículo";
+    var isEdit = ViewBag.IsEdit == true;
+    var vehiculoId = ViewBag.VehiculoId;
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+     <h2><i class="bi bi-truck-front-fill"></i> @ViewData["Title"]</h2>
+    </div>
+</div>
+
+<form asp-action="@(isEdit ? "Editar" : "Agregar")" asp-route-id="@vehiculoId" method="post" enctype="multipart/form-data">
+    @if (isEdit)
+    {
+   <input type="hidden" name="id" value="@vehiculoId" />
+    }
+ <div class="row">
+        <!-- Columna Izquierda -->
+     <div class="col-lg-6">
+   <div class="card mb-4">
+       <div class="card-header bg-primary text-white">
+ <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información Básica</h5>
+  </div>
+    <div class="card-body">
+    <div class="row">
+    <div class="col-md-6 mb-3">
+    <label asp-for="Patente" class="form-label"></label>
+        @if (isEdit)
+        {
+   <input asp-for="Patente" class="form-control text-uppercase" placeholder="ABCD-12" readonly />
+  <small class="text-muted">La patente no se puede modificar</small>
+        }
+    else
+        {
+   <input asp-for="Patente" class="form-control text-uppercase" placeholder="ABCD-12" />
+     }
+     <span asp-validation-for="Patente" class="text-danger small"></span>
+   </div>
+       <div class="col-md-6 mb-3">
+      <label asp-for="NumeroFlota" class="form-label"></label>
+    <input asp-for="NumeroFlota" class="form-control" placeholder="FL-001" />
+  </div>
+       </div>
+
+<div class="row">
+      <div class="col-md-6 mb-3">
+  <label asp-for="Marca" class="form-label"></label>
+       <select asp-for="Marca" class="form-select">
+ <option value="">-- Seleccione --</option>
+     <option>Volvo</option>
+             <option>Mercedes-Benz</option>
+      <option>Scania</option>
+ <option>MAN</option>
+  <option>Iveco</option>
+ <option>Toyota</option>
+      <option>Nissan</option>
+       <option>Ford</option>
+  <option>Chevrolet</option>
+     <option>Otra</option>
+    </select>
+    <span asp-validation-for="Marca" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6 mb-3">
+ <label asp-for="Modelo" class="form-label"></label>
+       <input asp-for="Modelo" class="form-control" placeholder="FH16" />
+ <span asp-validation-for="Modelo" class="text-danger small"></span>
+        </div>
+    </div>
+
+  <div class="row">
+   <div class="col-md-4 mb-3">
+    <label asp-for="Año" class="form-label"></label>
+ <input asp-for="Año" class="form-control" type="number" />
+   <span asp-validation-for="Año" class="text-danger small"></span>
+        </div>
+       <div class="col-md-4 mb-3">
+     <label asp-for="TipoVehiculo" class="form-label"></label>
+          <select asp-for="TipoVehiculo" class="form-select">
+  <option value="">-- Seleccione --</option>
+      <option>Camión</option>
+   <option>Camioneta</option>
+        <option>Furgón</option>
+ <option>Tractor</option>
+      <option>Semirremolque</option>
+  </select>
+   <span asp-validation-for="TipoVehiculo" class="text-danger small"></span>
+    </div>
+        <div class="col-md-4 mb-3">
+  <label asp-for="Color" class="form-label"></label>
+ <input asp-for="Color" class="form-control" placeholder="Blanco" />
+     </div>
+ </div>
+
+     <div class="row">
+      <div class="col-md-6 mb-3">
+    <label asp-for="Combustible" class="form-label"></label>
+     <select asp-for="Combustible" class="form-select">
+ <option value="">-- Seleccione --</option>
+ <option>Diésel</option>
+ <option>Gasolina</option>
+  <option>Gas Natural</option>
+     <option>Híbrido</option>
+          <option>Eléctrico</option>
+ </select>
+   </div>
+          <div class="col-md-6 mb-3">
+  <label asp-for="CapacidadCarga" class="form-label"></label>
+<input asp-for="CapacidadCarga" class="form-control" type="number" step="0.01" placeholder="15.5" />
+       <span asp-validation-for="CapacidadCarga" class="text-danger small"></span>
+   </div>
+       </div>
+  </div>
+      </div>
+
+ <div class="card mb-4">
+     <div class="card-header bg-secondary text-white">
+ <h5 class="mb-0"><i class="bi bi-gear"></i> Información Técnica</h5>
+      </div>
+ <div class="card-body">
+    <div class="mb-3">
+<label asp-for="Motor" class="form-label"></label>
+    <input asp-for="Motor" class="form-control" placeholder="D13K500" />
+    </div>
+     <div class="mb-3">
+ <label asp-for="Chasis" class="form-label"></label>
+    <input asp-for="Chasis" class="form-control" placeholder="VIN123456789" />
+ </div>
+       <div class="mb-3">
+       <label asp-for="KilometrajeActual" class="form-label"></label>
+      <input asp-for="KilometrajeActual" class="form-control" type="number" placeholder="125000" />
+  <span asp-validation-for="KilometrajeActual" class="text-danger small"></span>
+      </div>
+    </div>
+    </div>
+   </div>
+
+        <!-- Columna Derecha -->
+ <div class="col-lg-6">
+      <div class="card mb-4">
+      <div class="card-header bg-warning">
+  <h5 class="mb-0"><i class="bi bi-wrench"></i> Mantenimiento</h5>
+       </div>
+      <div class="card-body">
+       <div class="mb-3">
+  <label asp-for="UltimoMantenimiento" class="form-label"></label>
+    <input asp-for="UltimoMantenimiento" class="form-control" type="date" />
+      </div>
+     <div class="mb-3">
+  <label asp-for="ProximoMantenimiento" class="form-label"></label>
+     <input asp-for="ProximoMantenimiento" class="form-control" type="date" />
+ </div>
+ <div class="mb-3">
+  <label asp-for="Observaciones" class="form-label"></label>
+     <textarea asp-for="Observaciones" class="form-control" rows="3" placeholder="Observaciones generales del vehículo"></textarea>
+</div>
+  </div>
+  </div>
+
+ <div class="card mb-4">
+    <div class="card-header bg-info text-white">
+      <h5 class="mb-0"><i class="bi bi-file-earmark-pdf"></i> Documentos del Vehículo</h5>
+  </div>
+    <div class="card-body">
+        @if (isEdit)
+            {
+      <div class="alert alert-warning">
+  <i class="bi bi-exclamation-triangle"></i> 
+          Al subir nuevos documentos se agregarán a los existentes. 
+  <a asp-action="VerDocumentos" asp-route-id="@vehiculoId" class="alert-link">Ver documentos actuales</a>
+                </div>
+  }
+        else
+        {
+<div class="alert alert-info">
+  <i class="bi bi-info-circle"></i> Los documentos subidos se almacenarán de forma segura en el sistema.
+        </div>
+   }
+
+      <div class="mb-3">
+     <label asp-for="RevisionTecnica" class="form-label">
+   <i class="bi bi-file-check"></i> Revisión Técnica
+     </label>
+     <input asp-for="RevisionTecnica" class="form-control" type="file" accept=".pdf,.jpg,.png" />
+           <div class="row mt-2">
+     <div class="col-md-6">
+ <label asp-for="FechaVencimientoRevTecnica" class="form-label small">Fecha Vencimiento</label>
+  <input asp-for="FechaVencimientoRevTecnica" class="form-control form-control-sm" type="date" />
+     </div>
+ </div>
+      </div>
+
+     <div class="mb-3">
+    <label asp-for="SeguroObligatorio" class="form-label">
+       <i class="bi bi-shield-check"></i> Seguro Obligatorio (SOAP)
+     </label>
+        <input asp-for="SeguroObligatorio" class="form-control" type="file" accept=".pdf,.jpg,.png" />
+    <div class="row mt-2">
+  <div class="col-md-6">
+          <label asp-for="FechaVencimientoSOAP" class="form-label small">Fecha Vencimiento</label>
+  <input asp-for="FechaVencimientoSOAP" class="form-control form-control-sm" type="date" />
+       </div>
+     </div>
+  </div>
+
+<div class="mb-3">
+         <label asp-for="PermisoCirculacion" class="form-label">
+   <i class="bi bi-card-checklist"></i> Permiso de Circulación
+      </label>
+        <input asp-for="PermisoCirculacion" class="form-control" type="file" accept=".pdf,.jpg,.png" />
+  <div class="row mt-2">
+     <div class="col-md-6">
+  <label asp-for="FechaVencimientoPermiso" class="form-label small">Fecha Vencimiento</label>
+      <input asp-for="FechaVencimientoPermiso" class="form-control form-control-sm" type="date" />
+    </div>
+    </div>
+   </div>
+
+  <div class="mb-3">
+          <label asp-for="Contrato" class="form-label">
+<i class="bi bi-file-text"></i> Contrato de Arriendo/Compra
+   </label>
+    <input asp-for="Contrato" class="form-control" type="file" accept=".pdf" />
+     </div>
+
+        <div class="mb-3">
+     <label asp-for="Manual" class="form-label">
+ <i class="bi bi-book"></i> Manual del Vehículo
+      </label>
+ <input asp-for="Manual" class="form-control" type="file" accept=".pdf" />
+  </div>
+
+   <div class="mb-3">
+      <label class="form-label">
+   <i class="bi bi-files"></i> Otros Documentos
+ </label>
+      <input name="OtrosDocumentos" class="form-control" type="file" multiple accept=".pdf,.jpg,.png,.doc,.docx" />
+       <small class="text-muted">Puedes seleccionar múltiples archivos</small>
+     </div>
+      </div>
+</div>
+   </div>
+    </div>
+
+<div class="row">
+  <div class="col-12">
+<div class="d-flex justify-content-between">
+   <a asp-action="Index" class="btn btn-secondary">
+      <i class="bi bi-arrow-left"></i> Volver
+   </a>
+   <button type="submit" class="btn btn-primary btn-lg">
+     <i class="bi bi-save"></i> @(isEdit ? "Actualizar" : "Guardar") Vehículo
+         </button>
+      </div>
+  </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Convertir patente a mayúsculas automáticamente
+    document.querySelector('input[name="Patente"]').addEventListener('input', function(e) {
+ e.target.value = e.target.value.toUpperCase();
+});
+    </script>
+}

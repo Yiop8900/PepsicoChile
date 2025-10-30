@@ -6,12 +6,12 @@ using PepsicoChile.Filters;
 namespace PepsicoChile.Controllers
 {
     [AuthorizeSession]
-    [AuthorizeRole("Chofer", "Supervisor")]
+    [AuthorizeRole("Recepcionista", "JefeTaller")]
     public class ChoferController : Controller
     {
         public IActionResult Index()
    {
-            return View();
+        return View();
   }
 
      public IActionResult RegistrarLlegada()
@@ -27,14 +27,14 @@ namespace PepsicoChile.Controllers
 [HttpPost]
         public IActionResult RegistrarLlegada(RegistroLlegadaViewModel model)
 {
-    if (ModelState.IsValid)
+if (ModelState.IsValid)
        {
     // Aquí se guardaría en la base de datos
-     TempData["Mensaje"] = "Llegada registrada exitosamente";
-     return RedirectToAction("MisIngresos");
+   TempData["Mensaje"] = "Llegada registrada exitosamente";
+  return RedirectToAction("MisIngresos");
      }
    return View(model);
-        }
+    }
 
    public IActionResult MisIngresos()
   {
@@ -66,25 +66,25 @@ return new List<Vehiculo>
     {
    new IngresoTaller
      {
-          Id = 1,
+Id = 1,
    Vehiculo = new Vehiculo { Patente = "ABCD-12", Marca = "Volvo" },
-           FechaProgramada = DateTime.Now,
+ FechaProgramada = DateTime.Now,
 FechaIngresoReal = DateTime.Now,
       Estado = "En Proceso",
   MotivoIngreso = "Mantenimiento Preventivo",
-         ObservacionesChofer = "Ruido extraño en el motor"
+    ObservacionesChofer = "Ruido extraño en el motor"
     },
        new IngresoTaller
           {
         Id = 2,
    Vehiculo = new Vehiculo { Patente = "EFGH-34", Marca = "Mercedes" },
   FechaProgramada = DateTime.Now.AddDays(-2),
-     FechaIngresoReal = DateTime.Now.AddDays(-2),
+  FechaIngresoReal = DateTime.Now.AddDays(-2),
          FechaSalidaReal = DateTime.Now.AddDays(-1),
   Estado = "Completado",
      MotivoIngreso = "Reparación",
       ObservacionesChofer = "Falla en frenos"
-      }
+ }
       };
   }
 
@@ -92,16 +92,16 @@ FechaIngresoReal = DateTime.Now,
    {
      return new IngresoTaller
      {
-         Id = id,
+  Id = id,
        Vehiculo = new Vehiculo { Patente = "ABCD-12", Marca = "Volvo", Modelo = "FH16" },
    Chofer = new Usuario { Nombre = "Juan", Apellido = "Pérez" },
   FechaProgramada = DateTime.Now,
      FechaIngresoReal = DateTime.Now,
         Estado = "En Proceso",
         MotivoIngreso = "Mantenimiento Preventivo",
-         ObservacionesChofer = "Ruido extraño en el motor",
+ObservacionesChofer = "Ruido extraño en el motor",
      KilometrajeIngreso = 125000
        };
    }
-    }
+}
 }

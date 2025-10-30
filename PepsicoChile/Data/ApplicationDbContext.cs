@@ -17,6 +17,7 @@ namespace PepsicoChile.Data
         public DbSet<Pausa> Pausas { get; set; }
         public DbSet<Documento> Documentos { get; set; }
         public DbSet<Repuesto> Repuestos { get; set; }
+        public DbSet<DocumentoVehiculo> DocumentosVehiculo { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

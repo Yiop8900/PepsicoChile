@@ -1,0 +1,88 @@
+@model List<Usuario>
+@{
+    ViewData["Title"] = "Gestión de Usuarios";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-4">
+     <i class="bi bi-people"></i> Gestión de Usuarios
+        </h1>
+ <p class="lead">Administración de usuarios del sistema</p>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-12">
+   <a asp-action="Register" class="btn btn-primary">
+          <i class="bi bi-person-plus"></i> Registrar Nuevo Usuario
+      </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-list"></i> Usuarios Registrados (@Model.Count)</h5>
+    </div>
+    <div class="card-body">
+ <div class="table-responsive">
+            <table class="table table-hover">
+          <thead>
+            <tr>
+          <th>ID</th>
+     <th>Nombre</th>
+    <th>Email</th>
+           <th>RUT</th>
+                <th>Teléfono</th>
+   <th>Rol</th>
+  <th>Estado</th>
+     <th>Acciones</th>
+         </tr>
+                </thead>
+            <tbody>
+    @foreach (var usuario in Model)
+ {
+             <tr>
+                 <td>@usuario.Id</td>
+         <td>@usuario.Nombre @usuario.Apellido</td>
+               <td>@usuario.Email</td>
+      <td>@usuario.Rut</td>
+     <td>@usuario.Telefono</td>
+  <td>
+        <span class="badge bg-@(usuario.Rol == "Administrador" ? "danger" : usuario.Rol == "JefeTaller" ? "primary" : usuario.Rol == "Supervisor" ? "warning" : "secondary")">
+      @usuario.Rol
+      </span>
+       </td>
+ <td>
+      @if (usuario.Activo)
+               {
+<span class="badge bg-success">Activo</span>
+   }
+        else
+  {
+             <span class="badge bg-danger">Inactivo</span>
+     }
+          </td>
+  <td>
+       @if (usuario.Rol != "Administrador")
+       {
+  <form asp-action="ActivarDesactivar" method="post" style="display:inline;">
+  <input type="hidden" name="id" value="@usuario.Id" />
+              <button type="submit" class="btn btn-sm btn-@(usuario.Activo ? "warning" : "success")">
+              <i class="bi bi-@(usuario.Activo ? "x-circle" : "check-circle")"></i>
+       @(usuario.Activo ? "Desactivar" : "Activar")
+  </button>
+        </form>
+             }
+        else
+             {
+             <span class="text-muted">-</span>
+      }
+             </td>
+          </tr>
+  }
+     </tbody>
+       </table>
+      </div>
+    </div>
+</div>

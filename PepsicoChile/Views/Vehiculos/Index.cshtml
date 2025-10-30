@@ -1,131 +1,239 @@
 @model List<Vehiculo>
 @{
-    ViewData["Title"] = "Vehículos de la Flota";
+    ViewData["Title"] = "Gestión de Vehículos";
 }
 
 <div class="row mb-4">
-    <div class="col-12">
-  <h1><i class="bi bi-truck-front"></i> Vehículos de la Flota</h1>
-        <p class="lead">Gestión y consulta de todos los vehículos</p>
+    <div class="col-md-6">
+        <h2><i class="bi bi-truck-front-fill"></i> Gestión de Vehículos</h2>
     </div>
-</div>
-
-<!-- Resumen por Estado -->
-<div class="row mb-4">
- <div class="col-md-4">
-        <div class="card text-white bg-success">
-    <div class="card-body text-center">
-    <h5 class="card-title">Disponibles</h5>
-    <p class="display-4">@Model.Count(v => v.Estado == "Disponible")</p>
-   </div>
- </div>
+    <div class="col-md-6 text-end">
+        <a asp-action="Agregar" class="btn btn-primary btn-lg">
+            <i class="bi bi-plus-circle"></i> Agregar Vehículo
+        </a>
     </div>
-    <div class="col-md-4">
-   <div class="card text-white bg-warning">
- <div class="card-body text-center">
-       <h5 class="card-title">En Taller</h5>
-      <p class="display-4">@Model.Count(v => v.Estado == "En Taller")</p>
- </div>
- </div>
-    </div>
- <div class="col-md-4">
-    <div class="card text-white bg-info">
-       <div class="card-body text-center">
-        <h5 class="card-title">En Ruta</h5>
-     <p class="display-4">@Model.Count(v => v.Estado == "En Ruta")</p>
-        </div>
-  </div>
- </div>
 </div>
 
 <!-- Filtros -->
-<div class="row mb-3">
- <div class="col-md-12">
-   <div class="card">
- <div class="card-body">
-      <div class="row">
-  <div class="col-md-3">
-     <label class="form-label">Buscar por Patente</label>
-    <input type="text" class="form-control" placeholder="Ej: ABCD-12" />
-   </div>
-       <div class="col-md-3">
-     <label class="form-label">Filtrar por Estado</label>
-  <select class="form-select">
-      <option value="">Todos</option>
-   <option value="Disponible">Disponible</option>
-      <option value="En Taller">En Taller</option>
- <option value="En Ruta">En Ruta</option>
-      </select>
- </div>
-   <div class="col-md-3">
-<label class="form-label">Filtrar por Tipo</label>
-       <select class="form-select">
-       <option value="">Todos</option>
-    <option value="Camión">Camión</option>
-    <option value="Camioneta">Camioneta</option>
-   </select>
- </div>
-  <div class="col-md-3 d-flex align-items-end">
-  <button class="btn btn-primary w-100">
-  <i class="bi bi-search"></i> Buscar
- </button>
-   </div>
-  </div>
-   </div>
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <input type="text" id="filtroPatente" class="form-control" placeholder="Buscar por patente..." />
+            </div>
+            <div class="col-md-3">
+                <select id="filtroTipo" class="form-select">
+                    <option value="">Todos los tipos</option>
+                    <option>Camión</option>
+                    <option>Camioneta</option>
+                    <option>Furgón</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select id="filtroEstado" class="form-select">
+                    <option value="">Todos los estados</option>
+                    <option>Disponible</option>
+                    <option>En Taller</option>
+                    <option>En Ruta</option>
+                    <option>Inactivo</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-secondary w-100" onclick="limpiarFiltros()">
+                    <i class="bi bi-x-circle"></i> Limpiar
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Listado de Vehículos -->
-<div class="row">
+<!-- Token antifalsificación para formularios AJAX -->
+@Html.AntiForgeryToken()
+
+<!-- Lista de vehículos -->
+<div class="row" id="vehiculosContainer">
     @foreach (var vehiculo in Model)
     {
-        <div class="col-md-6 col-lg-4 mb-3">
-   <div class="card h-100">
-    <div class="card-header @(vehiculo.Estado == "Disponible" ? "bg-success text-white" : vehiculo.Estado == "En Taller" ? "bg-warning" : "bg-info text-white")">
-  <h5 class="mb-0">
-       <i class="bi bi-truck"></i> @vehiculo.Patente
-    </h5>
-   </div>
-  <div class="card-body">
-     <h6 class="card-subtitle mb-2 text-muted">@vehiculo.TipoVehiculo</h6>
-        <p class="card-text">
-    <strong>Marca:</strong> @vehiculo.Marca<br />
-       <strong>Modelo:</strong> @vehiculo.Modelo<br />
-  <strong>Año:</strong> @vehiculo.Año<br />
-        <strong>Kilometraje:</strong> @vehiculo.KilometrajeActual?.ToString("N0") km<br />
-<strong>Estado:</strong> 
-    @switch (vehiculo.Estado)
-      {
-    case "Disponible":
-        <span class="badge bg-success">@vehiculo.Estado</span>
- break;
-   case "En Taller":
- <span class="badge bg-warning">@vehiculo.Estado</span>
-       break;
-        case "En Ruta":
-   <span class="badge bg-info">@vehiculo.Estado</span>
-   break;
-      default:
-    <span class="badge bg-secondary">@vehiculo.Estado</span>
-      break;
-    }
-   </p>
-      </div>
-     <div class="card-footer">
-       <div class="btn-group w-100" role="group">
-       <a asp-action="Detalle" asp-route-id="@vehiculo.Id" class="btn btn-sm btn-primary">
-   <i class="bi bi-info-circle"></i> Detalle
-     </a>
-      <a asp-action="Historial" asp-route-id="@vehiculo.Id" class="btn btn-sm btn-info">
-       <i class="bi bi-clock-history"></i> Historial
-   </a>
- <a asp-action="DocumentosVehiculo" asp-route-id="@vehiculo.Id" class="btn btn-sm btn-secondary">
-    <i class="bi bi-file-earmark"></i> Docs
-    </a>
-  </div>
-   </div>
-   </div>
+        var colorEstado = vehiculo.Estado switch
+        {
+            "Disponible" => "success",
+            "En Taller" => "warning",
+            "En Ruta" => "info",
+            "Inactivo" => "danger",
+            _ => "secondary"
+        };
+
+        <div class="col-md-6 col-lg-4 mb-4 vehiculo-card"
+             data-patente="@vehiculo.Patente"
+             data-tipo="@vehiculo.TipoVehiculo"
+             data-estado="@vehiculo.Estado">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-@colorEstado text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-truck"></i> @vehiculo.Patente
+                        </h5>
+                        <span class="badge bg-light text-dark">@vehiculo.TipoVehiculo</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">@vehiculo.Marca @vehiculo.Modelo</h6>
+                    <div class="row g-2 small">
+                        <div class="col-6">
+                            <strong>Año:</strong> @vehiculo.Año
+                        </div>
+                        <div class="col-6">
+                            <strong>Flota:</strong> @(vehiculo.NumeroFlota ?? "N/A")
+                        </div>
+                        <div class="col-6">
+                            <strong>Combustible:</strong> @(vehiculo.Combustible ?? "N/A")
+                        </div>
+                        <div class="col-6">
+                            <strong>Km:</strong> @(vehiculo.KilometrajeActual?.ToString("N0") ?? "N/A")
+                        </div>
+                        <div class="col-12 mt-2">
+                            <span class="badge bg-@colorEstado">
+                                <i class="bi bi-@(vehiculo.Estado == "Disponible" ? "check-circle" :
+                                         vehiculo.Estado == "En Taller" ? "tools" :
+                                           vehiculo.Estado == "En Ruta" ? "geo-alt" : "x-circle")"></i>
+                                @vehiculo.Estado
+                            </span>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(vehiculo.Observaciones))
+                    {
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i> @vehiculo.Observaciones
+                            </small>
+                        </div>
+                    }
+
+                    <div class="mt-3">
+                        <div class="btn-group w-100" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots"></i> Acciones
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-action="Detalle" asp-route-id="@vehiculo.Id">
+    <i class="bi bi-eye"></i> Ver Detalle
+ </a></li>
+                                <li><a class="dropdown-item" asp-action="Editar" asp-route-id="@vehiculo.Id">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-action="VerDocumentos" asp-route-id="@vehiculo.Id">
+                                        <i class="bi bi-file-earmark-text"></i> Documentos
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header">Cambiar Estado</h6></li>
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="cambiarEstado(@vehiculo.Id, 'Disponible'); return false;">
+                                        <i class="bi bi-check-circle text-success"></i> Disponible
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="cambiarEstado(@vehiculo.Id, 'En Taller'); return false;">
+                                        <i class="bi bi-tools text-warning"></i> En Taller
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="cambiarEstado(@vehiculo.Id, 'En Ruta'); return false;">
+                                        <i class="bi bi-geo-alt text-info"></i> En Ruta
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="cambiarEstado(@vehiculo.Id, 'Inactivo'); return false;">
+                                        <i class="bi bi-x-circle text-danger"></i> Inactivo
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-muted small">
+                    <i class="bi bi-clock"></i> Actualizado: @vehiculo.FechaActualizacion.ToString("dd/MM/yyyy HH:mm")
+                </div>
+            </div>
         </div>
     }
 </div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center">
+        <i class="bi bi-info-circle"></i> No hay vehículos registrados.
+        <a asp-action="Agregar" class="alert-link">Agregar el primero</a>
+    </div>
+}
+
+@section Scripts {
+    <script>
+             function cambiarEstado(id, estado) {
+          if (confirm(`¿Cambiar estado del vehículo a "${estado}"?`)) {
+                var form = document.createElement('form');
+          form.method = 'POST';
+             form.action = '@Url.Action("CambiarEstado")';
+
+            var inputId = document.createElement('input');
+        inputId.type = 'hidden';
+         inputId.name = 'id';
+              inputId.value = id;
+             form.appendChild(inputId);
+
+           var inputEstado = document.createElement('input');
+                 inputEstado.type = 'hidden';
+             inputEstado.name = 'estado';
+           inputEstado.value = estado;
+             form.appendChild(inputEstado);
+
+            var token = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (token) {
+               var inputToken = document.createElement('input');
+             inputToken.type = 'hidden';
+            inputToken.name = '__RequestVerificationToken';
+             inputToken.value = token.value;
+                form.appendChild(inputToken);
+              }
+
+          document.body.appendChild(form);
+            form.submit();
+           }
+            return false;
+             }
+
+                // Filtros
+           document.getElementById('filtroPatente').addEventListener('input', filtrar);
+         document.getElementById('filtroTipo').addEventListener('change', filtrar);
+         document.getElementById('filtroEstado').addEventListener('change', filtrar);
+
+           function filtrar() {
+          var patente = document.getElementById('filtroPatente').value.toUpperCase();
+              var tipo = document.getElementById('filtroTipo').value;
+            var estado = document.getElementById('filtroEstado').value;
+
+             document.querySelectorAll('.vehiculo-card').forEach(card => {
+           var cardPatente = card.dataset.patente;
+            var cardTipo = card.dataset.tipo;
+          var cardEstado = card.dataset.estado;
+
+            var mostrar = true;
+         if (patente && !cardPatente.includes(patente)) mostrar = false;
+             if (tipo && cardTipo !== tipo) mostrar = false;
+              if (estado && cardEstado !== estado) mostrar = false;
+
+             card.style.display = mostrar ? '' : 'none';
+             });
+          }
+
+         function limpiarFiltros() {
+          document.getElementById('filtroPatente').value = '';
+         document.getElementById('filtroTipo').value = '';
+         document.getElementById('filtroEstado').value = '';
+           filtrar();
+                }
+    </script>
+}

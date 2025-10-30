@@ -7,232 +7,392 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            overflow-x: hidden;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 260px;
+            background: linear-gradient(180deg, #004B8D 0%, #003d73 100%);
+            padding-top: 1rem;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+            .sidebar .brand {
+                color: white;
+                font-size: 1.3rem;
+                font-weight: bold;
+                padding: 1.5rem 1rem;
+                text-align: center;
+                border-bottom: 2px solid rgba(255,255,255,0.2);
+                margin-bottom: 1.5rem;
+            }
+
+            .sidebar .nav-link {
+                color: rgba(255,255,255,0.85);
+                padding: 0.85rem 1.2rem;
+                border-left: 3px solid transparent;
+                transition: all 0.3s ease;
+                font-size: 0.95rem;
+            }
+
+                .sidebar .nav-link:hover {
+                    color: white;
+                    background: rgba(255,255,255,0.12);
+                    border-left-color: #00BFFF;
+                    transform: translateX(3px);
+                }
+
+                .sidebar .nav-link.active {
+                    color: white;
+                    background: rgba(255,255,255,0.18);
+                    border-left-color: #00BFFF;
+                    font-weight: 600;
+                }
+
+                .sidebar .nav-link i {
+                    width: 22px;
+                    margin-right: 12px;
+                    font-size: 1.1rem;
+                }
+
+            .sidebar .collapse-header {
+                color: rgba(255,255,255,0.6);
+                font-size: 0.75rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                padding: 1rem 1.2rem 0.5rem;
+                letter-spacing: 0.5px;
+            }
+
+            .sidebar .nav-collapse-btn {
+                color: rgba(255,255,255,0.9);
+                background: rgba(255,255,255,0.05);
+                padding: 0.75rem 1.2rem;
+                border: none;
+                width: 100%;
+                text-align: left;
+                transition: all 0.3s ease;
+                font-weight: 500;
+            }
+
+                .sidebar .nav-collapse-btn:hover {
+                    background: rgba(255,255,255,0.1);
+                    color: white;
+                }
+
+                .sidebar .nav-collapse-btn i {
+                    width: 22px;
+                    margin-right: 12px;
+                }
+
+                .sidebar .nav-collapse-btn .bi-chevron-down {
+                    float: right;
+                    transition: transform 0.3s ease;
+                }
+
+                .sidebar .nav-collapse-btn[aria-expanded="true"] .bi-chevron-down {
+                    transform: rotate(180deg);
+                }
+
+            .sidebar .submenu .nav-link {
+                padding-left: 3rem;
+                font-size: 0.9rem;
+            }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 2rem;
+            min-height: 100vh;
+            background: #f8f9fa;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 1.2rem 2rem;
+            margin: -2rem -2rem 2rem -2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #004B8D;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-dark bg-primary border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-truck"></i> PepsiCo Chile - Taller
+    @{
+        var usuarioNombre = Context.Session.GetString("UsuarioNombre") ?? "Invitado";
+        var usuarioRol = Context.Session.GetString("UsuarioRol") ?? "";
+    }
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="brand">
+            <i class="bi bi-truck-front-fill"></i><br />
+            PepsiCo Chile
+        </div>
+
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-speedometer2"></i> Dashboard
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    @{
-                        var usuarioNombre = Context.Session.GetString("UsuarioNombre") ?? "Invitado";
-                        var usuarioRol = Context.Session.GetString("UsuarioRol") ?? "";
-                    }
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">
-                                <i class="bi bi-house-door"></i> Dashboard
-                            </a>
-                        </li>
+            </li>
 
-                        @if (usuarioRol == "Mecanico" || usuarioRol == "Supervisor")
-                        {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-tools"></i> Mecánico
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Mecanico" asp-action="MisTareas">
-                                            <i class="bi bi-list-task"></i> Mis Tareas
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                        }
+            @* ADMINISTRADOR - Acceso total *@
+            @if (usuarioRol == "Administrador")
+            {
+                <div class="collapse-header">Administración</div>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Account" asp-action="ListarUsuarios">
+                        <i class="bi bi-people-fill"></i> Gestión de Usuarios
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Account" asp-action="Register">
+                        <i class="bi bi-person-plus-fill"></i> Registrar Usuario
+                    </a>
+                </li>
 
-                        @if (usuarioRol == "JefeTaller" || usuarioRol == "Supervisor")
-                        {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-person-workspace"></i> Jefe Taller
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Supervisor" asp-action="Agenda">
-                                            <i class="bi bi-calendar3"></i> Agenda
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Supervisor" asp-action="ProgramarIngreso">
-                                            <i class="bi bi-calendar-plus"></i> Programar Ingreso
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Supervisor" asp-action="MonitoreoGeneral">
-                                            <i class="bi bi-display"></i> Monitoreo General
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                        }
-
-                        @if (usuarioRol == "CoordinadorZona" || usuarioRol == "Supervisor")
-                        {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-geo-alt"></i> Coordinador
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Reportes" asp-action="VehiculosEstado">
-                                            <i class="bi bi-truck"></i> Estado Vehículos
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Reportes" asp-action="Repuestos">
-                                            <i class="bi bi-box-seam"></i> Control Repuestos
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                        }
-
-                        @if (usuarioRol == "Recepcionista" || usuarioRol == "Supervisor")
-                        {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-clipboard-data"></i> Recepción
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Chofer" asp-action="RegistrarLlegada">
-                                            <i class="bi bi-box-arrow-in-down"></i> Registrar Ingreso
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Chofer" asp-action="MisIngresos">
-                                            <i class="bi bi-list-check"></i> Ver Ingresos
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                        }
-
-                        @if (usuarioRol == "AsistenteRepuestos" || usuarioRol == "Supervisor")
-                        {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-box-seam"></i> Repuestos
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Reportes" asp-action="Repuestos">
-                                            <i class="bi bi-list"></i> Inventario
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                        }
-
-                        @if (usuarioRol == "GuardiaAcceso" || usuarioRol == "Supervisor")
-                        {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-shield-check"></i> Vigilancia
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Vehiculos" asp-action="Index">
-                                            <i class="bi bi-list"></i> Control Vehículos
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                        }
-
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-truck-front"></i> Vehículos
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li>
-                                    <a class="dropdown-item" asp-controller="Vehiculos" asp-action="Index">
-                                        <i class="bi bi-list"></i> Todos los Vehículos
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-
-                        @if (usuarioRol == "Supervisor" || usuarioRol == "JefeTaller" || usuarioRol == "CoordinadorZona")
-                        {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-graph-up"></i> Reportes
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Reportes" asp-action="TiemposProceso">
-                                            <i class="bi bi-clock-history"></i> Tiempos de Proceso
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Reportes" asp-action="Productividad">
-                                            <i class="bi bi-bar-chart"></i> Productividad
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Reportes" asp-action="Repuestos">
-                                            <i class="bi bi-box-seam"></i> Repuestos
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Reportes" asp-action="VehiculosEstado">
-                                            <i class="bi bi-truck"></i> Estado de Vehículos
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Reportes" asp-action="HistoricoPausas">
-                                            <i class="bi bi-pause-circle"></i> Histórico de Pausas
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                        }
-                    </ul>
-
-                    <div class="d-flex align-items-center">
-                        <span class="text-white me-3">
-                            <i class="bi bi-person-circle"></i> @usuarioNombre
-                            @if (!string.IsNullOrEmpty(usuarioRol))
-                            {
-                                <span class="badge bg-light text-primary">@usuarioRol</span>
-                            }
-                        </span>
-                        <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-light btn-sm">
-                            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
-                        </a>
+                <div class="collapse-header">Operaciones</div>
+                <li class="nav-item">
+                    <button class="nav-collapse-btn" type="button" data-bs-toggle="collapse" data-bs-target="#adminTaller">
+                        <i class="bi bi-gear-fill"></i> Gestión Taller
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <div class="collapse submenu" id="adminTaller">
+                        <ul class="nav flex-column">
+                            <li><a class="nav-link" asp-controller="Supervisor" asp-action="Agenda"><i class="bi bi-calendar3"></i> Agenda</a></li>
+                            <li><a class="nav-link" asp-controller="Supervisor" asp-action="ProgramarIngreso"><i class="bi bi-calendar-plus"></i> Programar Ingreso</a></li>
+                            <li><a class="nav-link" asp-controller="Supervisor" asp-action="MonitoreoGeneral"><i class="bi bi-display"></i> Monitoreo</a></li>
+                        </ul>
                     </div>
-                </div>
-            </div>
-        </nav>
-    </header>
+                </li>
 
-    <div class="container-fluid">
+                <li class="nav-item">
+                    <button class="nav-collapse-btn" type="button" data-bs-toggle="collapse" data-bs-target="#adminReportes">
+                        <i class="bi bi-graph-up"></i> Reportes
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <div class="collapse submenu" id="adminReportes">
+                        <ul class="nav flex-column">
+                            <li><a class="nav-link" asp-controller="Reportes" asp-action="TiemposProceso"><i class="bi bi-clock-history"></i> Tiempos</a></li>
+                            <li><a class="nav-link" asp-controller="Reportes" asp-action="Productividad"><i class="bi bi-bar-chart"></i> Productividad</a></li>
+                            <li><a class="nav-link" asp-controller="Reportes" asp-action="Repuestos"><i class="bi bi-box-seam"></i> Repuestos</a></li>
+                            <li><a class="nav-link" asp-controller="Reportes" asp-action="VehiculosEstado"><i class="bi bi-truck"></i> Vehículos</a></li>
+                            <li><a class="nav-link" asp-controller="Reportes" asp-action="HistoricoPausas"><i class="bi bi-pause-circle"></i> Pausas</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Vehiculos" asp-action="Index">
+                        <i class="bi bi-truck-front"></i> Vehículos
+                    </a>
+                </li>
+            }
+
+            @* MECÁNICO DE FLOTA *@
+            @if (usuarioRol == "Mecanico")
+            {
+                <div class="collapse-header">Mis Tareas</div>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Mecanico" asp-action="MisTareas">
+                        <i class="bi bi-list-task"></i> Tareas Asignadas
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Vehiculos" asp-action="Index">
+                        <i class="bi bi-truck-front"></i> Vehículos
+                    </a>
+                </li>
+            }
+
+            @* JEFE DE TALLER *@
+            @if (usuarioRol == "JefeTaller")
+            {
+                <div class="collapse-header">Gestión Taller</div>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Supervisor" asp-action="Agenda">
+                        <i class="bi bi-calendar3"></i> Agenda
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Supervisor" asp-action="ProgramarIngreso">
+                        <i class="bi bi-calendar-plus"></i> Programar Ingreso
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Supervisor" asp-action="MonitoreoGeneral">
+                        <i class="bi bi-display"></i> Monitoreo General
+                    </a>
+                </li>
+
+                <div class="collapse-header">Reportes</div>
+                <li class="nav-item">
+                    <button class="nav-collapse-btn" type="button" data-bs-toggle="collapse" data-bs-target="#jefeTallerReportes">
+                        <i class="bi bi-graph-up"></i> Ver Reportes
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <div class="collapse submenu" id="jefeTallerReportes">
+                        <ul class="nav flex-column">
+                            <li><a class="nav-link" asp-controller="Reportes" asp-action="TiemposProceso"><i class="bi bi-clock-history"></i> Tiempos</a></li>
+                            <li><a class="nav-link" asp-controller="Reportes" asp-action="Productividad"><i class="bi bi-bar-chart"></i> Productividad</a></li>
+                            <li><a class="nav-link" asp-controller="Reportes" asp-action="HistoricoPausas"><i class="bi bi-pause-circle"></i> Pausas</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Vehiculos" asp-action="Index">
+                        <i class="bi bi-truck-front"></i> Vehículos
+                    </a>
+                </li>
+            }
+
+            @* COORDINADOR DE ZONA *@
+            @if (usuarioRol == "CoordinadorZona")
+            {
+                <div class="collapse-header">Control de Zona</div>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Reportes" asp-action="VehiculosEstado">
+                        <i class="bi bi-truck"></i> Estado Vehículos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Reportes" asp-action="Repuestos">
+                        <i class="bi bi-box-seam"></i> Control Repuestos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-collapse-btn" type="button" data-bs-toggle="collapse" data-bs-target="#coordReportes">
+                        <i class="bi bi-graph-up"></i> Reportes
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <div class="collapse submenu" id="coordReportes">
+                        <ul class="nav flex-column">
+                            <li><a class="nav-link" asp-controller="Reportes" asp-action="TiemposProceso"><i class="bi bi-clock-history"></i> Tiempos</a></li>
+                            <li><a class="nav-link" asp-controller="Reportes" asp-action="Productividad"><i class="bi bi-bar-chart"></i> Productividad</a></li>
+                        </ul>
+                    </div>
+                </li>
+            }
+
+            @* RECEPCIONISTA DE VEHÍCULOS *@
+            @if (usuarioRol == "Recepcionista")
+            {
+                <div class="collapse-header">Recepción</div>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Chofer" asp-action="RegistrarLlegada">
+                        <i class="bi bi-box-arrow-in-down-fill"></i> Registrar Ingreso
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Chofer" asp-action="MisIngresos">
+                        <i class="bi bi-list-check"></i> Ver Ingresos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Vehiculos" asp-action="Index">
+                        <i class="bi bi-truck-front"></i> Vehículos
+                    </a>
+                </li>
+            }
+
+            @* ASISTENTE DE REPUESTOS *@
+            @if (usuarioRol == "AsistenteRepuestos")
+            {
+                <div class="collapse-header">Inventario</div>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Reportes" asp-action="Repuestos">
+                        <i class="bi bi-boxes"></i> Gestión Repuestos
+                    </a>
+                </li>
+            }
+
+            @* GUARDIA DE ACCESO *@
+            @if (usuarioRol == "GuardiaAcceso")
+            {
+                <div class="collapse-header">Vigilancia</div>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Vehiculos" asp-action="Index">
+                        <i class="bi bi-shield-check"></i> Control Vehículos
+                    </a>
+                </li>
+            }
+
+            @* SUPERVISOR DE FLOTAS *@
+            @if (usuarioRol == "Supervisor")
+            {
+                <div class="collapse-header">Supervisión</div>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Supervisor" asp-action="MonitoreoGeneral">
+                        <i class="bi bi-display"></i> Monitoreo General
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Reportes" asp-action="VehiculosEstado">
+                        <i class="bi bi-truck"></i> Estado Vehículos
+                    </a>
+                </li>
+            }
+
+            @* ENCARGADO DE LLAVES *@
+            @if (usuarioRol == "EncargadoLlaves")
+            {
+                <div class="collapse-header">Control Llaves</div>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Vehiculos" asp-action="Index">
+                        <i class="bi bi-key-fill"></i> Gestión de Llaves
+                    </a>
+                </li>
+            }
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-bar">
+            <h5 class="mb-0 text-primary"><i class="bi bi-bar-chart-line"></i> @ViewData["Title"]</h5>
+            <div class="user-info">
+                <span class="text-muted">
+                    <i class="bi bi-person-circle fs-5"></i> <strong>@usuarioNombre</strong>
+                    @if (!string.IsNullOrEmpty(usuarioRol))
+                    {
+                        <span class="badge bg-primary ms-2">@usuarioRol</span>
+                    }
+                </span>
+                <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-box-arrow-right"></i> Salir
+                </a>
+            </div>
+        </div>
+
         @if (TempData["Mensaje"] != null)
         {
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle"></i> @TempData["Mensaje"]
+            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                <i class="bi bi-check-circle-fill"></i> @TempData["Mensaje"]
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         }
 
-        <main role="main" class="pb-3">
+        <main role="main">
             @RenderBody()
         </main>
     </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - PepsiCo Chile - Gestión de Taller - <a asp-controller="Home" asp-action="Index">Inicio</a>
-        </div>
-    </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

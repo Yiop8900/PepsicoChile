@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PepsicoChile.Data;
 using PepsicoChile.Models.ViewModels;
+using PepsicoChile.Filters;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -9,14 +10,14 @@ namespace PepsicoChile.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly ApplicationDbContext _context;
+    private readonly ApplicationDbContext _context;
 
         public AccountController(ApplicationDbContext context)
         {
-            _context = context;
+   _context = context;
         }
 
-        [HttpGet]
+ [HttpGet]
         public IActionResult Login(string? returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
@@ -25,56 +26,51 @@ namespace PepsicoChile.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
+public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
-            ViewData["ReturnUrl"] = returnUrl;
+         ViewData["ReturnUrl"] = returnUrl;
 
             if (ModelState.IsValid)
             {
-                try
-                {
-                    // Hash de la contraseña para comparar
-                    var hashedPassword = HashPassword(model.Password);
+        try
+    {
+    var hashedPassword = HashPassword(model.Password);
 
-                    // Buscar usuario por email y password
-                    var usuario = await _context.Usuarios
-                            .FirstOrDefaultAsync(u => u.Email == model.Email
-                                && u.Password == hashedPassword
-                                && u.Activo);
+              var usuario = await _context.Usuarios
+  .FirstOrDefaultAsync(u => u.Email == model.Email
+    && u.Password == hashedPassword
+        && u.Activo);
 
-                    if (usuario != null)
-                    {
-                        // Login exitoso - Guardar información en sesión
-                        HttpContext.Session.SetInt32("UsuarioId", usuario.Id);
-                        HttpContext.Session.SetString("UsuarioNombre", usuario.Nombre + " " + usuario.Apellido);
-                        HttpContext.Session.SetString("UsuarioRol", usuario.Rol);
-                        HttpContext.Session.SetString("UsuarioEmail", usuario.Email);
+      if (usuario != null)
+          {
+   HttpContext.Session.SetInt32("UsuarioId", usuario.Id);
+   HttpContext.Session.SetString("UsuarioNombre", usuario.Nombre + " " + usuario.Apellido);
+        HttpContext.Session.SetString("UsuarioRol", usuario.Rol);
+            HttpContext.Session.SetString("UsuarioEmail", usuario.Email);
 
-                        TempData["Mensaje"] = $"¡Bienvenido {usuario.Nombre}!";
+        TempData["Mensaje"] = $"¡Bienvenido {usuario.Nombre}!";
 
-                        // Redirigir según returnUrl o al dashboard
-                        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                        {
-                            return Redirect(returnUrl);
-                        }
-                        else
-                        {
-                            return RedirectToAction("Index", "Home");
-                        }
-                    }
-                    else
-                    {
-                        ModelState.AddModelError(string.Empty, "Email o contraseña incorrectos, o usuario inactivo");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError(string.Empty, $"Error al iniciar sesión: {ex.Message}");
-                    // Log del error para debugging
-                    Console.WriteLine($"Error en Login: {ex}");
-                }
-                
+    if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+         {
+    return Redirect(returnUrl);
+         }
+     else
+    {
+     return RedirectToAction("Index", "Home");
             }
+         }
+         else
+             {
+   ModelState.AddModelError(string.Empty, "Email o contraseña incorrectos, o usuario inactivo");
+    }
+        }
+       catch (Exception ex)
+ {
+           ModelState.AddModelError(string.Empty, $"Error al iniciar sesión: {ex.Message}");
+  Console.WriteLine($"Error en Login: {ex}");
+              }
+        
+         }
 
             return View(model);
         }
@@ -82,112 +78,140 @@ namespace PepsicoChile.Controllers
         [HttpGet]
         public IActionResult Logout()
         {
-            HttpContext.Session.Clear();
+    HttpContext.Session.Clear();
             TempData["Mensaje"] = "Sesión cerrada exitosamente";
             return RedirectToAction("Login");
         }
 
-        // Método auxiliar para hashear contraseñas
         private string HashPassword(string password)
-        {
-            using (var sha256 = SHA256.Create())
-            {
-                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return Convert.ToBase64String(hashedBytes);
+     {
+      using (var sha256 = SHA256.Create())
+          {
+  var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+    return Convert.ToBase64String(hashedBytes);
             }
         }
 
-        // Endpoint de diagnóstico (solo para desarrollo - REMOVER EN PRODUCCIÓN)
         [HttpGet]
-        public IActionResult TestHash(string password = "123456")
+   public IActionResult TestHash(string password = "123456")
         {
-            var hash = HashPassword(password);
-            var expectedHash = "jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=";
+        var hash = HashPassword(password);
+  var expectedHash = "jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=";
             
-            return Json(new
-            {
-                Password = password,
-                GeneratedHash = hash,
-                ExpectedHash = expectedHash,
-                Match = hash == expectedHash,
-                Message = hash == expectedHash ? "? Hash correcto" : "? Hash incorrecto"
-            });
+    return Json(new
+      {
+       Password = password,
+           GeneratedHash = hash,
+   ExpectedHash = expectedHash,
+    Match = hash == expectedHash,
+    Message = hash == expectedHash ? "? Hash correcto" : "? Hash incorrecto"
+    });
         }
 
-        // Endpoint para verificar usuarios en BD (solo para desarrollo - REMOVER EN PRODUCCIÓN)
         [HttpGet]
         public async Task<IActionResult> TestUsers()
         {
-            var usuarios = await _context.Usuarios
+         var usuarios = await _context.Usuarios
                 .Select(u => new
-                {
-                    u.Id,
-                    u.Email,
-                    u.Nombre,
-                    u.Apellido,
-                    u.Rol,
-                    u.Activo,
-                    PasswordHash = u.Password.Substring(0, 20) + "..." // Solo mostrar parte del hash
-                })
-                .ToListAsync();
+          {
+         u.Id,
+u.Email,
+  u.Nombre,
+ u.Apellido,
+             u.Rol,
+     u.Activo,
+     PasswordHash = u.Password.Substring(0, 20) + "..." // Solo mostrar parte del hash
+    })
+       .ToListAsync();
 
             return Json(new
             {
-                TotalUsuarios = usuarios.Count,
-                Usuarios = usuarios,
-                HashEsperado = "jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI="
-            });
-        }
+       TotalUsuarios = usuarios.Count,
+      Usuarios = usuarios,
+         HashEsperado = "jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI="
+       });
+     }
 
-        [HttpGet]
+        // SOLO ADMINISTRADOR
+   [HttpGet]
+        [AuthorizeSession]
+        [AuthorizeRole("Administrador")]
         public IActionResult Register()
         {
             return View();
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterViewModel model)
-        {
+     [ValidateAntiForgeryToken]
+        [AuthorizeSession]
+        [AuthorizeRole("Administrador")]
+ public async Task<IActionResult> Register(RegisterViewModel model)
+{
             if (ModelState.IsValid)
+      {
+  var existeEmail = await _context.Usuarios.AnyAsync(u => u.Email == model.Email);
+    var existeRut = await _context.Usuarios.AnyAsync(u => u.Rut == model.Rut);
+
+      if (existeEmail)
+    {
+        ModelState.AddModelError("Email", "Este email ya está registrado");
+      return View(model);
+         }
+
+  if (existeRut)
+        {
+   ModelState.AddModelError("Rut", "Este RUT ya está registrado");
+        return View(model);
+     }
+
+     var usuario = new Models.Usuario
+       {
+        Nombre = model.Nombre,
+      Apellido = model.Apellido,
+     Email = model.Email,
+        Telefono = model.Telefono ?? string.Empty,
+    Rut = model.Rut,
+      Rol = model.Rol,
+        Password = HashPassword(model.Password),
+               Activo = true
+            };
+
+       _context.Usuarios.Add(usuario);
+   await _context.SaveChangesAsync();
+
+        TempData["Mensaje"] = "Usuario registrado exitosamente";
+     return RedirectToAction("ListarUsuarios");
+    }
+
+ return View(model);
+        }
+
+[HttpGet]
+ [AuthorizeSession]
+        [AuthorizeRole("Administrador")]
+        public async Task<IActionResult> ListarUsuarios()
+        {
+       var usuarios = await _context.Usuarios
+    .OrderByDescending(u => u.Id)
+     .ToListAsync();
+            
+        return View(usuarios);
+        }
+
+        [HttpPost]
+        [AuthorizeSession]
+        [AuthorizeRole("Administrador")]
+    public async Task<IActionResult> ActivarDesactivar(int id)
+        {
+ var usuario = await _context.Usuarios.FindAsync(id);
+            if (usuario != null && usuario.Rol != "Administrador")
             {
-                // Verificar si el email o RUT ya existe
-                var existeEmail = await _context.Usuarios.AnyAsync(u => u.Email == model.Email);
-                var existeRut = await _context.Usuarios.AnyAsync(u => u.Rut == model.Rut);
-
-                if (existeEmail)
-                {
-                    ModelState.AddModelError("Email", "Este email ya está registrado");
-                    return View(model);
-                }
-
-                if (existeRut)
-                {
-                    ModelState.AddModelError("Rut", "Este RUT ya está registrado");
-                    return View(model);
-                }
-
-                // Crear nuevo usuario
-                var usuario = new Models.Usuario
-                {
-                    Nombre = model.Nombre,
-                    Apellido = model.Apellido,
-                    Email = model.Email,
-                    Telefono = model.Telefono ?? string.Empty,
-                    Rut = model.Rut,
-                    Rol = model.Rol,
-                    Password = HashPassword(model.Password),
-                    Activo = true
-                };
-
-                _context.Usuarios.Add(usuario);
-                await _context.SaveChangesAsync();
-
-                TempData["Mensaje"] = "Usuario registrado exitosamente. Ya puedes iniciar sesión.";
-                return RedirectToAction("Login");
-            }
-
-            return View(model);
+                usuario.Activo = !usuario.Activo;
+     await _context.SaveChangesAsync();
+          TempData["Mensaje"] = $"Usuario {(usuario.Activo ? "activado" : "desactivado")} correctamente";
+   }
+     
+  return RedirectToAction("ListarUsuarios");
         }
     }
 }
