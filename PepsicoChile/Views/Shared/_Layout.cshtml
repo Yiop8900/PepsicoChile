@@ -167,41 +167,71 @@
                     </a>
                 </li>
 
-                <div class="collapse-header">Operaciones</div>
+                <div class="collapse-header">Gestión de Taller</div>
                 <li class="nav-item">
-                    <button class="nav-collapse-btn" type="button" data-bs-toggle="collapse" data-bs-target="#adminTaller">
-                        <i class="bi bi-gear-fill"></i> Gestión Taller
-                        <i class="bi bi-chevron-down"></i>
-                    </button>
-                    <div class="collapse submenu" id="adminTaller">
-                        <ul class="nav flex-column">
-                            <li><a class="nav-link" asp-controller="Supervisor" asp-action="Agenda"><i class="bi bi-calendar3"></i> Agenda</a></li>
-                            <li><a class="nav-link" asp-controller="Supervisor" asp-action="ProgramarIngreso"><i class="bi bi-calendar-plus"></i> Programar Ingreso</a></li>
-                            <li><a class="nav-link" asp-controller="Supervisor" asp-action="MonitoreoGeneral"><i class="bi bi-display"></i> Monitoreo</a></li>
-                        </ul>
-                    </div>
+                    <a class="nav-link" asp-controller="Supervisor" asp-action="Agenda">
+                        <i class="bi bi-calendar3"></i> Agenda
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Supervisor" asp-action="ProgramarIngreso">
+                        <i class="bi bi-calendar-plus"></i> Programar Ingreso
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Supervisor" asp-action="MonitoreoGeneral">
+                        <i class="bi bi-display"></i> Monitoreo General
+                    </a>
                 </li>
 
+                <div class="collapse-header">Operaciones</div>
                 <li class="nav-item">
-                    <button class="nav-collapse-btn" type="button" data-bs-toggle="collapse" data-bs-target="#adminReportes">
-                        <i class="bi bi-graph-up"></i> Reportes
-                        <i class="bi bi-chevron-down"></i>
-                    </button>
-                    <div class="collapse submenu" id="adminReportes">
-                        <ul class="nav flex-column">
-                            <li><a class="nav-link" asp-controller="Reportes" asp-action="TiemposProceso"><i class="bi bi-clock-history"></i> Tiempos</a></li>
-                            <li><a class="nav-link" asp-controller="Reportes" asp-action="Productividad"><i class="bi bi-bar-chart"></i> Productividad</a></li>
-                            <li><a class="nav-link" asp-controller="Reportes" asp-action="Repuestos"><i class="bi bi-box-seam"></i> Repuestos</a></li>
-                            <li><a class="nav-link" asp-controller="Reportes" asp-action="VehiculosEstado"><i class="bi bi-truck"></i> Vehículos</a></li>
-                            <li><a class="nav-link" asp-controller="Reportes" asp-action="HistoricoPausas"><i class="bi bi-pause-circle"></i> Pausas</a></li>
-                        </ul>
-                    </div>
+                    <a class="nav-link" asp-controller="Mecanico" asp-action="MisTareas">
+                        <i class="bi bi-list-task"></i> Tareas de Mecánicos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Chofer" asp-action="RegistrarLlegada">
+                        <i class="bi bi-box-arrow-in-down-fill"></i> Registrar Ingreso
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Chofer" asp-action="MisIngresos">
+                        <i class="bi bi-list-check"></i> Ver Ingresos
+                    </a>
                 </li>
 
                 <li class="nav-item">
                     <a class="nav-link" asp-controller="Vehiculos" asp-action="Index">
                         <i class="bi bi-truck-front"></i> Vehículos
                     </a>
+                </li>
+
+                <div class="collapse-header">Inventario y Control</div>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Reportes" asp-action="Repuestos">
+                        <i class="bi bi-boxes"></i> Gestión Repuestos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Reportes" asp-action="VehiculosEstado">
+                        <i class="bi bi-truck"></i> Control Vehículos
+                    </a>
+                </li>
+
+                <div class="collapse-header">Reportes</div>
+                <li class="nav-item">
+                    <button class="nav-collapse-btn" type="button" data-bs-toggle="collapse" data-bs-target="#adminReportes">
+                        <i class="bi bi-graph-up"></i> Reportes Generales
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <div class="collapse submenu" id="adminReportes">
+                        <ul class="nav flex-column">
+                            <li><a class="nav-link" asp-controller="Reportes" asp-action="TiemposProceso"><i class="bi bi-clock-history"></i> Tiempos de Proceso</a></li>
+                            <li><a class="nav-link" asp-controller="Reportes" asp-action="Productividad"><i class="bi bi-bar-chart"></i> Productividad</a></li>
+                            <li><a class="nav-link" asp-controller="Reportes" asp-action="HistoricoPausas"><i class="bi bi-pause-circle"></i> Histórico de Pausas</a></li>
+                        </ul>
+                    </div>
                 </li>
             }
 
@@ -212,6 +242,11 @@
                 <li class="nav-item">
                     <a class="nav-link" asp-controller="Mecanico" asp-action="MisTareas">
                         <i class="bi bi-list-task"></i> Tareas Asignadas
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Mecanico" asp-action="HistorialTareas">
+                        <i class="bi bi-clock-history"></i> Historial de Tareas
                     </a>
                 </li>
                 <li class="nav-item">
@@ -337,10 +372,27 @@
             @* SUPERVISOR DE FLOTAS *@
             @if (usuarioRol == "Supervisor")
             {
-                <div class="collapse-header">Supervisión</div>
+                <div class="collapse-header">Gestión de Taller</div>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Supervisor" asp-action="Agenda">
+                        <i class="bi bi-calendar3"></i> Agenda
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Supervisor" asp-action="ProgramarIngreso">
+                        <i class="bi bi-calendar-plus"></i> Programar Ingreso
+                    </a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link" asp-controller="Supervisor" asp-action="MonitoreoGeneral">
                         <i class="bi bi-display"></i> Monitoreo General
+                    </a>
+                </li>
+
+                <div class="collapse-header">Vehículos</div>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Vehiculos" asp-action="Index">
+                        <i class="bi bi-truck-front"></i> Gestión Vehículos
                     </a>
                 </li>
                 <li class="nav-item">
@@ -348,16 +400,21 @@
                         <i class="bi bi-truck"></i> Estado Vehículos
                     </a>
                 </li>
-            }
 
-            @* ENCARGADO DE LLAVES *@
-            @if (usuarioRol == "EncargadoLlaves")
-            {
-                <div class="collapse-header">Control Llaves</div>
+                <div class="collapse-header">Reportes</div>
                 <li class="nav-item">
-                    <a class="nav-link" asp-controller="Vehiculos" asp-action="Index">
-                        <i class="bi bi-key-fill"></i> Gestión de Llaves
-                    </a>
+                    <button class="nav-collapse-btn" type="button" data-bs-toggle="collapse" data-bs-target="#supervisorReportes">
+                        <i class="bi bi-graph-up"></i> Ver Reportes
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <div class="collapse submenu" id="supervisorReportes">
+                        <ul class="nav flex-column">
+                            <li><a class="nav-link" asp-controller="Reportes" asp-action="TiemposProceso"><i class="bi bi-clock-history"></i> Tiempos de Proceso</a></li>
+                            <li><a class="nav-link" asp-controller="Reportes" asp-action="Productividad"><i class="bi bi-bar-chart"></i> Productividad</a></li>
+                            <li><a class="nav-link" asp-controller="Reportes" asp-action="HistoricoPausas"><i class="bi bi-pause-circle"></i> Histórico Pausas</a></li>
+                            <li><a class="nav-link" asp-controller="Reportes" asp-action="Repuestos"><i class="bi bi-boxes"></i> Gestión Repuestos</a></li>
+                        </ul>
+                    </div>
                 </li>
             }
         </ul>
@@ -367,17 +424,29 @@
     <div class="main-content">
         <div class="top-bar">
             <h5 class="mb-0 text-primary"><i class="bi bi-bar-chart-line"></i> @ViewData["Title"]</h5>
-            <div class="user-info">
-                <span class="text-muted">
-                    <i class="bi bi-person-circle fs-5"></i> <strong>@usuarioNombre</strong>
-                    @if (!string.IsNullOrEmpty(usuarioRol))
-                    {
-                        <span class="badge bg-primary ms-2">@usuarioRol</span>
-                    }
-                </span>
-                <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-danger btn-sm">
-                    <i class="bi bi-box-arrow-right"></i> Salir
-                </a>
+        <div class="user-info">
+  @if (Context.Session.GetInt32("UsuarioId").HasValue)
+  {
+     <a asp-controller="Notificaciones" asp-action="Index" class="btn btn-outline-primary position-relative me-3">
+     <i class="bi bi-bell fs-5"></i>
+      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="badgeNotificaciones" style="display: none;">
+     0
+    </span>
+              </a>
+            }
+ <span class="text-muted">
+    <i class="bi bi-person-circle fs-5"></i> <strong>@usuarioNombre</strong>
+             @if (!string.IsNullOrEmpty(usuarioRol))
+        {
+        <span class="badge bg-primary ms-2">@usuarioRol</span>
+    }
+     </span>
+                @if (Context.Session.GetInt32("UsuarioId").HasValue)
+        {
+        <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-danger btn-sm">
+             <i class="bi bi-box-arrow-right"></i> Salir
+    </a>
+     }
             </div>
         </div>
 
@@ -397,6 +466,33 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    @* Solo ejecutar notificaciones si hay usuario logueado *@
+    @if (Context.Session.GetInt32("UsuarioId").HasValue)
+    {
+     <script>
+            // Actualizar badge de notificaciones cada 30 segundos
+       function actualizarNotificaciones() {
+    fetch('/Notificaciones/ContarNoLeidas')
+             .then(response => response.json())
+ .then(data => {
+         const badge = document.getElementById('badgeNotificaciones');
+            if (badge) {
+               badge.textContent = data.count;
+    badge.style.display = data.count > 0 ? 'inline-block' : 'none';
+        }
+             })
+ .catch(error => console.error('Error:', error));
+     }
+
+            // Ejecutar al cargar la página
+  actualizarNotificaciones();
+
+  // Actualizar cada 30 segundos
+         setInterval(actualizarNotificaciones, 30000);
+      </script>
+    }
+    
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -8,7 +8,7 @@ using PepsicoChile.Filters;
 namespace PepsicoChile.Controllers
 {
     [AuthorizeSession]
-    [AuthorizeRole("Administrador", "JefeTaller", "CoordinadorZona")]
+    [AuthorizeRole("Administrador", "JefeTaller", "CoordinadorZona", "Recepcionista", "GuardiaAcceso", "AsistenteRepuestos", "Supervisor", "EncargadoLlaves", "Mecanico")]
     public class VehiculosController : Controller
     {
         private readonly ApplicationDbContext _context;

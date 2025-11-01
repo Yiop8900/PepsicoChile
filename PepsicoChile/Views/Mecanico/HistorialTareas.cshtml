@@ -1,0 +1,149 @@
+@model List<TareaTaller>
+@{
+    ViewData["Title"] = "Historial de Tareas";
+}
+
+<div class="row mb-4">
+    <div class="col-md-8">
+     <h2><i class="bi bi-clock-history"></i> Historial de Tareas Completadas</h2>
+     <p class="text-muted">Registro de todas mis tareas finalizadas</p>
+    </div>
+<div class="col-md-4 text-end">
+        <a asp-action="MisTareas" class="btn btn-primary">
+        <i class="bi bi-list-task"></i> Tareas Activas
+    </a>
+    </div>
+</div>
+
+<!-- Estadísticas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+  <div class="card-body text-center">
+    <i class="bi bi-check-circle fs-1"></i>
+           <h3 class="mt-2">@Model.Count</h3>
+       <p class="mb-0">Tareas Completadas</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+     <div class="card-body text-center">
+    <i class="bi bi-clock fs-1"></i>
+   <h3 class="mt-2">@(Model.Any() ? Model.Average(t => t.TiempoRealHoras ?? 0).ToString("N1") : "0") h</h3>
+        <p class="mb-0">Tiempo Promedio</p>
+   </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+    <div class="card bg-warning text-dark">
+     <div class="card-body text-center">
+                <i class="bi bi-exclamation-triangle fs-1"></i>
+      <h3 class="mt-2">@Model.Count(t => t.Prioridad == "Alta")</h3>
+         <p class="mb-0">Alta Prioridad</p>
+         </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+ <div class="card bg-primary text-white">
+   <div class="card-body text-center">
+     <i class="bi bi-speedometer fs-1"></i>
+       @{
+          var eficiencia = Model.Any() 
+                  ? Model.Count(t => t.TiempoRealHoras <= t.TiempoEstimadoHoras) * 100.0 / Model.Count
+                 : 0;
+       }
+    <h3 class="mt-2">@eficiencia.ToString("N0")%</h3>
+            <p class="mb-0">Eficiencia</p>
+    </div>
+ </div>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center">
+        <i class="bi bi-info-circle fs-1 d-block mb-3"></i>
+        <h4>No hay tareas completadas</h4>
+        <p>Aún no has finalizado ninguna tarea.</p>
+        <a asp-action="MisTareas" class="btn btn-primary">
+            <i class="bi bi-list-task"></i> Ver Tareas Activas
+        </a>
+    </div>
+}
+else
+{
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+     <h5 class="mb-0"><i class="bi bi-list-check"></i> Tareas Completadas (@Model.Count)</h5>
+        </div>
+        <div class="card-body">
+       <div class="table-responsive">
+    <table class="table table-hover align-middle">
+   <thead>
+       <tr>
+                   <th>Descripción</th>
+           <th>Vehículo</th>
+   <th>Prioridad</th>
+            <th>Asignada</th>
+           <th>Finalizada</th>
+      <th>Tiempo Est.</th>
+    <th>Tiempo Real</th>
+  <th>Eficiencia</th>
+           <th>Acciones</th>
+      </tr>
+        </thead>
+  <tbody>
+       @foreach (var tarea in Model)
+            {
+               var eficienciaTarea = tarea.TiempoEstimadoHoras > 0 
+       ? ((tarea.TiempoRealHoras ?? 0) / (double)tarea.TiempoEstimadoHoras) * 100 
+  : 0;
+            var esEficiente = tarea.TiempoRealHoras <= tarea.TiempoEstimadoHoras;
+            
+          <tr>
+    <td><strong>@tarea.Descripcion</strong></td>
+             <td>
+      @tarea.IngresoTaller?.Vehiculo?.Patente<br />
+                  <small class="text-muted">@tarea.IngresoTaller?.Vehiculo?.Marca</small>
+           </td>
+        <td>
+        <span class="badge bg-@(tarea.Prioridad == "Alta" ? "danger" : tarea.Prioridad == "Media" ? "warning" : "secondary")">
+          @tarea.Prioridad
+       </span>
+ </td>
+          <td>@tarea.FechaAsignacion.ToString("dd/MM/yyyy")</td>
+          <td>@tarea.FechaFinalizacion?.ToString("dd/MM/yyyy")</td>
+       <td class="text-center">@tarea.TiempoEstimadoHoras h</td>
+      <td class="text-center">
+     <span class="@(esEficiente ? "text-success" : "text-danger")">
+                  @tarea.TiempoRealHoras h
+     </span>
+         </td>
+      <td class="text-center">
+           @if (esEficiente)
+      {
+         <span class="badge bg-success">
+   <i class="bi bi-check-circle"></i> @eficienciaTarea.ToString("N0")%
+        </span>
+        }
+      else
+              {
+  <span class="badge bg-warning text-dark">
+      @eficienciaTarea.ToString("N0")%
+             </span>
+      }
+   </td>
+    <td>
+   <a asp-action="DetalleTarea" asp-route-id="@tarea.Id" class="btn btn-sm btn-info">
+          <i class="bi bi-eye"></i> Ver
+          </a>
+     </td>
+    </tr>
+   }
+                </tbody>
+       </table>
+      </div>
+     </div>
+    </div>
+}

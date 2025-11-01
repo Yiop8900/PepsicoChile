@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PepsicoChile.Data;
 using PepsicoChile.Models.ViewModels;
@@ -10,14 +10,14 @@ namespace PepsicoChile.Controllers
 {
     public class AccountController : Controller
     {
-    private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
 
         public AccountController(ApplicationDbContext context)
         {
-   _context = context;
+            _context = context;
         }
 
- [HttpGet]
+        [HttpGet]
         public IActionResult Login(string? returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
@@ -26,51 +26,83 @@ namespace PepsicoChile.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
+        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
-         ViewData["ReturnUrl"] = returnUrl;
+            ViewData["ReturnUrl"] = returnUrl;
 
             if (ModelState.IsValid)
             {
-        try
-    {
-    var hashedPassword = HashPassword(model.Password);
+                try
+                {
+                    // Log para debug
+                    Console.WriteLine($"Intento de login: {model.Email}");
 
-              var usuario = await _context.Usuarios
-  .FirstOrDefaultAsync(u => u.Email == model.Email
-    && u.Password == hashedPassword
-        && u.Activo);
+                    var hashedPassword = HashPassword(model.Password);
+                    Console.WriteLine($"Password hasheado: {hashedPassword.Substring(0, 20)}...");
 
-      if (usuario != null)
-          {
-   HttpContext.Session.SetInt32("UsuarioId", usuario.Id);
-   HttpContext.Session.SetString("UsuarioNombre", usuario.Nombre + " " + usuario.Apellido);
-        HttpContext.Session.SetString("UsuarioRol", usuario.Rol);
-            HttpContext.Session.SetString("UsuarioEmail", usuario.Email);
+                    var usuario = await _context.Usuarios
+                                .AsNoTracking() // Mejora de rendimiento
+                                .FirstOrDefaultAsync(u => u.Email == model.Email
+                                 && u.Password == hashedPassword
+                       && u.Activo);
 
-        TempData["Mensaje"] = $"�Bienvenido {usuario.Nombre}!";
+                    if (usuario != null)
+                    {
+                        Console.WriteLine($"Usuario encontrado: {usuario.Nombre} - Rol: {usuario.Rol}");
 
-    if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-         {
-    return Redirect(returnUrl);
-         }
-     else
-    {
-     return RedirectToAction("Index", "Home");
+                        // Configurar sesión
+                        HttpContext.Session.SetInt32("UsuarioId", usuario.Id);
+                        HttpContext.Session.SetString("UsuarioNombre", usuario.Nombre + " " + usuario.Apellido);
+                        HttpContext.Session.SetString("UsuarioRol", usuario.Rol);
+                        HttpContext.Session.SetString("UsuarioEmail", usuario.Email);
+
+                        // Guardar cambios de sesión
+                        await HttpContext.Session.CommitAsync();
+
+                        TempData["Mensaje"] = $"¡Bienvenido {usuario.Nombre}!";
+
+                        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                        {
+                            Console.WriteLine($"Redirigiendo a: {returnUrl}");
+                            return Redirect(returnUrl);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Redirigiendo a Home/Index");
+                            return RedirectToAction("Index", "Home");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"No se encontró usuario con email: {model.Email}");
+                        ModelState.AddModelError(string.Empty, "Email o contraseña incorrectos, o usuario inactivo");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"ERROR COMPLETO en Login:");
+                    Console.WriteLine($"Mensaje: {ex.Message}");
+                    Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                    Console.WriteLine($"InnerException: {ex.InnerException?.Message}");
+
+                    ModelState.AddModelError(string.Empty, "Error al conectar con la base de datos. Por favor, intente nuevamente.");
+
+                    // Si es un error de conexión, mostrar mensaje específico
+                    if (ex.InnerException?.Message.Contains("network") == true ||
+                   ex.InnerException?.Message.Contains("connection") == true)
+                    {
+                        ModelState.AddModelError(string.Empty, "No se puede conectar a la base de datos. Verifique la conexión.");
+                    }
+                }
             }
-         }
-         else
-             {
-   ModelState.AddModelError(string.Empty, "Email o contrase�a incorrectos, o usuario inactivo");
-    }
-        }
-       catch (Exception ex)
- {
-           ModelState.AddModelError(string.Empty, $"Error al iniciar sesi�n: {ex.Message}");
-  Console.WriteLine($"Error en Login: {ex}");
-              }
-        
-         }
+            else
+            {
+                Console.WriteLine("ModelState inválido:");
+                foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    Console.WriteLine($"  - {error.ErrorMessage}");
+                }
+            }
 
             return View(model);
         }
@@ -78,62 +110,62 @@ public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl =
         [HttpGet]
         public IActionResult Logout()
         {
-    HttpContext.Session.Clear();
-            TempData["Mensaje"] = "Sesi�n cerrada exitosamente";
+            HttpContext.Session.Clear();
+            TempData["Mensaje"] = "Sesión cerrada exitosamente";
             return RedirectToAction("Login");
         }
 
         private string HashPassword(string password)
-     {
-      using (var sha256 = SHA256.Create())
-          {
-  var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-    return Convert.ToBase64String(hashedBytes);
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return Convert.ToBase64String(hashedBytes);
             }
         }
 
         [HttpGet]
-   public IActionResult TestHash(string password = "123456")
+        public IActionResult TestHash(string password = "123456")
         {
-        var hash = HashPassword(password);
-  var expectedHash = "jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=";
-            
-    return Json(new
-      {
-       Password = password,
-           GeneratedHash = hash,
-   ExpectedHash = expectedHash,
-    Match = hash == expectedHash,
-    Message = hash == expectedHash ? "? Hash correcto" : "? Hash incorrecto"
-    });
+            var hash = HashPassword(password);
+            var expectedHash = "jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=";
+
+            return Json(new
+            {
+                Password = password,
+                GeneratedHash = hash,
+                ExpectedHash = expectedHash,
+                Match = hash == expectedHash,
+                Message = hash == expectedHash ? "✓ Hash correcto" : "✗ Hash incorrecto"
+            });
         }
 
         [HttpGet]
         public async Task<IActionResult> TestUsers()
         {
-         var usuarios = await _context.Usuarios
-                .Select(u => new
-          {
-         u.Id,
-u.Email,
-  u.Nombre,
- u.Apellido,
-             u.Rol,
-     u.Activo,
-     PasswordHash = u.Password.Substring(0, 20) + "..." // Solo mostrar parte del hash
-    })
-       .ToListAsync();
+            var usuarios = await _context.Usuarios
+      .Select(u => new
+      {
+          u.Id,
+          u.Email,
+          u.Nombre,
+          u.Apellido,
+          u.Rol,
+          u.Activo,
+          PasswordHash = u.Password.Substring(0, 20) + "..." // Solo mostrar parte del hash
+      })
+    .ToListAsync();
 
             return Json(new
             {
-       TotalUsuarios = usuarios.Count,
-      Usuarios = usuarios,
-         HashEsperado = "jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI="
-       });
-     }
+                TotalUsuarios = usuarios.Count,
+                Usuarios = usuarios,
+                HashEsperado = "jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI="
+            });
+        }
 
         // SOLO ADMINISTRADOR
-   [HttpGet]
+        [HttpGet]
         [AuthorizeSession]
         [AuthorizeRole("Administrador")]
         public IActionResult Register()
@@ -142,76 +174,76 @@ u.Email,
         }
 
         [HttpPost]
-     [ValidateAntiForgeryToken]
+        [ValidateAntiForgeryToken]
         [AuthorizeSession]
         [AuthorizeRole("Administrador")]
- public async Task<IActionResult> Register(RegisterViewModel model)
-{
-            if (ModelState.IsValid)
-      {
-  var existeEmail = await _context.Usuarios.AnyAsync(u => u.Email == model.Email);
-    var existeRut = await _context.Usuarios.AnyAsync(u => u.Rut == model.Rut);
-
-      if (existeEmail)
-    {
-        ModelState.AddModelError("Email", "Este email ya est� registrado");
-      return View(model);
-         }
-
-  if (existeRut)
+        public async Task<IActionResult> Register(RegisterViewModel model)
         {
-   ModelState.AddModelError("Rut", "Este RUT ya est� registrado");
-        return View(model);
-     }
+            if (ModelState.IsValid)
+            {
+                var existeEmail = await _context.Usuarios.AnyAsync(u => u.Email == model.Email);
+                var existeRut = await _context.Usuarios.AnyAsync(u => u.Rut == model.Rut);
 
-     var usuario = new Models.Usuario
-       {
-        Nombre = model.Nombre,
-      Apellido = model.Apellido,
-     Email = model.Email,
-        Telefono = model.Telefono ?? string.Empty,
-    Rut = model.Rut,
-      Rol = model.Rol,
-        Password = HashPassword(model.Password),
-               Activo = true
-            };
+                if (existeEmail)
+                {
+                    ModelState.AddModelError("Email", "Este email ya está registrado");
+                    return View(model);
+                }
 
-       _context.Usuarios.Add(usuario);
-   await _context.SaveChangesAsync();
+                if (existeRut)
+                {
+                    ModelState.AddModelError("Rut", "Este RUT ya está registrado");
+                    return View(model);
+                }
 
-        TempData["Mensaje"] = "Usuario registrado exitosamente";
-     return RedirectToAction("ListarUsuarios");
-    }
+                var usuario = new Models.Usuario
+                {
+                    Nombre = model.Nombre,
+                    Apellido = model.Apellido,
+                    Email = model.Email,
+                    Telefono = model.Telefono ?? string.Empty,
+                    Rut = model.Rut,
+                    Rol = model.Rol,
+                    Password = HashPassword(model.Password),
+                    Activo = true
+                };
 
- return View(model);
+                _context.Usuarios.Add(usuario);
+                await _context.SaveChangesAsync();
+
+                TempData["Mensaje"] = "Usuario registrado exitosamente";
+                return RedirectToAction("ListarUsuarios");
+            }
+
+            return View(model);
         }
 
-[HttpGet]
- [AuthorizeSession]
+        [HttpGet]
+        [AuthorizeSession]
         [AuthorizeRole("Administrador")]
         public async Task<IActionResult> ListarUsuarios()
         {
-       var usuarios = await _context.Usuarios
-    .OrderByDescending(u => u.Id)
-     .ToListAsync();
-            
-        return View(usuarios);
+            var usuarios = await _context.Usuarios
+               .OrderByDescending(u => u.Id)
+            .ToListAsync();
+
+            return View(usuarios);
         }
 
         [HttpPost]
         [AuthorizeSession]
         [AuthorizeRole("Administrador")]
-    public async Task<IActionResult> ActivarDesactivar(int id)
+        public async Task<IActionResult> ActivarDesactivar(int id)
         {
- var usuario = await _context.Usuarios.FindAsync(id);
+            var usuario = await _context.Usuarios.FindAsync(id);
             if (usuario != null && usuario.Rol != "Administrador")
             {
                 usuario.Activo = !usuario.Activo;
-     await _context.SaveChangesAsync();
-          TempData["Mensaje"] = $"Usuario {(usuario.Activo ? "activado" : "desactivado")} correctamente";
-   }
-     
-  return RedirectToAction("ListarUsuarios");
+                await _context.SaveChangesAsync();
+                TempData["Mensaje"] = $"Usuario {(usuario.Activo ? "activado" : "desactivado")} correctamente";
+            }
+
+            return RedirectToAction("ListarUsuarios");
         }
     }
 }

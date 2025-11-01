@@ -361,3 +361,33 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# ===================================
+# SEGURIDAD - ARCHIVOS SENSIBLES
+# ===================================
+
+# User Secrets (contiene credenciales de Twilio)
+secrets.json
+appsettings.Development.json
+appsettings.Production.json
+
+# Logs que podrían contener credenciales
+logs/
+*.log
+
+# Archivos de base de datos locales con datos reales
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads de usuarios (pueden contener datos sensibles)
+wwwroot/uploads/
+
+# Scripts SQL con datos sensibles
+insertar-usuarios.sql
+*-backup.sql
+
+# Documentos con información de configuración sensible
+SEGURIDAD_URGENTE.md
+crear-admin.sql
+diagnostico-db.bat

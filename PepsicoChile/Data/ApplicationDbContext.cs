@@ -18,6 +18,7 @@ namespace PepsicoChile.Data
         public DbSet<Documento> Documentos { get; set; }
         public DbSet<Repuesto> Repuestos { get; set; }
         public DbSet<DocumentoVehiculo> DocumentosVehiculo { get; set; }
+        public DbSet<Notificacion> Notificaciones { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -139,6 +140,21 @@ namespace PepsicoChile.Data
                .HasForeignKey(e => e.TareaTallerId)
              .OnDelete(DeleteBehavior.Cascade);
              });
+
+            // Configuración de Notificacion
+            modelBuilder.Entity<Notificacion>(entity =>
+            {
+                entity.ToTable("Notificaciones");
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.Usuario)
+                .WithMany()
+  .HasForeignKey(e => e.UsuarioId)
+ .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.UsuarioId);
+     entity.HasIndex(e => new { e.UsuarioId, e.Leida });
+            });
         }
     }
 }

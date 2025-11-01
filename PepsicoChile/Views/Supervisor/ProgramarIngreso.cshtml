@@ -1,93 +1,328 @@
-@model IngresoTaller
+@model ProgramarIngresoViewModel
 @{
-    ViewData["Title"] = "Programar Ingreso";
- var vehiculos = ViewBag.Vehiculos as List<Vehiculo> ?? new List<Vehiculo>();
-    var choferes = ViewBag.Choferes as List<Usuario> ?? new List<Usuario>();
+    ViewData["Title"] = "Programar Ingreso al Taller";
 }
 
-<div class="row">
-    <div class="col-md-8 offset-md-2">
-  <div class="card">
-       <div class="card-header bg-success text-white">
-           <h4 class="mb-0"><i class="bi bi-calendar-plus"></i> Programar Ingreso al Taller</h4>
-   </div>
-    <div class="card-body">
-    <form asp-action="ProgramarIngreso" method="post">
-      <div class="row">
-  <div class="col-md-6 mb-3">
-         <label asp-for="VehiculoId" class="form-label">Vehículo</label>
-        <select asp-for="VehiculoId" class="form-select" required>
-   <option value="">-- Seleccione un vehículo --</option>
-         @foreach (var vehiculo in vehiculos)
-       {
-      <option value="@vehiculo.Id">@vehiculo.Patente - @vehiculo.Marca @vehiculo.Modelo</option>
-    }
-       </select>
-          </div>
-
-      <div class="col-md-6 mb-3">
-           <label asp-for="ChoferId" class="form-label">Chofer</label>
-     <select asp-for="ChoferId" class="form-select" required>
-           <option value="">-- Seleccione un chofer --</option>
-      @foreach (var chofer in choferes)
-            {
-   <option value="@chofer.Id">@chofer.Nombre @chofer.Apellido</option>
-        }
-    </select>
-          </div>
-   </div>
-
-       <div class="row">
-    <div class="col-md-6 mb-3">
-     <label asp-for="FechaProgramada" class="form-label">Fecha y Hora Programada</label>
-      <input asp-for="FechaProgramada" type="datetime-local" class="form-control" required />
-     <small class="form-text text-muted">Seleccione la fecha y hora del ingreso</small>
-  </div>
-
-     <div class="col-md-6 mb-3">
-       <label asp-for="MotivoIngreso" class="form-label">Motivo del Ingreso</label>
-   <select asp-for="MotivoIngreso" class="form-select" required>
-  <option value="">-- Seleccione --</option>
-     <option value="Mantenimiento Preventivo">Mantenimiento Preventivo</option>
-  <option value="Reparación">Reparación</option>
-  <option value="Siniestro">Siniestro</option>
-       <option value="Inspección">Inspección</option>
-           </select>
-     </div>
-         </div>
-
-       <div class="mb-3">
-<label asp-for="DescripcionProblema" class="form-label">Descripción/Motivo Detallado</label>
-       <textarea asp-for="DescripcionProblema" class="form-control" rows="3" placeholder="Describa el trabajo a realizar"></textarea>
-     </div>
-
-        <div class="row">
-     <div class="col-md-6 mb-3">
-  <label asp-for="FechaSalidaEstimada" class="form-label">Fecha de Salida Estimada</label>
-        <input asp-for="FechaSalidaEstimada" type="datetime-local" class="form-control" />
+<div class="row mb-4">
+    <div class="col-md-8">
+  <h2><i class="bi bi-calendar-plus"></i> Programar Ingreso al Taller</h2>
+        <p class="text-muted">Complete el formulario para programar un nuevo ingreso de vehículo</p>
     </div>
+    <div class="col-md-4 text-end">
+      <a asp-action="Agenda" class="btn btn-secondary">
+  <i class="bi bi-arrow-left"></i> Volver a Agenda
+     </a>
+  </div>
+</div>
 
-   <div class="col-md-6 mb-3">
-        <label asp-for="KilometrajeIngreso" class="form-label">Kilometraje Estimado</label>
-    <input asp-for="KilometrajeIngreso" type="number" class="form-control" placeholder="Ej: 125000" />
- </div>
+<form asp-action="ProgramarIngreso" method="post">
+    <div class="row">
+        <!-- Columna Izquierda -->
+        <div class="col-lg-6">
+<!-- Información del Vehículo -->
+    <div class="card mb-4">
+     <div class="card-header bg-primary text-white">
+<h5 class="mb-0"><i class="bi bi-truck"></i> Selección de Vehículo</h5>
+       </div>
+     <div class="card-body">
+   <div class="mb-3">
+      <label asp-for="VehiculoId" class="form-label"></label>
+          <select asp-for="VehiculoId" class="form-select" id="selectVehiculo" required>
+  <option value="">-- Seleccione un vehículo --</option>
+  @foreach (var vehiculo in Model.VehiculosDisponibles)
+{
+     <option value="@vehiculo.Id" 
+     data-patente="@vehiculo.Patente"
+        data-marca="@vehiculo.Marca"
+        data-modelo="@vehiculo.Modelo"
+  data-kilometraje="@(vehiculo.KilometrajeActual ?? 0)">
+             @vehiculo.Patente - @vehiculo.Marca @vehiculo.Modelo (@vehiculo.TipoVehiculo)
+          </option>
+       }
+        </select>
+     <span asp-validation-for="VehiculoId" class="text-danger small"></span>
+     </div>
+
+   <div id="infoVehiculo" class="alert alert-info" style="display:none;">
+            <h6><i class="bi bi-info-circle"></i> Información del Vehículo</h6>
+    <div class="row">
+  <div class="col-6">
+<strong>Patente:</strong> <span id="vehiculoPatente"></span>
+       </div>
+          <div class="col-6">
+    <strong>Marca/Modelo:</strong> <span id="vehiculoMarca"></span>
+         </div>
+      <div class="col-12 mt-2">
+        <strong>Kilometraje:</strong> <span id="vehiculoKm"></span> km
+</div>
+      </div>
        </div>
 
-     <div class="mb-3 form-check">
-   <input asp-for="RequiereRepuestos" type="checkbox" class="form-check-input" />
-   <label asp-for="RequiereRepuestos" class="form-check-label">¿Requiere repuestos?</label>
+    <div class="mb-3">
+      <label asp-for="KilometrajeIngreso" class="form-label"></label>
+           <input asp-for="KilometrajeIngreso" class="form-control" type="number" id="inputKilometraje" />
+         <span asp-validation-for="KilometrajeIngreso" class="text-danger small"></span>
+    <small class="text-muted">Se completará automáticamente con el kilometraje actual del vehículo</small>
+           </div>
+       </div>
+            </div>
+
+     <!-- Responsable -->
+            <div class="card mb-4">
+     <div class="card-header bg-info text-white">
+         <h5 class="mb-0"><i class="bi bi-person"></i> Responsable</h5>
+      </div>
+   <div class="card-body">
+      <div class="mb-3">
+            <label asp-for="ChoferId" class="form-label"></label>
+    <select asp-for="ChoferId" class="form-select" required>
+       <option value="">-- Seleccione un chofer --</option>
+         @foreach (var chofer in Model.ChofersDisponibles)
+{
+        <option value="@chofer.Id">@chofer.Nombre @chofer.Apellido</option>
+           }
+        </select>
+         <span asp-validation-for="ChoferId" class="text-danger small"></span>
+          </div>
+
+            <div class="mb-3">
+   <label asp-for="MecanicoAsignadoId" class="form-label"></label>
+   <select asp-for="MecanicoAsignadoId" class="form-select" id="selectMecanico">
+ <option value="">-- Asignar más tarde --</option>
+    @foreach (var mecanico in Model.MecanicosDisponibles)
+{
+    <option value="@mecanico.Id" 
+       data-nombre="@mecanico.Nombre @mecanico.Apellido">
+     @mecanico.Nombre @mecanico.Apellido
+    </option>
+   }
+       </select>
+   <small class="text-muted">Opcional: Puede asignar un mecánico ahora o posteriormente</small>
+  </div>
+
+<div class="mb-3">
+ <label asp-for="ObservacionesChofer" class="form-label"></label>
+   <textarea asp-for="ObservacionesChofer" class="form-control" rows="3" 
+ placeholder="Observaciones adicionales del chofer..."></textarea>
+      </div>
+    </div>
+     </div>
+        </div>
+
+     <!-- Columna Derecha -->
+     <div class="col-lg-6">
+            <!-- Programación -->
+            <div class="card mb-4">
+   <div class="card-header bg-warning">
+       <h5 class="mb-0"><i class="bi bi-calendar-event"></i> Programación</h5>
+          </div>
+                <div class="card-body">
+         <div class="mb-3">
+   <label asp-for="FechaProgramada" class="form-label"></label>
+      <input asp-for="FechaProgramada" class="form-control" type="datetime-local" 
+        value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm")" required />
+      <span asp-validation-for="FechaProgramada" class="text-danger small"></span>
+   <small class="text-muted">Seleccione la fecha y hora de ingreso al taller</small>
+         </div>
+
+         <div class="mb-3">
+          <label asp-for="FechaSalidaEstimada" class="form-label"></label>
+      <input asp-for="FechaSalidaEstimada" class="form-control" type="date" />
+      <small class="text-muted">Estimación de cuándo estará listo el vehículo</small>
+       </div>
+            </div>
+  </div>
+
+      <!-- Detalles del Ingreso -->
+            <div class="card mb-4">
+          <div class="card-header bg-success text-white">
+   <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Detalles del Ingreso</h5>
+     </div>
+     <div class="card-body">
+        <div class="mb-3">
+         <label asp-for="MotivoIngreso" class="form-label"></label>
+            <select asp-for="MotivoIngreso" class="form-select" required>
+         <option value="">-- Seleccione el motivo --</option>
+       <option value="Mantenimiento Preventivo">Mantenimiento Preventivo</option>
+          <option value="Mantenimiento Correctivo">Mantenimiento Correctivo</option>
+        <option value="Reparación General">Reparación General</option>
+     <option value="Reparación de Motor">Reparación de Motor</option>
+      <option value="Reparación de Transmisión">Reparación de Transmisión</option>
+            <option value="Reparación de Frenos">Reparación de Frenos</option>
+       <option value="Reparación Eléctrica">Reparación Eléctrica</option>
+    <option value="Siniestro">Siniestro</option>
+        <option value="Cambio de Neumáticos">Cambio de Neumáticos</option>
+      <option value="Revisión Técnica">Revisión Técnica</option>
+       <option value="Diagnóstico">Diagnóstico</option>
+        <option value="Otro">Otro</option>
+      </select>
+<span asp-validation-for="MotivoIngreso" class="text-danger small"></span>
    </div>
 
-<div class="d-grid gap-2">
-     <button type="submit" class="btn btn-success btn-lg">
-   <i class="bi bi-save"></i> Programar Ingreso
-  </button>
-       <a asp-action="Agenda" class="btn btn-secondary">
-          <i class="bi bi-arrow-left"></i> Volver a Agenda
-       </a>
-   </div>
-  </form>
+   <div class="mb-3">
+   <label asp-for="DescripcionProblema" class="form-label"></label>
+   <textarea asp-for="DescripcionProblema" class="form-control" rows="4" 
+     placeholder="Describa detalladamente el problema o trabajo a realizar..."></textarea>
+  <span asp-validation-for="DescripcionProblema" class="text-danger small"></span>
+          </div>
+
+           <div class="form-check form-switch mb-3">
+           <input asp-for="RequiereRepuestos" class="form-check-input" type="checkbox" id="switchRepuestos" />
+    <label asp-for="RequiereRepuestos" class="form-check-label" for="switchRepuestos">
+ El trabajo requiere repuestos
+     </label>
+           </div>
+
+       <div id="alertaRepuestos" class="alert alert-warning" style="display:none;">
+           <i class="bi bi-exclamation-triangle"></i> 
+     <strong>Atención:</strong> Se marcará este ingreso como pendiente de repuestos. 
+  Coordine con el área de inventario.
   </div>
+     </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones de Acción -->
+    <div class="row">
+      <div class="col-12">
+       <div class="card">
+         <div class="card-body">
+         <div class="d-flex justify-content-between align-items-center">
+      <a asp-action="Agenda" class="btn btn-secondary">
+     <i class="bi bi-x-circle"></i> Cancelar
+     </a>
+   <div>
+      <button type="button" class="btn btn-outline-primary me-2" onclick="validarFormulario()">
+    <i class="bi bi-eye"></i> Vista Previa
+   </button>
+   <button type="submit" class="btn btn-primary btn-lg">
+           <i class="bi bi-save"></i> Programar Ingreso
+     </button>
+     </div>
+             </div>
+       </div>
+        </div>
    </div>
     </div>
+</form>
+
+<!-- Modal Vista Previa -->
+<div class="modal fade" id="modalVistaPrevia" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+    <div class="modal-header bg-primary text-white">
+      <h5 class="modal-title"><i class="bi bi-eye"></i> Vista Previa del Ingreso</h5>
+   <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+        <div class="modal-body">
+         <div class="row">
+    <div class="col-md-6">
+         <h6 class="text-primary">Información del Vehículo</h6>
+        <p><strong>Vehículo:</strong> <span id="prevVehiculo"></span></p>
+       <p><strong>Kilometraje:</strong> <span id="prevKilometraje"></span> km</p>
+      <p><strong>Chofer:</strong> <span id="prevChofer"></span></p>
+      <p><strong>Mecánico:</strong> <span id="prevMecanico"></span></p>
+ </div>
+ <div class="col-md-6">
+   <h6 class="text-primary">Programación</h6>
+     <p><strong>Fecha Programada:</strong> <span id="prevFecha"></span></p>
+ <p><strong>Fecha Estimada Salida:</strong> <span id="prevSalida"></span></p>
+        <p><strong>Requiere Repuestos:</strong> <span id="prevRepuestos"></span></p>
+          </div>
+<div class="col-12 mt-3">
+            <h6 class="text-primary">Detalles del Trabajo</h6>
+          <p><strong>Motivo:</strong> <span id="prevMotivo"></span></p>
+            <p><strong>Descripción:</strong></p>
+         <p class="p-3 bg-light rounded" id="prevDescripcion"></p>
+         <p id="prevObservaciones"></p>
+     </div>
+                </div>
+       </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
 </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Mostrar información del vehículo seleccionado
+  document.getElementById('selectVehiculo').addEventListener('change', function() {
+      var selected = this.options[this.selectedIndex];
+            var infoDiv = document.getElementById('infoVehiculo');
+  
+          if (this.value) {
+    document.getElementById('vehiculoPatente').textContent = selected.dataset.patente;
+     document.getElementById('vehiculoMarca').textContent = selected.dataset.marca + ' ' + selected.dataset.modelo;
+  document.getElementById('vehiculoKm').textContent = parseInt(selected.dataset.kilometraje).toLocaleString();
+   
+       // Auto-completar kilometraje
+     document.getElementById('inputKilometraje').value = selected.dataset.kilometraje;
+        
+        infoDiv.style.display = 'block';
+     } else {
+   infoDiv.style.display = 'none';
+            }
+     });
+
+        // Mostrar alerta de repuestos
+ document.getElementById('switchRepuestos').addEventListener('change', function() {
+        document.getElementById('alertaRepuestos').style.display = this.checked ? 'block' : 'none';
+        });
+
+        // Validar y mostrar vista previa
+      function validarFormulario() {
+            var form = document.querySelector('form');
+            if (!form.checkValidity()) {
+     form.reportValidity();
+   return;
+        }
+
+            // Obtener valores
+     var vehiculoSelect = document.getElementById('selectVehiculo');
+            var vehiculoTexto = vehiculoSelect.options[vehiculoSelect.selectedIndex].text;
+         var choferSelect = document.querySelector('select[name="ChoferId"]');
+     var choferTexto = choferSelect.options[choferSelect.selectedIndex].text;
+
+      var mecanicoSelect = document.querySelector('select[name="MecanicoAsignadoId"]');
+      var mecanicoTexto = mecanicoSelect.value ? mecanicoSelect.options[mecanicoSelect.selectedIndex].text : 'Sin asignar';
+
+    // Llenar modal
+     document.getElementById('prevVehiculo').textContent = vehiculoTexto;
+     document.getElementById('prevKilometraje').textContent = document.getElementById('inputKilometraje').value || 'No especificado';
+     document.getElementById('prevChofer').textContent = choferTexto;
+  document.getElementById('prevMecanico').textContent = mecanicoTexto;
+            
+          var fecha = new Date(document.querySelector('input[name="FechaProgramada"]').value);
+            document.getElementById('prevFecha').textContent = fecha.toLocaleString('es-CL');
+   
+      var fechaSalida = document.querySelector('input[name="FechaSalidaEstimada"]').value;
+            document.getElementById('prevSalida').textContent = fechaSalida ? new Date(fechaSalida).toLocaleDateString('es-CL') : 'No especificada';
+        
+            document.getElementById('prevRepuestos').textContent = document.getElementById('switchRepuestos').checked ? 'Sí' : 'No';
+            document.getElementById('prevMotivo').textContent = document.querySelector('select[name="MotivoIngreso"]').value;
+            document.getElementById('prevDescripcion').textContent = document.querySelector('textarea[name="DescripcionProblema"]').value;
+          
+      var obs = document.querySelector('textarea[name="ObservacionesChofer"]').value;
+      var prevObs = document.getElementById('prevObservaciones');
+       if (obs) {
+    prevObs.innerHTML = '<strong>Observaciones del Chofer:</strong><p class="p-3 bg-light rounded">' + obs + '</p>';
+      } else {
+        prevObs.innerHTML = '';
+            }
+
+     // Mostrar modal
+   var modal = new bootstrap.Modal(document.getElementById('modalVistaPrevia'));
+    modal.show();
+        }
+
+        // Establecer fecha mínima como mañana
+        var tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        var minDateTime = tomorrow.toISOString().slice(0, 16);
+        document.querySelector('input[name="FechaProgramada"]').min = minDateTime;
+ </script>
+}

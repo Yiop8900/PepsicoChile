@@ -1,202 +1,235 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PepsicoChile.Filters;
 using PepsicoChile.Models;
+using PepsicoChile.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace PepsicoChile.Controllers
 {
+    [AuthorizeSession]
+    [AuthorizeRole("Administrador", "Mecanico")]
     public class MecanicoController : Controller
     {
-     public IActionResult Index()
- {
-            return View();
-   }
+ private readonly ApplicationDbContext _context;
 
-        public IActionResult MisTareas()
-{
-            var tareas = ObtenerTareasPorMecanico();
-        return View(tareas);
-        }
-
-  public IActionResult DetalleTarea(int id)
+        public MecanicoController(ApplicationDbContext context)
         {
-            var tarea = ObtenerTareaPorId(id);
-            return View(tarea);
+            _context = context;
         }
 
-        public IActionResult IniciarTarea(int id)
+        public IActionResult Index()
         {
-// Lógica para iniciar tarea
-        TempData["Mensaje"] = "Tarea iniciada";
-   return RedirectToAction("DetalleTarea", new { id });
+            return RedirectToAction("MisTareas");
         }
 
-        public IActionResult FinalizarTarea(int id)
- {
- var tarea = ObtenerTareaPorId(id);
-            return View(tarea);
+public async Task<IActionResult> MisTareas()
+        {
+  var mecanicoId = HttpContext.Session.GetInt32("UsuarioId");
+      
+      var tareas = await _context.TareasTaller
+         .Include(t => t.IngresoTaller)
+         .ThenInclude(i => i.Vehiculo)
+       .Include(t => t.IngresoTaller)
+         .ThenInclude(i => i.Chofer)
+     .Include(t => t.MecanicoAsignado)
+              .Where(t => t.MecanicoAsignadoId == mecanicoId && t.Estado != "Completada")
+     .OrderByDescending(t => t.Prioridad == "Alta")
+  .ThenByDescending(t => t.Prioridad == "Media")
+     .ThenBy(t => t.FechaAsignacion)
+  .ToListAsync();
+
+     return View(tareas);
         }
 
-        [HttpPost]
-        public IActionResult FinalizarTarea(TareaTaller model)
-     {
-            if (ModelState.IsValid)
-     {
-   TempData["Mensaje"] = "Tarea finalizada exitosamente";
-      return RedirectToAction("MisTareas");
-   }
-   return View(model);
-        }
+    public async Task<IActionResult> DetalleTarea(int id)
+        {
+            var tarea = await _context.TareasTaller
+      .Include(t => t.IngresoTaller)
+            .ThenInclude(i => i.Vehiculo)
+.Include(t => t.IngresoTaller)
+         .ThenInclude(i => i.Chofer)
+                .Include(t => t.IngresoTaller)
+      .ThenInclude(i => i.Supervisor)
+     .Include(t => t.MecanicoAsignado)
+                .FirstOrDefaultAsync(t => t.Id == id);
 
-        public IActionResult SubirDocumento(int ingresoId)
-    {
-            ViewBag.IngresoId = ingresoId;
-       return View();
-      }
+      if (tarea == null)
+            {
+    return NotFound();
+            }
+
+       // Verificar que la tarea pertenece al mecánico actual
+          var mecanicoId = HttpContext.Session.GetInt32("UsuarioId");
+   if (tarea.MecanicoAsignadoId != mecanicoId && HttpContext.Session.GetString("UsuarioRol") != "Administrador")
+            {
+       TempData["Error"] = "No tienes permiso para ver esta tarea";
+   return RedirectToAction("MisTareas");
+ }
+
+ // Obtener repuestos solicitados para esta tarea
+    var repuestos = await _context.Repuestos
+        .Where(r => r.TareaTallerId == id)
+   .ToListAsync();
+
+       ViewBag.Repuestos = repuestos;
+
+ return View(tarea);
+     }
 
     [HttpPost]
-        public IActionResult SubirDocumento(Documento model, IFormFile archivo)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> IniciarTarea(int id)
         {
-            if (archivo != null && archivo.Length > 0)
+    var tarea = await _context.TareasTaller.FindAsync(id);
+      
+ if (tarea == null)
             {
-          // Simulación de guardado de archivo
-       model.NombreArchivo = archivo.FileName;
- model.TamañoBytes = archivo.Length;
-       model.FechaSubida = DateTime.Now;
-   
-       TempData["Mensaje"] = "Documento subido exitosamente";
-      return RedirectToAction("VerDocumentos", new { ingresoId = model.IngresoTallerId });
-          }
-       return View(model);
-    }
+    return NotFound();
+     }
 
-        public IActionResult VerDocumentos(int ingresoId)
-        {
-  var documentos = ObtenerDocumentosPorIngreso(ingresoId);
-      ViewBag.IngresoId = ingresoId;
-    return View(documentos);
-        }
-
-        public IActionResult SolicitarRepuesto(int tareaId)
-      {
-          ViewBag.TareaId = tareaId;
- return View();
-    }
-
-   [HttpPost]
-        public IActionResult SolicitarRepuesto(Repuesto model)
-        {
-            if (ModelState.IsValid)
-            {
-        TempData["Mensaje"] = "Repuesto solicitado exitosamente";
-      return RedirectToAction("DetalleTarea", new { id = model.TareaTallerId });
-            }
-    return View(model);
-        }
-
-        public IActionResult RegistrarObservacion(int tareaId)
+    if (tarea.Estado == "Pendiente")
    {
-            ViewBag.TareaId = tareaId;
-        return View();
- }
+tarea.Estado = "En Proceso";
+   tarea.FechaInicio = DateTime.Now;
+         
+     await _context.SaveChangesAsync();
+    
+  TempData["Mensaje"] = "Tarea iniciada correctamente";
+       }
+            else
+  {
+             TempData["Error"] = "La tarea ya fue iniciada";
+            }
+
+       return RedirectToAction("DetalleTarea", new { id });
+     }
+
+        [HttpGet]
+     public async Task<IActionResult> FinalizarTarea(int id)
+ {
+        var tarea = await _context.TareasTaller
+      .Include(t => t.IngresoTaller)
+              .ThenInclude(i => i.Vehiculo)
+     .FirstOrDefaultAsync(t => t.Id == id);
+
+   if (tarea == null)
+            {
+                return NotFound();
+            }
+
+    return View(tarea);
+        }
 
         [HttpPost]
-        public IActionResult RegistrarObservacion(int tareaId, string observacion)
-        {
-TempData["Mensaje"] = "Observación registrada exitosamente";
-       return RedirectToAction("DetalleTarea", new { id = tareaId });
+        [ValidateAntiForgeryToken]
+      public async Task<IActionResult> FinalizarTarea(int id, int tiempoRealHoras, string? observaciones)
+      {
+  var tarea = await _context.TareasTaller
+          .Include(t => t.IngresoTaller)
+        .FirstOrDefaultAsync(t => t.Id == id);
+
+         if (tarea == null)
+            {
+        return NotFound();
+            }
+
+        tarea.Estado = "Completada";
+      tarea.FechaFinalizacion = DateTime.Now;
+   tarea.TiempoRealHoras = tiempoRealHoras;
+         
+        if (!string.IsNullOrEmpty(observaciones))
+            {
+         tarea.Observaciones = string.IsNullOrEmpty(tarea.Observaciones) 
+        ? observaciones 
+          : tarea.Observaciones + "\n\n" + observaciones;
+ }
+
+        await _context.SaveChangesAsync();
+
+     TempData["Mensaje"] = "Tarea finalizada exitosamente";
+   return RedirectToAction("MisTareas");
    }
 
-        // Métodos auxiliares
-        private List<TareaTaller> ObtenerTareasPorMecanico()
-        {
-    return new List<TareaTaller>
-   {
-      new TareaTaller
-          {
-     Id = 1,
-        Descripcion = "Cambio de aceite y filtros",
-    IngresoTaller = new IngresoTaller 
-               { 
-  Vehiculo = new Vehiculo { Patente = "ABCD-12", Marca = "Volvo" }
-       },
-             Estado = "En Proceso",
-     Prioridad = "Media",
- FechaAsignacion = DateTime.Now.AddHours(-2),
-              TiempoEstimadoHoras = 3
-       },
-         new TareaTaller
-            {
-         Id = 2,
-    Descripcion = "Revisión sistema de frenos",
-   IngresoTaller = new IngresoTaller 
- { 
-            Vehiculo = new Vehiculo { Patente = "EFGH-34", Marca = "Mercedes" }
-  },
-        Estado = "Pendiente",
-      Prioridad = "Alta",
-            FechaAsignacion = DateTime.Now,
-  TiempoEstimadoHoras = 5
-            },
-                new TareaTaller
-     {
-                 Id = 3,
-    Descripcion = "Cambio de neumáticos",
-        IngresoTaller = new IngresoTaller 
-     { 
-       Vehiculo = new Vehiculo { Patente = "IJKL-56", Marca = "Scania" }
-     },
-           Estado = "Completada",
-   Prioridad = "Baja",
-   FechaAsignacion = DateTime.Now.AddDays(-1),
-FechaFinalizacion = DateTime.Now.AddHours(-2),
-     TiempoEstimadoHoras = 2,
-   TiempoRealHoras = 2
-                }
-};
-      }
-
-        private TareaTaller ObtenerTareaPorId(int id)
+      [HttpGet]
+        public async Task<IActionResult> SolicitarRepuesto(int tareaId)
     {
-      return new TareaTaller
+ var tarea = await _context.TareasTaller
+         .Include(t => t.IngresoTaller)
+        .ThenInclude(i => i.Vehiculo)
+      .FirstOrDefaultAsync(t => t.Id == tareaId);
+
+            if (tarea == null)
             {
-     Id = id,
-    Descripcion = "Cambio de aceite y filtros",
-    IngresoTaller = new IngresoTaller 
-              { 
-         Id = 1,
-  Vehiculo = new Vehiculo { Patente = "ABCD-12", Marca = "Volvo", Modelo = "FH16" },
-      MotivoIngreso = "Mantenimiento Preventivo"
-                },
-      MecanicoAsignado = new Usuario { Nombre = "Carlos", Apellido = "Rojas" },
-      Estado = "En Proceso",
-         Prioridad = "Media",
-    FechaAsignacion = DateTime.Now.AddHours(-2),
-           FechaInicio = DateTime.Now.AddHours(-1),
-      TiempoEstimadoHoras = 3,
-      Observaciones = "Filtro de aire muy sucio, recomendar limpieza adicional"
-    };
+return NotFound();
+       }
+
+            ViewBag.Tarea = tarea;
+        return View();
         }
 
-        private List<Documento> ObtenerDocumentosPorIngreso(int ingresoId)
+     [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SolicitarRepuesto(int tareaId, string nombre, string codigoRepuesto, int cantidad, string? proveedor)
         {
- return new List<Documento>
-            {
- new Documento
-          {
-  Id = 1,
-     TipoDocumento = "Foto",
-       NombreArchivo = "motor_antes.jpg",
-         FechaSubida = DateTime.Now.AddHours(-2),
-          UsuarioSubida = new Usuario { Nombre = "Carlos", Apellido = "Rojas" }
-                },
-       new Documento
+    var repuesto = new Repuesto
+      {
+     TareaTallerId = tareaId,
+             Nombre = nombre,
+     CodigoRepuesto = codigoRepuesto,
+    Cantidad = cantidad,
+         Proveedor = proveedor,
+        FechaSolicitud = DateTime.Now,
+          Estado = "Solicitado"
+        };
+
+            _context.Repuestos.Add(repuesto);
+  await _context.SaveChangesAsync();
+
+    TempData["Mensaje"] = "Repuesto solicitado exitosamente";
+            return RedirectToAction("DetalleTarea", new { id = tareaId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+   public async Task<IActionResult> RegistrarObservacion(int tareaId, string observacion)
    {
-       Id = 2,
-     TipoDocumento = "Informe",
-   NombreArchivo = "diagnostico_inicial.pdf",
-   FechaSubida = DateTime.Now.AddHours(-1),
-                    UsuarioSubida = new Usuario { Nombre = "Carlos", Apellido = "Rojas" }
-                }
-     };
- }
+            var tarea = await _context.TareasTaller.FindAsync(tareaId);
+          
+            if (tarea == null)
+        {
+         return NotFound();
+          }
+
+ if (string.IsNullOrEmpty(tarea.Observaciones))
+       {
+              tarea.Observaciones = $"[{DateTime.Now:dd/MM/yyyy HH:mm}] {observacion}";
+  }
+         else
+   {
+ tarea.Observaciones += $"\n\n[{DateTime.Now:dd/MM/yyyy HH:mm}] {observacion}";
+  }
+
+          await _context.SaveChangesAsync();
+
+    TempData["Mensaje"] = "Observación registrada exitosamente";
+            return RedirectToAction("DetalleTarea", new { id = tareaId });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> HistorialTareas()
+        {
+            var mecanicoId = HttpContext.Session.GetInt32("UsuarioId");
+            
+        var tareas = await _context.TareasTaller
+          .Include(t => t.IngresoTaller)
+  .ThenInclude(i => i.Vehiculo)
+    .Where(t => t.MecanicoAsignadoId == mecanicoId && t.Estado == "Completada")
+     .OrderByDescending(t => t.FechaFinalizacion)
+           .Take(50)
+       .ToListAsync();
+
+    return View(tareas);
+        }
     }
 }

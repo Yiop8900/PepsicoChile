@@ -3,59 +3,132 @@
     ViewData["Title"] = "Finalizar Tarea";
 }
 
-<div class="row">
-  <div class="col-md-8 offset-md-2">
- <div class="card">
-  <div class="card-header bg-success text-white">
-   <h4 class="mb-0"><i class="bi bi-check-circle"></i> Finalizar Tarea</h4>
-   </div>
-       <div class="card-body">
-    <div class="alert alert-info">
-        <strong>Tarea:</strong> @Model.Descripcion<br />
-  <strong>Vehículo:</strong> @Model.IngresoTaller?.Vehiculo?.Patente
- </div>
-
-       <form asp-action="FinalizarTarea" method="post">
-     <input type="hidden" asp-for="Id" />
-     <input type="hidden" asp-for="IngresoTallerId" />
-   
-     <div class="mb-3">
-   <label asp-for="TiempoRealHoras" class="form-label">Tiempo Real Trabajado (horas)</label>
-      <input asp-for="TiempoRealHoras" type="number" class="form-control" min="0.5" step="0.5" required />
-      <small class="form-text text-muted">Tiempo estimado: @Model.TiempoEstimadoHoras horas</small>
-   </div>
-
-   <div class="mb-3">
-  <label asp-for="Observaciones" class="form-label">Observaciones Finales</label>
-       <textarea asp-for="Observaciones" class="form-control" rows="4" placeholder="Describa el trabajo realizado, hallazgos, recomendaciones, etc." required></textarea>
-        </div>
-
-       <div class="mb-3">
-   <label class="form-label">Estado del Trabajo</label>
-        <div class="form-check">
-       <input class="form-check-input" type="radio" name="estadoTrabajo" value="completado" checked>
-   <label class="form-check-label">
-  Trabajo completado satisfactoriamente
-     </label>
-   </div>
-           <div class="form-check">
-    <input class="form-check-input" type="radio" name="estadoTrabajo" value="requiereAtencion">
-   <label class="form-check-label">
-   Requiere atención adicional
-      </label>
-   </div>
-        </div>
-
-    <div class="d-grid gap-2">
-         <button type="submit" class="btn btn-success btn-lg">
-       <i class="bi bi-check-circle"></i> Confirmar Finalización
-   </button>
-      <a asp-action="DetalleTarea" asp-route-id="@Model.Id" class="btn btn-secondary">
-    <i class="bi bi-arrow-left"></i> Cancelar
-  </a>
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="bi bi-check-circle"></i> Finalizar Tarea</h2>
+        <p class="text-muted">Complete la información para finalizar la tarea</p>
     </div>
-       </form>
-        </div>
- </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Información de la Tarea -->
+        <div class="card mb-4">
+   <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información de la Tarea</h5>
+            </div>
+      <div class="card-body">
+     <dl class="row mb-0">
+          <dt class="col-sm-4">Descripción:</dt>
+         <dd class="col-sm-8"><strong>@Model.Descripcion</strong></dd>
+      
+       <dt class="col-sm-4">Vehículo:</dt>
+     <dd class="col-sm-8">
+        @Model.IngresoTaller?.Vehiculo?.Patente - 
+            @Model.IngresoTaller?.Vehiculo?.Marca @Model.IngresoTaller?.Vehiculo?.Modelo
+          </dd>
+ 
+   <dt class="col-sm-4">Tiempo Estimado:</dt>
+        <dd class="col-sm-8">@Model.TiempoEstimadoHoras horas</dd>
+       
+           @if (Model.FechaInicio.HasValue)
+          {
+      var transcurrido = (DateTime.Now - Model.FechaInicio.Value).TotalHours;
+           <dt class="col-sm-4">Tiempo Transcurrido:</dt>
+         <dd class="col-sm-8">
+                 @transcurrido.ToString("N2") horas
+       @if (transcurrido > Model.TiempoEstimadoHoras)
+            {
+             <span class="badge bg-warning">Excedido</span>
+            }
+     </dd>
+               }
+     </dl>
+            </div>
+  </div>
+
+        <!-- Formulario de Finalización -->
+      <div class="card">
+       <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-check-square"></i> Completar Tarea</h5>
+            </div>
+      <div class="card-body">
+       <form asp-action="FinalizarTarea" method="post">
+         <input type="hidden" name="id" value="@Model.Id" />
+     
+        <div class="mb-4">
+            <label for="tiempoRealHoras" class="form-label">
+    <i class="bi bi-clock"></i> Tiempo Real Empleado (horas)
+          </label>
+  <input type="number" 
+        name="tiempoRealHoras" 
+       id="tiempoRealHoras"
+             class="form-control form-control-lg" 
+         min="0.1" 
+           step="0.5"
+     value="@Model.TiempoEstimadoHoras"
+       required />
+     <small class="text-muted">Ingrese el tiempo real que tomó completar la tarea</small>
+                    </div>
+
+  <div class="mb-4">
+           <label for="observaciones" class="form-label">
+    <i class="bi bi-chat-left-text"></i> Observaciones Finales
+         </label>
+    <textarea name="observaciones" 
+          id="observaciones"
+           class="form-control" 
+         rows="5"
+          placeholder="Describa el trabajo realizado, problemas encontrados, recomendaciones, etc."></textarea>
+         <small class="text-muted">Opcional: Agregue detalles importantes sobre el trabajo realizado</small>
+         </div>
+
+       <div class="alert alert-info">
+              <i class="bi bi-info-circle"></i> 
+ Al finalizar esta tarea, se marcará como completada y se registrará el tiempo empleado.
+          </div>
+
+     <div class="d-grid gap-2">
+   <button type="submit" class="btn btn-success btn-lg">
+       <i class="bi bi-check-circle-fill"></i> Finalizar Tarea
+        </button>
+        <a asp-action="DetalleTarea" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+      <i class="bi bi-x-circle"></i> Cancelar
+   </a>
+   </div>
+     </form>
+          </div>
+   </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Resumen -->
+     <div class="card">
+     <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="bi bi-speedometer2"></i> Resumen</h5>
+         </div>
+   <div class="card-body">
+   <div class="text-center mb-3">
+         <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+       </div>
+      
+      <h6 class="text-center mb-3">Trabajo Completado</h6>
+          
+                <ul class="list-group list-group-flush">
+      <li class="list-group-item">
+     <i class="bi bi-truck text-primary"></i> 
+             @Model.IngresoTaller?.Vehiculo?.Patente
+        </li>
+  <li class="list-group-item">
+          <i class="bi bi-clock text-info"></i> 
+             @Model.TiempoEstimadoHoras h estimadas
+        </li>
+            <li class="list-group-item">
+              <i class="bi bi-exclamation-triangle text-danger"></i> 
+             Prioridad: @Model.Prioridad
+      </li>
+     </ul>
+    </div>
+      </div>
     </div>
 </div>

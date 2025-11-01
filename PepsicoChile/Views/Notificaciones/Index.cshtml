@@ -1,0 +1,167 @@
+@model List<Notificacion>
+@{
+    ViewData["Title"] = "Notificaciones";
+    var noLeidas = Model.Where(n => !n.Leida).ToList();
+    var leidas = Model.Where(n => n.Leida).ToList();
+}
+
+<div class="row mb-4">
+ <div class="col-md-8">
+<h2><i class="bi bi-bell"></i> Notificaciones</h2>
+<p class="text-muted">Tienes @noLeidas.Count notificación@(noLeidas.Count != 1 ? "es" : "") sin leer</p>
+ </div>
+    <div class="col-md-4 text-end">
+@if (noLeidas.Any())
+{
+      <form asp-action="MarcarTodasLeidas" method="post" class="d-inline">
+  <button type="submit" class="btn btn-outline-primary">
+         <i class="bi bi-check-all"></i> Marcar todas como leídas
+  </button>
+ </form>
+  }
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center">
+   <i class="bi bi-bell-slash fs-1 d-block mb-3"></i>
+<h4>No tienes notificaciones</h4>
+<p>Cuando recibas notificaciones aparecerán aquí.</p>
+    </div>
+}
+else
+{
+    <!-- Notificaciones No Leídas -->
+    @if (noLeidas.Any())
+    {
+   <div class="card mb-4 border-primary">
+ <div class="card-header bg-primary text-white">
+    <h5 class="mb-0"><i class="bi bi-bell-fill"></i> Nuevas (@noLeidas.Count)</h5>
+ </div>
+       <div class="card-body p-0">
+  <div class="list-group list-group-flush">
+  @foreach (var notif in noLeidas)
+   {
+    <div class="list-group-item list-group-item-action" style="border-left: 4px solid @(notif.Tipo == "Urgente" ? "#dc3545" : notif.Tipo == "Tarea" ? "#ffc107" : "#0dcaf0")">
+      <div class="d-flex w-100 justify-content-between align-items-start">
+     <div class="flex-grow-1">
+       <div class="d-flex align-items-center mb-2">
+    @switch (notif.Tipo)
+       {
+case "Urgente":
+   <span class="badge bg-danger me-2"><i class="bi bi-exclamation-triangle-fill"></i> URGENTE</span>
+   break;
+   case "Tarea":
+  <span class="badge bg-warning text-dark me-2"><i class="bi bi-list-task"></i> Tarea</span>
+  break;
+case "Sistema":
+       <span class="badge bg-info me-2"><i class="bi bi-info-circle"></i> Sistema</span>
+       break;
+  default:
+   <span class="badge bg-secondary me-2"><i class="bi bi-bell"></i> Info</span>
+  break;
+    }
+       <h6 class="mb-0">@notif.Titulo</h6>
+    </div>
+       <p class="mb-2">@notif.Mensaje</p>
+      <small class="text-muted">
+   <i class="bi bi-clock"></i> @notif.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
+   @if (notif.EnviadoWhatsApp)
+     {
+      <span class="ms-2"><i class="bi bi-whatsapp text-success"></i> Enviado por WhatsApp</span>
+   }
+ </small>
+    </div>
+  <div class="ms-3">
+        @if (!string.IsNullOrEmpty(notif.UrlAccion))
+   {
+       <a href="@notif.UrlAccion" class="btn btn-sm btn-primary mb-2" onclick="marcarLeida(@notif.Id)">
+      <i class="bi bi-eye"></i> Ver
+     </a>
+ }
+     <form asp-action="MarcarLeida" method="post" class="d-inline">
+         <input type="hidden" name="id" value="@notif.Id" />
+ <button type="submit" class="btn btn-sm btn-outline-success mb-2">
+       <i class="bi bi-check"></i>
+       </button>
+ </form>
+     <form asp-action="Eliminar" method="post" class="d-inline">
+   <input type="hidden" name="id" value="@notif.Id" />
+  <button type="submit" class="btn btn-sm btn-outline-danger" 
+   onclick="return confirm('¿Eliminar esta notificación?')">
+  <i class="bi bi-trash"></i>
+   </button>
+  </form>
+  </div>
+   </div>
+       </div>
+    }
+      </div>
+      </div>
+ </div>
+  }
+
+    <!-- Notificaciones Leídas -->
+    @if (leidas.Any())
+  {
+  <div class="card">
+  <div class="card-header bg-secondary text-white">
+ <h5 class="mb-0"><i class="bi bi-check-circle"></i> Leídas (@leidas.Count)</h5>
+  </div>
+   <div class="card-body p-0">
+ <div class="list-group list-group-flush">
+    @foreach (var notif in leidas)
+       {
+       <div class="list-group-item" style="opacity: 0.7">
+<div class="d-flex w-100 justify-content-between align-items-start">
+   <div class="flex-grow-1">
+      <div class="d-flex align-items-center mb-2">
+      <span class="badge bg-secondary me-2">
+    @notif.Tipo
+   </span>
+  <h6 class="mb-0 text-muted">@notif.Titulo</h6>
+      </div>
+ <p class="mb-2 text-muted small">@notif.Mensaje</p>
+           <small class="text-muted">
+      <i class="bi bi-clock"></i> @notif.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
+    <span class="ms-3"><i class="bi bi-check-circle"></i> Leída: @notif.FechaLeida?.ToString("dd/MM/yyyy HH:mm")</span>
+        </small>
+        </div>
+   <div class="ms-3">
+     @if (!string.IsNullOrEmpty(notif.UrlAccion))
+     {
+      <a href="@notif.UrlAccion" class="btn btn-sm btn-outline-primary mb-2">
+       <i class="bi bi-eye"></i>
+       </a>
+      }
+      <form asp-action="Eliminar" method="post" class="d-inline">
+       <input type="hidden" name="id" value="@notif.Id" />
+    <button type="submit" class="btn btn-sm btn-outline-danger" 
+     onclick="return confirm('¿Eliminar esta notificación?')">
+   <i class="bi bi-trash"></i>
+ </button>
+      </form>
+       </div>
+      </div>
+  </div>
+   }
+   </div>
+ </div>
+   </div>
+  }
+}
+
+@section Scripts {
+  <script>
+   function marcarLeida(id) {
+       fetch('/Notificaciones/MarcarLeida', {
+method: 'POST',
+   headers: {
+ 'Content-Type': 'application/json',
+  },
+   body: JSON.stringify({ id: id })
+  });
+  }
+    </script>
+}

@@ -1,0 +1,272 @@
+@model List<Vehiculo>
+@{
+    ViewData["Title"] = "Estado de Vehículos";
+    var stats = ViewBag.Estadisticas;
+}
+
+<div class="row mb-4">
+    <div class="col-md-8">
+ <h2><i class="bi bi-truck-front"></i> Estado de la Flota de Vehículos</h2>
+   <p class="text-muted">Vista completa del estado actual de todos los vehículos</p>
+    </div>
+<div class="col-md-4 text-end">
+ <a asp-controller="Vehiculos" asp-action="Index" class="btn btn-primary">
+  <i class="bi bi-list"></i> Gestionar Vehículos
+   </a>
+    </div>
+</div>
+
+<!-- Estadísticas Generales -->
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card bg-primary text-white h-100">
+   <div class="card-body text-center">
+         <i class="bi bi-truck-front fs-1"></i>
+     <h2 class="mt-2">@stats.Total</h2>
+    <p class="mb-0">Total Flota</p>
+         </div>
+   </div>
+ </div>
+    <div class="col-md-2">
+  <div class="card bg-success text-white h-100">
+      <div class="card-body text-center">
+         <i class="bi bi-check-circle fs-1"></i>
+     <h2 class="mt-2">@stats.Disponibles</h2>
+      <p class="mb-0">Disponibles</p>
+ <small>@((stats.Disponibles * 100.0 / stats.Total).ToString("N1"))%</small>
+     </div>
+    </div>
+ </div>
+    <div class="col-md-2">
+ <div class="card bg-info text-white h-100">
+ <div class="card-body text-center">
+           <i class="bi bi-arrow-right-circle fs-1"></i>
+     <h2 class="mt-2">@stats.EnRuta</h2>
+     <p class="mb-0">En Ruta</p>
+     <small>@((stats.EnRuta * 100.0 / stats.Total).ToString("N1"))%</small>
+   </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-warning text-dark h-100">
+    <div class="card-body text-center">
+    <i class="bi bi-tools fs-1"></i>
+    <h2 class="mt-2">@stats.EnTaller</h2>
+        <p class="mb-0">En Taller</p>
+       <small>@((stats.EnTaller * 100.0 / stats.Total).ToString("N1"))%</small>
+   </div>
+        </div>
+  </div>
+    <div class="col-md-2">
+   <div class="card bg-secondary text-white h-100">
+    <div class="card-body text-center">
+    <i class="bi bi-calendar-check fs-1"></i>
+    <h2 class="mt-2">@stats.Programados</h2>
+                <p class="mb-0">Programados</p>
+        <small>@((stats.Programados * 100.0 / stats.Total).ToString("N1"))%</small>
+        </div>
+ </div>
+    </div>
+ <div class="col-md-2">
+     <div class="card bg-dark text-white h-100">
+  <div class="card-body text-center">
+    <i class="bi bi-speedometer fs-1"></i>
+     <h2 class="mt-2">@stats.PromedioKilometraje.ToString("N0")</h2>
+         <p class="mb-0 small">Km Promedio</p>
+    </div>
+ </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+   <div class="row">
+      <div class="col-md-3">
+         <label class="form-label">Filtrar por Estado</label>
+ <select class="form-select" id="filtroEstado">
+         <option value="">Todos</option>
+       <option value="Disponible">Disponible</option>
+ <option value="En Ruta">En Ruta</option>
+ <option value="En Taller">En Taller</option>
+        <option value="Programado">Programado</option>
+   </select>
+        </div>
+  <div class="col-md-3">
+  <label class="form-label">Filtrar por Marca</label>
+       <select class="form-select" id="filtroMarca">
+      <option value="">Todas</option>
+ @foreach (var marca in Model.Select(v => v.Marca).Distinct().OrderBy(m => m))
+      {
+    <option value="@marca">@marca</option>
+  }
+      </select>
+    </div>
+   <div class="col-md-4">
+      <label class="form-label">Buscar por Patente</label>
+  <input type="text" class="form-control" id="buscarPatente" placeholder="Ej: ABCD-12" />
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+      <button class="btn btn-secondary w-100" onclick="limpiarFiltros()">
+ <i class="bi bi-x-circle"></i> Limpiar
+      </button>
+   </div>
+   </div>
+    </div>
+</div>
+
+<!-- Tabla de Vehículos -->
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-table"></i> Detalle de Vehículos (@Model.Count)</h5>
+    </div>
+    <div class="card-body">
+   <div class="table-responsive">
+      <table class="table table-hover align-middle" id="tablaVehiculos">
+    <thead>
+       <tr>
+            <th>Patente</th>
+   <th>Marca/Modelo</th>
+      <th>Año</th>
+       <th>Kilometraje</th>
+     <th>Estado</th>
+<th>Último Mantenimiento</th>
+     <th>Tiempo en Estado</th>
+     <th>Acciones</th>
+       </tr>
+   </thead>
+ <tbody>
+         @foreach (var vehiculo in Model)
+   {
+       var tiempoEnEstado = (DateTime.Now - vehiculo.FechaActualizacion).Days;
+       
+   <tr data-estado="@vehiculo.Estado" data-marca="@vehiculo.Marca" data-patente="@vehiculo.Patente">
+ <td>
+           <strong class="fs-5">@vehiculo.Patente</strong>
+     </td>
+       <td>
+           @vehiculo.Marca @vehiculo.Modelo
+           </td>
+       <td>@vehiculo.Año</td>
+       <td>
+@(vehiculo.KilometrajeActual.HasValue ? vehiculo.KilometrajeActual.Value.ToString("N0") : "N/A") km
+      </td>
+       <td>
+     @switch (vehiculo.Estado)
+   {
+      case "Disponible":
+   <span class="badge bg-success"><i class="bi bi-check-circle"></i> Disponible</span>
+   break;
+     case "En Ruta":
+    <span class="badge bg-info"><i class="bi bi-arrow-right-circle"></i> En Ruta</span>
+    break;
+   case "En Taller":
+   <span class="badge bg-warning text-dark"><i class="bi bi-tools"></i> En Taller</span>
+    break;
+ case "Programado":
+       <span class="badge bg-secondary"><i class="bi bi-calendar-check"></i> Programado</span>
+break;
+      default:
+ <span class="badge bg-secondary">@vehiculo.Estado</span>
+      break;
+ }
+    </td>
+  <td>
+     @if (vehiculo.UltimoMantenimiento.HasValue)
+   {
+       <small>
+      @vehiculo.UltimoMantenimiento.Value.ToString("dd/MM/yyyy")
+           </small>
+  }
+   else
+{
+  <span class="text-muted">Sin registro</span>
+    }
+   </td>
+ <td>
+    @if (tiempoEnEstado == 0)
+  {
+   <span class="badge bg-info">Hoy</span>
+       }
+  else if (tiempoEnEstado == 1)
+        {
+  <span>1 día</span>
+     }
+  else if (tiempoEnEstado > 30)
+      {
+      <span class="badge bg-danger">@tiempoEnEstado días</span>
+       }
+      else if (tiempoEnEstado > 7)
+     {
+         <span class="badge bg-warning text-dark">@tiempoEnEstado días</span>
+}
+ else
+      {
+        <span>@tiempoEnEstado días</span>
+  }
+        </td>
+      <td>
+       <div class="btn-group">
+      <a asp-controller="Vehiculos" asp-action="Detalle" asp-route-id="@vehiculo.Id" 
+   class="btn btn-sm btn-info">
+      <i class="bi bi-eye"></i>
+     </a>
+   @if (vehiculo.Estado == "Disponible" || vehiculo.Estado == "En Ruta")
+        {
+      <a asp-controller="Supervisor" asp-action="ProgramarIngreso" 
+  class="btn btn-sm btn-success" 
+    title="Programar ingreso al taller">
+  <i class="bi bi-calendar-plus"></i>
+      </a>
+      }
+  </div>
+      </td>
+  </tr>
+  }
+
+    </tbody>
+      </table>
+     </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+   // Función de filtrado
+        function aplicarFiltros() {
+      const filtroEstado = document.getElementById('filtroEstado').value.toLowerCase();
+      const filtroMarca = document.getElementById('filtroMarca').value.toLowerCase();
+ const buscarPatente = document.getElementById('buscarPatente').value.toLowerCase();
+   
+   const filas = document.querySelectorAll('#tablaVehiculos tbody tr');
+   
+filas.forEach(fila => {
+         const estado = fila.getAttribute('data-estado').toLowerCase();
+    const marca = fila.getAttribute('data-marca').toLowerCase();
+           const patente = fila.getAttribute('data-patente').toLowerCase();
+      
+const cumpleEstado = !filtroEstado || estado === filtroEstado;
+     const cumpleMarca = !filtroMarca || marca === filtroMarca;
+     const cumplePatente = !buscarPatente || patente.includes(buscarPatente);
+  
+    if (cumpleEstado && cumpleMarca && cumplePatente) {
+         fila.style.display = '';
+  } else {
+    fila.style.display = 'none';
+      }
+       });
+ }
+ 
+      function limpiarFiltros() {
+     document.getElementById('filtroEstado').value = '';
+   document.getElementById('filtroMarca').value = '';
+       document.getElementById('buscarPatente').value = '';
+   aplicarFiltros();
+       }
+ 
+        // Event listeners
+ document.getElementById('filtroEstado').addEventListener('change', aplicarFiltros);
+        document.getElementById('filtroMarca').addEventListener('change', aplicarFiltros);
+        document.getElementById('buscarPatente').addEventListener('input', aplicarFiltros);
+    </script>
+}

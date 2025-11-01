@@ -6,7 +6,7 @@ using PepsicoChile.Filters;
 namespace PepsicoChile.Controllers
 {
     [AuthorizeSession]
-    [AuthorizeRole("Recepcionista", "JefeTaller")]
+    [AuthorizeRole("Administrador", "Recepcionista", "JefeTaller")]
     public class ChoferController : Controller
     {
         public IActionResult Index()

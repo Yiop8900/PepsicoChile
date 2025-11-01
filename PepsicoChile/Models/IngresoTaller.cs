@@ -17,6 +17,8 @@ namespace PepsicoChile.Models
         public string? ObservacionesChofer { get; set; }
         public int? SupervisorId { get; set; }
         public Usuario? Supervisor { get; set; }
+        public int? MecanicoAsignadoId { get; set; }
+        public Usuario? MecanicoAsignado { get; set; }
         public bool RequiereRepuestos { get; set; }
         public int? KilometrajeIngreso { get; set; }
     }

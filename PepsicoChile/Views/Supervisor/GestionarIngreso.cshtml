@@ -1,229 +1,630 @@
-@model GestionIngresoViewModel
+@model GestionarIngresoViewModel
 @{
-    ViewData["Title"] = "Gestionar Ingreso";
+    ViewData["Title"] = $"Gestionar Ingreso - {Model.Ingreso.Vehiculo?.Patente}";
+    var ingreso = Model.Ingreso;
+    var puedeEditar = Model.PuedeEditarTareas;
 }
 
 <div class="row mb-4">
-    <div class="col-12">
-        <h1><i class="bi bi-gear"></i> Gestionar Ingreso - @Model.Ingreso.Vehiculo?.Patente</h1>
- <a asp-action="Agenda" class="btn btn-secondary">
-  <i class="bi bi-arrow-left"></i> Volver a Agenda
+    <div class="col-md-8">
+        <h2>
+            <i class="bi bi-clipboard-check"></i> Gestión de Ingreso
+        </h2>
+        <h4 class="text-primary">
+            <i class="bi bi-truck"></i> @ingreso.Vehiculo?.Patente - @ingreso.Vehiculo?.Marca @ingreso.Vehiculo?.Modelo
+        </h4>
+    </div>
+    <div class="col-md-4 text-end">
+        <a asp-action="MonitoreoGeneral" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
         </a>
     </div>
 </div>
 
-<!-- Información General del Ingreso -->
+<!-- Estado del Ingreso -->
 <div class="row mb-4">
-    <div class="col-md-6">
- <div class="card">
-  <div class="card-header bg-primary text-white">
-       <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información del Ingreso</h5>
+    <div class="col-12">
+        <div class="card border-@(ingreso.Estado == "Completado" ? "success" : ingreso.Estado == "En Proceso" ? "warning" : ingreso.Estado == "Pausado" ? "danger" : "info")">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <h5 class="mb-1">Estado</h5>
+                        <h3 class="mb-0">
+                            <span class="badge bg-@(ingreso.Estado == "Completado" ? "success" : ingreso.Estado == "En Proceso" ? "warning" : ingreso.Estado == "Pausado" ? "danger" : "info")">
+                                @ingreso.Estado
+                            </span>
+                        </h3>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Motivo:</strong> @ingreso.MotivoIngreso</p>
+                        <p class="mb-1"><strong>Programado:</strong> @ingreso.FechaProgramada.ToString("dd/MM/yyyy HH:mm")</p>
+                        @if (ingreso.FechaIngresoReal.HasValue)
+                        {
+                            <p class="mb-0"><strong>Ingreso Real:</strong> @ingreso.FechaIngresoReal.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                        }
+                    </div>
+                    <div class="col-md-3 text-end">
+                        @if (ingreso.Estado == "Programado")
+                        {
+                            <form asp-action="IniciarIngreso" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@ingreso.Id" />
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="bi bi-play-fill"></i> Iniciar
+                                </button>
+                            </form>
+                        }
+                        else if (ingreso.Estado == "Pausado")
+                        {
+                            <form asp-action="ReanudarIngreso" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@ingreso.Id" />
+                                <button type="submit" class="btn btn-warning btn-lg">
+                                    <i class="bi bi-play-circle"></i> Reanudar
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
             </div>
-      <div class="card-body">
-  <dl class="row mb-0">
-    <dt class="col-sm-5">Vehículo:</dt>
-   <dd class="col-sm-7"><strong>@Model.Ingreso.Vehiculo?.Patente - @Model.Ingreso.Vehiculo?.Marca</strong></dd>
-    
-     <dt class="col-sm-5">Chofer:</dt>
-      <dd class="col-sm-7">@Model.Ingreso.Chofer?.Nombre @Model.Ingreso.Chofer?.Apellido</dd>
-    
-   <dt class="col-sm-5">Estado:</dt>
-   <dd class="col-sm-7">
-      @switch (Model.Ingreso.Estado)
-   {
-  case "En Proceso":
- <span class="badge bg-warning">@Model.Ingreso.Estado</span>
-     break;
-  case "Programado":
- <span class="badge bg-info">@Model.Ingreso.Estado</span>
-      break;
-  case "Pausado":
-        <span class="badge bg-danger">@Model.Ingreso.Estado</span>
- break;
-        case "Completado":
-       <span class="badge bg-success">@Model.Ingreso.Estado</span>
-   break;
-   default:
-     <span class="badge bg-secondary">@Model.Ingreso.Estado</span>
-     break;
- }
-       </dd>
-    
-       <dt class="col-sm-5">Motivo:</dt>
-    <dd class="col-sm-7">@Model.Ingreso.MotivoIngreso</dd>
-  
-  <dt class="col-sm-5">Fecha Programada:</dt>
-  <dd class="col-sm-7">@Model.Ingreso.FechaProgramada.ToString("dd/MM/yyyy HH:mm")</dd>
-       </dl>
-   </div>
         </div>
     </div>
-    
-    <div class="col-md-6">
-<div class="card">
-       <div class="card-header bg-info text-white">
-  <h5 class="mb-0"><i class="bi bi-lightning"></i> Acciones Rápidas</h5>
-  </div>
- <div class="card-body">
-       <div class="d-grid gap-2">
- <a asp-action="AsignarTarea" asp-route-ingresoId="@Model.Ingreso.Id" class="btn btn-success">
-              <i class="bi bi-plus-circle"></i> Asignar Nueva Tarea
-</a>
-<a asp-action="RegistrarPausa" asp-route-ingresoId="@Model.Ingreso.Id" class="btn btn-warning">
-  <i class="bi bi-pause-circle"></i> Registrar Pausa
-        </a>
-      <button class="btn btn-primary" onclick="alert('Funcionalidad de notificación')">
-      <i class="bi bi-bell"></i> Enviar Notificación
-           </button>
-         </div>
-       </div>
-     </div>
- </div>
 </div>
 
-<!-- Tareas Asignadas -->
-<div class="row mb-4">
-    <div class="col-12">
-      <div class="card">
-      <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-       <h5 class="mb-0"><i class="bi bi-list-task"></i> Tareas Asignadas</h5>
-         <a asp-action="AsignarTarea" asp-route-ingresoId="@Model.Ingreso.Id" class="btn btn-sm btn-light">
-       <i class="bi bi-plus"></i> Nueva Tarea
-   </a>
-   </div>
- <div class="card-body">
-          @if (Model.Tareas.Any())
-     {
-         <div class="table-responsive">
-      <table class="table table-hover">
-           <thead>
-    <tr>
-    <th>Descripción</th>
-       <th>Mecánico</th>
-  <th>Prioridad</th>
-       <th>Estado</th>
-   <th>Tiempo Est.</th>
-     <th>Acciones</th>
- </tr>
-  </thead>
-   <tbody>
-      @foreach (var tarea in Model.Tareas)
-    {
-       <tr>
-      <td>@tarea.Descripcion</td>
-   <td>@tarea.MecanicoAsignado?.Nombre @tarea.MecanicoAsignado?.Apellido</td>
-       <td>
-   @switch (tarea.Prioridad)
-        {
-     case "Alta":
-   <span class="badge bg-danger">@tarea.Prioridad</span>
-   break;
-       case "Media":
-   <span class="badge bg-warning">@tarea.Prioridad</span>
-      break;
-           default:
-     <span class="badge bg-secondary">@tarea.Prioridad</span>
-       break;
-   }
-      </td>
-      <td>
-     @switch (tarea.Estado)
- {
-  case "Completada":
-<span class="badge bg-success">@tarea.Estado</span>
- break;
-    case "En Proceso":
-  <span class="badge bg-warning">@tarea.Estado</span>
-           break;
-     default:
-       <span class="badge bg-secondary">@tarea.Estado</span>
-  break;
-     }
-    </td>
-     <td>@tarea.TiempoEstimadoHoras h</td>
-         <td>
-  <button class="btn btn-sm btn-info" onclick="alert('Ver detalle de tarea')">
-   <i class="bi bi-eye"></i>
-      </button>
- </td>
-      </tr>
-       }
-       </tbody>
-  </table>
- </div>
-      }
-            else
-            {
-    <p class="text-muted">No hay tareas asignadas aún.</p>
-       }
-    </div>
- </div>
- </div>
-</div>
+@Html.AntiForgeryToken()
 
-<!-- Pausas y Documentos -->
 <div class="row">
-    <div class="col-md-6">
-   <div class="card">
-        <div class="card-header bg-warning">
-     <h5 class="mb-0"><i class="bi bi-pause-circle"></i> Pausas Registradas</h5>
-   </div>
-  <div class="card-body">
-       @if (Model.Pausas.Any())
-       {
-         <ul class="list-group">
- @foreach (var pausa in Model.Pausas)
-         {
-   <li class="list-group-item">
-       <strong>@pausa.Motivo</strong>
-             <br />
-       <small>Inicio: @pausa.FechaInicio.ToString("dd/MM/yyyy HH:mm")</small>
-   @if (pausa.FechaFin.HasValue)
-      {
-          <br />
-  <small>Fin: @pausa.FechaFin.Value.ToString("dd/MM/yyyy HH:mm")</small>
-    }
-       else
-         {
-   <br />
-  <span class="badge bg-danger">Activa</span>
-    }
-    </li>
-        }
-  </ul>
-      }
-   else
-   {
-     <p class="text-muted">No hay pausas registradas.</p>
-      }
-   </div>
+    <!-- Columna Izquierda -->
+    <div class="col-lg-6">
+        <!-- Información del Ingreso -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información del Ingreso</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <strong>Chofer:</strong>
+                        <p class="mb-0">@ingreso.Chofer?.Nombre @ingreso.Chofer?.Apellido</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Supervisor:</strong>
+                        <p class="mb-0">@(ingreso.Supervisor?.Nombre ?? "N/A")</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Mecánico Asignado:</strong>
+                        <p class="mb-0">
+                            @if (ingreso.MecanicoAsignado != null)
+                            {
+                                <span class="badge bg-success">
+                                    <i class="bi bi-person-check"></i> @ingreso.MecanicoAsignado.Nombre @ingreso.MecanicoAsignado.Apellido
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-warning"><i class="bi bi-person-x"></i> Sin asignar</span>
+                                @if (puedeEditar)
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#modalAsignarMecanico">
+                                        <i class="bi bi-plus"></i> Asignar
+                                    </button>
+                                }
+                            }
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Kilometraje Ingreso:</strong>
+                        <p class="mb-0">@(ingreso.KilometrajeIngreso?.ToString("N0") ?? "N/A") km</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Requiere Repuestos:</strong>
+                        <p class="mb-0">
+                            @if (ingreso.RequiereRepuestos)
+                            {
+                                <span class="badge bg-warning">Sí</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">No</span>
+                            }
+                        </p>
+                    </div>
+                    @if (!string.IsNullOrEmpty(ingreso.DescripcionProblema))
+                    {
+                        <div class="col-12">
+                            <strong>Descripción del Problema:</strong>
+                            <p class="mb-0 p-3 bg-light rounded">@ingreso.DescripcionProblema</p>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(ingreso.ObservacionesChofer))
+                    {
+                        <div class="col-12">
+                            <strong>Observaciones del Chofer:</strong>
+                            <p class="mb-0 p-3 bg-light rounded">@ingreso.ObservacionesChofer</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Tareas Asignadas -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-list-task"></i> Tareas (@Model.Tareas.Count)</h5>
+                @if (puedeEditar)
+                {
+                    <button type="button" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalNuevaTarea">
+                        <i class="bi bi-plus-circle"></i> Nueva Tarea
+                    </button>
+                }
+            </div>
+            <div class="card-body">
+                @if (Model.Tareas.Any())
+                {
+                    <div class="list-group">
+                        @foreach (var tarea in Model.Tareas)
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">@tarea.Descripcion</h6>
+                                        <p class="mb-1 small">
+                                            <i class="bi bi-person"></i> @tarea.MecanicoAsignado?.Nombre @tarea.MecanicoAsignado?.Apellido
+                                        </p>
+                                        <p class="mb-0 small text-muted">
+                                            <span class="badge bg-@(tarea.Prioridad == "Alta" ? "danger" : tarea.Prioridad == "Media" ? "warning" : "secondary")">
+                                                @tarea.Prioridad
+                                            </span>
+                                            <span class="badge bg-@(tarea.Estado == "Completada" ? "success" : tarea.Estado == "En Proceso" ? "warning" : "secondary")">
+                                                @tarea.Estado
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle"></i> No hay tareas asignadas
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Pausas Registradas -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-pause-circle"></i> Pausas (@Model.Pausas.Count)</h5>
+                @if (puedeEditar && ingreso.Estado == "En Proceso")
+                {
+                    <button type="button" class="btn btn-sm btn-dark" data-bs-toggle="modal" data-bs-target="#modalRegistrarPausa">
+                        <i class="bi bi-plus-circle"></i> Registrar Pausa
+                    </button>
+                }
+            </div>
+            <div class="card-body">
+                @if (Model.Pausas.Any())
+                {
+                    @foreach (var pausa in Model.Pausas)
+                    {
+                        <div class="mb-3 pb-3 border-bottom">
+                            <h6 class="mb-1">@pausa.Motivo</h6>
+                            @if (!string.IsNullOrEmpty(pausa.Descripcion))
+                            {
+                                <p class="mb-1 small">@pausa.Descripcion</p>
+                            }
+                            <div class="small text-muted">
+                                <div class="mb-1">
+                                    <i class="bi bi-clock"></i> Inicio: @pausa.FechaInicio.ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                                @if (pausa.FechaFin.HasValue)
+                                {
+                                    <div class="mb-1">
+                                        <i class="bi bi-clock-fill"></i> Fin: @(pausa.FechaFin.Value.ToString("dd/MM/yyyy HH:mm"))
+                                    </div>
+                                    <div>
+                                        <strong>Duración:</strong> @((pausa.FechaFin.Value - pausa.FechaInicio).TotalHours.ToString("N2")) horas
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div><span class="badge bg-danger">ACTIVA</span></div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle"></i> No se han registrado pausas
+                    </div>
+                }
+            </div>
         </div>
     </div>
-    
-    <div class="col-md-6">
-        <div class="card">
-      <div class="card-header bg-secondary text-white">
-    <h5 class="mb-0"><i class="bi bi-file-earmark"></i> Documentos</h5>
-   </div>
-   <div class="card-body">
-    @if (Model.Documentos.Any())
-  {
-     <ul class="list-group">
-         @foreach (var doc in Model.Documentos)
-      {
-        <li class="list-group-item">
-    <i class="bi bi-file-earmark-pdf"></i> @doc.NombreArchivo
-  <br />
-        <small class="text-muted">@doc.TipoDocumento - @doc.FechaSubida.ToString("dd/MM/yyyy")</small>
-  </li>
-   }
-      </ul>
-      }
-   else
-            {
- <p class="text-muted">No hay documentos adjuntos.</p>
-            }
-       </div>
+
+    <!-- Columna Derecha -->
+    <div class="col-lg-6">
+        <!-- Documentos -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> Documentos (@Model.Documentos.Count)</h5>
+                @if (puedeEditar)
+                {
+                    <button type="button" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalSubirDocumento">
+                        <i class="bi bi-cloud-upload"></i> Subir Documento
+                    </button>
+                }
+            </div>
+            <div class="card-body">
+                @if (Model.Documentos.Any())
+                {
+                    <div class="list-group">
+                        @foreach (var doc in Model.Documentos)
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-@(doc.TipoDocumento == "Foto" ? "image" : doc.TipoDocumento == "Informe" ? "file-earmark-text" : doc.TipoDocumento == "Presupuesto" ? "currency-dollar" : "file-earmark-pdf") fs-4 me-2 text-primary"></i>
+                                            <div>
+                                                <h6 class="mb-0">@doc.TipoDocumento</h6>
+                                                <small class="text-muted">@doc.NombreArchivo</small>
+                                            </div>
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(doc.Descripcion))
+                                        {
+                                            <p class="mb-1 small">@doc.Descripcion</p>
+                                        }
+                                        <div class="small text-muted">
+                                            <i class="bi bi-calendar"></i> @doc.FechaSubida.ToString("dd/MM/yyyy HH:mm")
+                                            <span class="ms-2">
+                                                <i class="bi bi-hdd"></i> @((doc.TamañoBytes / 1024.0).ToString("N2")) KB
+                                            </span>
+                                            @if (doc.UsuarioSubida != null)
+                                            {
+                                                <span class="ms-2">
+                                                    <i class="bi bi-person"></i> @doc.UsuarioSubida.Nombre
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="btn-group-vertical">
+                                        <a href="@Url.Action("DescargarDocumento", "Supervisor", new { id = doc.Id })" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                        @if (doc.TipoDocumento == "Foto")
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-info" onclick="verImagen('@Url.Action("DescargarDocumento", "Supervisor", new { id = doc.Id })', '@doc.NombreArchivo')">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        }
+                                        @if (puedeEditar)
+                                        {
+                                            <form asp-action="EliminarDocumento" asp-route-id="@doc.Id" method="post" class="d-inline" onsubmit="return confirm('¿Está seguro de eliminar este documento?');">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0 text-center">
+                        <i class="bi bi-info-circle"></i> No hay documentos adjuntos
+                        @if (puedeEditar)
+                        {
+                            <br />
+                            <button type="button" class="btn btn-sm btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#modalSubirDocumento">
+                                <i class="bi bi-cloud-upload"></i> Subir el primero
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
         </div>
-  </div>
+
+        <!-- Acciones -->
+        @if (puedeEditar)
+        {
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="bi bi-lightning-fill"></i> Acciones</h5>
+                </div>
+                <div class="card-body">
+                    @if (ingreso.Estado == "En Proceso")
+                    {
+                        <button type="button" class="btn btn-primary btn-lg w-100 mb-3" data-bs-toggle="modal" data-bs-target="#modalFinalizarIngreso">
+                            <i class="bi bi-check-circle-fill"></i> Finalizar Ingreso
+                        </button>
+                    }
+
+                    @if (ingreso.Estado != "Cancelado" && ingreso.Estado != "Completado")
+                    {
+                        <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#modalCancelarIngreso">
+                            <i class="bi bi-x-circle"></i> Cancelar Ingreso
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
 </div>
+
+<!-- Modal Nueva Tarea -->
+<div class="modal fade" id="modalNuevaTarea" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="AsignarTarea" method="post">
+                <input type="hidden" name="ingresoId" value="@ingreso.Id" />
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Nueva Tarea</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label asp-for="NuevaTareaDescripcion" class="form-label"></label>
+                        <textarea asp-for="NuevaTareaDescripcion" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="NuevaTareaMecanicoId" class="form-label"></label>
+                        <select asp-for="NuevaTareaMecanicoId" class="form-select" required>
+                            <option value="">-- Seleccione un mecánico --</option>
+                            @foreach (var mecanico in Model.MecanicosDisponibles)
+                            {
+                                <option value="@mecanico.Id">@mecanico.Nombre @mecanico.Apellido</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="NuevaTareaPrioridad" class="form-label"></label>
+                        <select asp-for="NuevaTareaPrioridad" class="form-select">
+                            <option value="Baja">Baja</option>
+                            <option value="Media" selected>Media</option>
+                            <option value="Alta">Alta</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Asignar Tarea</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Registrar Pausa -->
+<div class="modal fade" id="modalRegistrarPausa" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="RegistrarPausa" method="post">
+                <input type="hidden" name="ingresoId" value="@ingreso.Id" />
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title"><i class="bi bi-pause-circle"></i> Registrar Pausa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label asp-for="PausaMotivo" class="form-label"></label>
+                        <select asp-for="PausaMotivo" class="form-select" required>
+                            <option value="">-- Seleccione --</option>
+                            <option>Espera de Repuestos</option>
+                            <option>Falta de Herramientas</option>
+                            <option>Diagnóstico Adicional</option>
+                            <option>Aprobación de Presupuesto</option>
+                            <option>Otro</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="PausaDescripcion" class="form-label"></label>
+                        <textarea asp-for="PausaDescripcion" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning">Registrar Pausa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Finalizar Ingreso -->
+<div class="modal fade" id="modalFinalizarIngreso" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="FinalizarIngreso" asp-route-id="@ingreso.Id" method="post">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="bi bi-check-circle"></i> Finalizar Ingreso</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> Se verificará que todas las tareas estén completadas.
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="KilometrajeSalida" class="form-label"></label>
+                        <input asp-for="KilometrajeSalida" class="form-control" type="number" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ObservacionesFinales" class="form-label"></label>
+                        <textarea asp-for="ObservacionesFinales" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Finalizar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cancelar Ingreso -->
+<div class="modal fade" id="modalCancelarIngreso" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="CancelarIngreso" asp-route-id="@ingreso.Id" method="post">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-x-circle"></i> Cancelar Ingreso</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> Esta acción no se puede deshacer.
+                    </div>
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label">Motivo de la Cancelación</label>
+                        <textarea name="motivo" class="form-control" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
+                    <button type="submit" class="btn btn-danger">Confirmar Cancelación</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Asignar Mecánico -->
+<div class="modal fade" id="modalAsignarMecanico" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="AsignarMecanicoIngreso" asp-route-id="@ingreso.Id" method="post">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-person-plus"></i> Asignar Mecánico</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="mecanicoId" class="form-label">Seleccione el Mecánico</label>
+                        <select name="mecanicoId" class="form-select" required>
+                            <option value="">-- Seleccione un mecánico --</option>
+                            @foreach (var mecanico in Model.MecanicosDisponibles)
+                            {
+                                <option value="@mecanico.Id">@mecanico.Nombre @mecanico.Apellido</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> El mecánico seleccionado será responsable de este ingreso.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Asignar Mecánico</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Subir Documento -->
+<div class="modal fade" id="modalSubirDocumento" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="SubirDocumento" asp-route-id="@ingreso.Id" method="post" enctype="multipart/form-data">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="bi bi-cloud-upload"></i> Subir Documento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="tipoDocumento" class="form-label">Tipo de Documento</label>
+                        <select name="tipoDocumento" id="tipoDocumento" class="form-select" required>
+                            <option value="">-- Seleccione el tipo --</option>
+                            <option value="Foto">Foto del Vehículo/Trabajo</option>
+                            <option value="Informe">Informe Técnico</option>
+                            <option value="Presupuesto">Presupuesto</option>
+                            <option value="Orden de Trabajo">Orden de Trabajo</option>
+                            <option value="Factura">Factura</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="archivo" class="form-label">Seleccionar Archivo</label>
+                        <input type="file" name="archivo" id="archivo" class="form-control"
+                               accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" required />
+                        <small class="text-muted">
+                            Formatos permitidos: Imágenes (JPG, PNG), PDF, Word, Excel. Máx: 10 MB
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">Descripción (Opcional)</label>
+                        <textarea name="descripcion" id="descripcion" class="form-control" rows="3"
+                                  placeholder="Agregue detalles sobre este documento..."></textarea>
+                    </div>
+
+                    <div id="previewContainer" style="display:none;" class="mb-3">
+                        <label class="form-label">Vista Previa:</label>
+                        <div class="border rounded p-2 text-center bg-light">
+                            <img id="imagePreview" style="max-width: 100%; max-height: 300px;" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-info">
+                        <i class="bi bi-cloud-upload"></i> Subir Documento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ver Imagen -->
+<div class="modal fade" id="modalVerImagen" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalVerImagenTitulo">Ver Imagen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="imagenGrande" style="max-width: 100%; height: auto;" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+              // Preview de imagen al seleccionar archivo
+             document.getElementById('archivo').addEventListener('change', function(e) {
+              const file = e.target.files[0];
+           const preview = document.getElementById('imagePreview');
+        const container = document.getElementById('previewContainer');
+
+           if (file && file.type.startsWith('image/')) {
+           const reader = new FileReader();
+                        reader.onload = function(e) {
+                       preview.src = e.target.result;
+                 container.style.display = 'block';
+                        };
+              reader.readAsDataURL(file);
+                    } else {
+         container.style.display = 'none';
+              }
+                });
+
+          // Función para ver imagen en modal
+                function verImagen(url, nombre) {
+         document.getElementById('imagenGrande').src = url;
+                    document.getElementById('modalVerImagenTitulo').textContent = nombre;
+         var modal = new bootstrap.Modal(document.getElementById('modalVerImagen'));
+                    modal.show();
+          }
+    </script>
+}

@@ -1,174 +1,316 @@
 @model TareaTaller
 @{
-ViewData["Title"] = "Detalle de Tarea";
+    ViewData["Title"] = "Detalle de Tarea";
+    var repuestos = ViewBag.Repuestos as List<Repuesto> ?? new List<Repuesto>();
 }
 
 <div class="row mb-4">
-    <div class="col-12">
-    <h1><i class="bi bi-info-circle"></i> Detalle de la Tarea</h1>
-<a asp-action="MisTareas" class="btn btn-secondary">
-   <i class="bi bi-arrow-left"></i> Volver a Mis Tareas
- </a>
+    <div class="col-md-8">
+        <h2><i class="bi bi-clipboard-check"></i> Detalle de la Tarea</h2>
+        <p class="text-muted">@Model.Descripcion</p>
     </div>
+    <div class="col-md-4 text-end">
+  <a asp-action="MisTareas" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Volver
+        </a>
+ </div>
+</div>
+
+<!-- Estado de la Tarea -->
+<div class="row mb-4">
+    <div class="col-12">
+   <div class="card border-@(Model.Estado == "Completada" ? "success" : Model.Estado == "En Proceso" ? "warning" : "info")">
+  <div class="card-body">
+     <div class="row align-items-center">
+ <div class="col-md-3">
+      <h5 class="mb-1">Estado Actual</h5>
+      <h3 class="mb-0">
+   <span class="badge bg-@(Model.Estado == "Completada" ? "success" : Model.Estado == "En Proceso" ? "warning" : "info")">
+        @Model.Estado
+             </span>
+      </h3>
+         </div>
+        <div class="col-md-6">
+     <p class="mb-1">
+       <strong>Prioridad:</strong> 
+        <span class="badge bg-@(Model.Prioridad == "Alta" ? "danger" : Model.Prioridad == "Media" ? "warning" : "secondary")">
+        @Model.Prioridad
+  </span>
+               </p>
+<p class="mb-1"><strong>Asignada:</strong> @Model.FechaAsignacion.ToString("dd/MM/yyyy HH:mm")</p>
+       @if (Model.FechaInicio.HasValue)
+     {
+<p class="mb-0"><strong>Iniciada:</strong> @Model.FechaInicio.Value.ToString("dd/MM/yyyy HH:mm")</p>
+       }
+   </div>
+     <div class="col-md-3 text-end">
+         @if (Model.Estado == "Pendiente")
+     {
+<form asp-action="IniciarTarea" method="post" class="d-inline">
+     <input type="hidden" name="id" value="@Model.Id" />
+            <button type="submit" class="btn btn-success btn-lg">
+     <i class="bi bi-play-fill"></i> Iniciar
+         </button>
+       </form>
+    }
+     else if (Model.Estado == "En Proceso")
+                {
+      <a asp-action="FinalizarTarea" asp-route-id="@Model.Id" class="btn btn-primary btn-lg">
+      <i class="bi bi-check-circle-fill"></i> Finalizar
+  </a>
+}
+    </div>
+        </div>
+    </div>
+ </div>
+  </div>
 </div>
 
 <div class="row">
-    <div class="col-md-8">
- <!-- Información de la Tarea -->
-<div class="card mb-3">
-  <div class="card-header bg-primary text-white">
-     <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Información de la Tarea</h5>
-</div>
-      <div class="card-body">
-     <dl class="row">
-  <dt class="col-sm-4">Descripción:</dt>
-  <dd class="col-sm-8"><strong>@Model.Descripcion</strong></dd>
-    
-   <dt class="col-sm-4">Estado:</dt>
-     <dd class="col-sm-8">
-     @switch (Model.Estado)
-  {
-        case "Completada":
-       <span class="badge bg-success">@Model.Estado</span>
-     break;
-     case "En Proceso":
-       <span class="badge bg-warning">@Model.Estado</span>
-     break;
-  case "Pendiente":
- <span class="badge bg-secondary">@Model.Estado</span>
-    break;
-      default:
-         <span class="badge bg-secondary">@Model.Estado</span>
-        break;
-   }
-  </dd>
-    
-<dt class="col-sm-4">Prioridad:</dt>
-  <dd class="col-sm-8">
-   @switch (Model.Prioridad)
-  {
- case "Alta":
-      <span class="badge bg-danger">@Model.Prioridad</span>
-     break;
-   case "Media":
-       <span class="badge bg-warning">@Model.Prioridad</span>
-          break;
- default:
-         <span class="badge bg-secondary">@Model.Prioridad</span>
-    break;
-  }
-    </dd>
-
-       <dt class="col-sm-4">Fecha Asignación:</dt>
-  <dd class="col-sm-8">@Model.FechaAsignacion.ToString("dd/MM/yyyy HH:mm")</dd>
-   
-      @if (Model.FechaInicio.HasValue)
-  {
-      <dt class="col-sm-4">Fecha Inicio:</dt>
-<dd class="col-sm-8">@Model.FechaInicio.Value.ToString("dd/MM/yyyy HH:mm")</dd>
-   }
-    
-   @if (Model.FechaFinalizacion.HasValue)
-    {
-      <dt class="col-sm-4">Fecha Finalización:</dt>
-     <dd class="col-sm-8">@Model.FechaFinalizacion.Value.ToString("dd/MM/yyyy HH:mm")</dd>
-     }
-    
-    <dt class="col-sm-4">Tiempo Estimado:</dt>
- <dd class="col-sm-8">@Model.TiempoEstimadoHoras horas</dd>
-       
-   @if (Model.TiempoRealHoras.HasValue)
-     {
-        <dt class="col-sm-4">Tiempo Real:</dt>
-        <dd class="col-sm-8">@Model.TiempoRealHoras horas</dd>
-      }
-  </dl>
- 
-    @if (!string.IsNullOrEmpty(Model.Observaciones))
-  {
-     <hr />
-    <h6><i class="bi bi-chat-left-text"></i> Observaciones:</h6>
-      <p>@Model.Observaciones</p>
- }
-   </div>
-  </div>
-
+    <!-- Columna Izquierda -->
+    <div class="col-lg-8">
         <!-- Información del Vehículo -->
-        <div class="card mb-3">
-       <div class="card-header bg-info text-white">
-   <h5 class="mb-0"><i class="bi bi-truck"></i> Información del Vehículo</h5>
-      </div>
-    <div class="card-body">
-    <dl class="row mb-0">
-      <dt class="col-sm-4">Patente:</dt>
-    <dd class="col-sm-8"><strong>@Model.IngresoTaller?.Vehiculo?.Patente</strong></dd>
-    
-  <dt class="col-sm-4">Marca/Modelo:</dt>
-<dd class="col-sm-8">@Model.IngresoTaller?.Vehiculo?.Marca @Model.IngresoTaller?.Vehiculo?.Modelo</dd>
-   
-<dt class="col-sm-4">Motivo Ingreso:</dt>
-<dd class="col-sm-8">@Model.IngresoTaller?.MotivoIngreso</dd>
-     </dl>
-  </div>
-   </div>
-    </div>
-    
-    <div class="col-md-4">
-   <!-- Acciones -->
-    <div class="card mb-3">
-            <div class="card-header bg-success text-white">
-     <h5 class="mb-0"><i class="bi bi-lightning"></i> Acciones</h5>
+ <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+     <h5 class="mb-0"><i class="bi bi-truck"></i> Información del Ingreso</h5>
             </div>
       <div class="card-body">
-     <div class="d-grid gap-2">
-      @if (Model.Estado == "Pendiente")
-        {
-    <a asp-action="IniciarTarea" asp-route-id="@Model.Id" class="btn btn-success">
-  <i class="bi bi-play-fill"></i> Iniciar Tarea
-  </a>
-     }
-    
-   @if (Model.Estado == "En Proceso")
-     {
-      <a asp-action="FinalizarTarea" asp-route-id="@Model.Id" class="btn btn-primary">
-   <i class="bi bi-check-circle"></i> Finalizar Tarea
-       </a>
-      }
-   
-    <a asp-action="SubirDocumento" asp-route-ingresoId="@Model.IngresoTallerId" class="btn btn-warning">
-        <i class="bi bi-upload"></i> Subir Foto/Documento
-   </a>
-   
-   <a asp-action="SolicitarRepuesto" asp-route-tareaId="@Model.Id" class="btn btn-info">
-          <i class="bi bi-box-seam"></i> Solicitar Repuesto
-      </a>
-     
-        <a asp-action="RegistrarObservacion" asp-route-tareaId="@Model.Id" class="btn btn-secondary">
-      <i class="bi bi-chat-left-text"></i> Agregar Observación
-      </a>
-      </div>
-   </div>
+   <div class="row g-3">
+     <div class="col-md-6">
+  <strong>Vehículo:</strong>
+           <p class="mb-0 fs-5">
+  <i class="bi bi-truck-front text-primary"></i> 
+    @Model.IngresoTaller?.Vehiculo?.Patente
+           </p>
+<small class="text-muted">
+    @Model.IngresoTaller?.Vehiculo?.Marca @Model.IngresoTaller?.Vehiculo?.Modelo
+    </small>
+       </div>
+    <div class="col-md-6">
+ <strong>Chofer:</strong>
+    <p class="mb-0">@Model.IngresoTaller?.Chofer?.Nombre @Model.IngresoTaller?.Chofer?.Apellido</p>
+         </div>
+  <div class="col-md-6">
+ <strong>Motivo Ingreso:</strong>
+      <p class="mb-0">@Model.IngresoTaller?.MotivoIngreso</p>
+  </div>
+  <div class="col-md-6">
+       <strong>Supervisor:</strong>
+<p class="mb-0">@(Model.IngresoTaller?.Supervisor?.Nombre ?? "N/A")</p>
+       </div>
+     <div class="col-12">
+          <strong>Descripción Problema:</strong>
+      <p class="mb-0 p-3 bg-light rounded">
+          @(Model.IngresoTaller?.DescripcionProblema ?? "Sin descripción")
+         </p>
+  </div>
+     </div>
+ </div>
         </div>
 
-  <!-- Enlaces Rápidos -->
-   <div class="card">
-  <div class="card-header bg-secondary text-white">
-    <h5 class="mb-0"><i class="bi bi-link"></i> Enlaces Rápidos</h5>
- </div>
-        <div class="card-body">
-     <ul class="list-group list-group-flush">
-  <li class="list-group-item">
-  <a asp-action="VerDocumentos" asp-route-ingresoId="@Model.IngresoTallerId">
-     <i class="bi bi-file-earmark"></i> Ver Documentos del Ingreso
-      </a>
-   </li>
-    <li class="list-group-item">
-          <a asp-controller="Vehiculos" asp-action="Historial" asp-route-id="@Model.IngresoTaller?.VehiculoId">
-       <i class="bi bi-clock-history"></i> Historial del Vehículo
-     </a>
-   </li>
- </ul>
+        <!-- Información de Tiempos -->
+  <div class="card mb-4">
+ <div class="card-header bg-info text-white">
+    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Control de Tiempos</h5>
+         </div>
+    <div class="card-body">
+    <div class="row text-center">
+     <div class="col-md-4">
+  <div class="card bg-light">
+     <div class="card-body">
+          <h6 class="text-muted">Tiempo Estimado</h6>
+ <h3 class="text-info">@Model.TiempoEstimadoHoras h</h3>
+        </div>
+        </div>
+  </div>
+  @if (Model.FechaInicio.HasValue)
+    {
+      var transcurrido = (DateTime.Now - Model.FechaInicio.Value).TotalHours;
+      <div class="col-md-4">
+       <div class="card bg-light">
+     <div class="card-body">
+           <h6 class="text-muted">Tiempo Transcurrido</h6>
+    <h3 class="@(transcurrido > Model.TiempoEstimadoHoras ? "text-danger" : "text-warning")">
+  @transcurrido.ToString("N1") h
+     </h3>
+  </div>
+      </div>
+     </div>
+   }
+  @if (Model.TiempoRealHoras.HasValue)
+     {
+   <div class="col-md-4">
+   <div class="card bg-light">
+   <div class="card-body">
+     <h6 class="text-muted">Tiempo Real</h6>
+         <h3 class="text-success">@Model.TiempoRealHoras h</h3>
     </div>
+      </div>
+  </div>
+        }
+       </div>
+            </div>
+   </div>
+
+  <!-- Observaciones -->
+  @if (!string.IsNullOrEmpty(Model.Observaciones))
+      {
+   <div class="card mb-4">
+      <div class="card-header bg-secondary text-white">
+   <h5 class="mb-0"><i class="bi bi-chat-left-text"></i> Observaciones</h5>
+   </div>
+        <div class="card-body">
+ <pre class="mb-0" style="white-space: pre-wrap;">@Model.Observaciones</pre>
+  </div>
+        </div>
+        }
+
+        <!-- Repuestos Solicitados -->
+    @if (repuestos.Any())
+  {
+        <div class="card mb-4">
+     <div class="card-header bg-warning text-dark">
+     <h5 class="mb-0"><i class="bi bi-tools"></i> Repuestos Solicitados (@repuestos.Count)</h5>
+    </div>
+  <div class="card-body">
+    <div class="table-responsive">
+  <table class="table table-sm mb-0">
+  <thead>
+         <tr>
+ <th>Nombre</th>
+    <th>Código</th>
+          <th>Cantidad</th>
+    <th>Proveedor</th>
+     <th>Estado</th>
+    <th>Solicitado</th>
+          </tr>
+      </thead>
+     <tbody>
+   @foreach (var rep in repuestos)
+        {
+    <tr>
+           <td>@rep.Nombre</td>
+   <td><code>@rep.CodigoRepuesto</code></td>
+   <td>@rep.Cantidad</td>
+  <td>@(rep.Proveedor ?? "-")</td>
+           <td>
+      <span class="badge bg-@(rep.Estado == "Recibido" ? "success" : "warning")">
+    @rep.Estado
+           </span>
+    </td>
+  <td>@rep.FechaSolicitud?.ToString("dd/MM HH:mm")</td>
+      </tr>
+ }
+      </tbody>
+   </table>
+      </div>
+  </div>
+    </div>
+ }
+    </div>
+
+    <!-- Columna Derecha -->
+    <div class="col-lg-4">
+        <!-- Acciones Rápidas -->
+  @if (Model.Estado != "Completada")
+        {
+   <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+       <h5 class="mb-0"><i class="bi bi-lightning-fill"></i> Acciones</h5>
+    </div>
+            <div class="card-body">
+     <div class="d-grid gap-2">
+     <button type="button" class="btn btn-warning" 
+     data-bs-toggle="modal" data-bs-target="#modalSolicitarRepuesto">
+     <i class="bi bi-tools"></i> Solicitar Repuesto
+          </button>
+       <button type="button" class="btn btn-info" 
+  data-bs-toggle="modal" data-bs-target="#modalObservacion">
+  <i class="bi bi-chat-left-text"></i> Agregar Observación
+   </button>
+     </div>
+    </div>
+        </div>
+        }
+
+        <!-- Información Adicional -->
+<div class="card">
+   <div class="card-header bg-secondary text-white">
+ <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información</h5>
+      </div>
+            <div class="card-body">
+   <p class="mb-2"><strong>Mecánico Asignado:</strong></p>
+ <p class="mb-3">@Model.MecanicoAsignado?.Nombre @Model.MecanicoAsignado?.Apellido</p>
+     
+ @if (Model.FechaFinalizacion.HasValue)
+     {
+    <p class="mb-2"><strong>Finalizada:</strong></p>
+          <p class="mb-0">@Model.FechaFinalizacion.Value.ToString("dd/MM/yyyy HH:mm")</p>
+      }
+   </div>
+      </div>
+    </div>
+</div>
+
+<!-- Modal Solicitar Repuesto -->
+<div class="modal fade" id="modalSolicitarRepuesto" tabindex="-1">
+    <div class="modal-dialog">
+ <div class="modal-content">
+ <form asp-action="SolicitarRepuesto" method="post">
+       <input type="hidden" name="tareaId" value="@Model.Id" />
+           <div class="modal-header bg-warning text-dark">
+  <h5 class="modal-title"><i class="bi bi-tools"></i> Solicitar Repuesto</h5>
+     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+ </div>
+<div class="modal-body">
+         <div class="mb-3">
+  <label for="nombre" class="form-label">Nombre del Repuesto</label>
+  <input type="text" name="nombre" class="form-control" required />
+         </div>
+         <div class="mb-3">
+  <label for="codigoRepuesto" class="form-label">Código</label>
+       <input type="text" name="codigoRepuesto" class="form-control" required />
+       </div>
+    <div class="mb-3">
+ <label for="cantidad" class="form-label">Cantidad</label>
+    <input type="number" name="cantidad" class="form-control" value="1" required />
+      </div>
+       <div class="mb-3">
+           <label for="proveedor" class="form-label">Proveedor (Opcional)</label>
+<input type="text" name="proveedor" class="form-control" />
+            </div>
+   </div>
+  <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+     <button type="submit" class="btn btn-warning">Solicitar</button>
+       </div>
+   </form>
+  </div>
+    </div>
+</div>
+
+<!-- Modal Observación -->
+<div class="modal fade" id="modalObservacion" tabindex="-1">
+    <div class="modal-dialog">
+ <div class="modal-content">
+     <form asp-action="RegistrarObservacion" method="post">
+  <input type="hidden" name="tareaId" value="@Model.Id" />
+    <div class="modal-header bg-info text-white">
+       <h5 class="modal-title"><i class="bi bi-chat-left-text"></i> Agregar Observación</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+     </div>
+      <div class="modal-body">
+    <div class="mb-3">
+        <label for="observacion" class="form-label">Observación</label>
+   <textarea name="observacion" class="form-control" rows="4" required 
+     placeholder="Describe el progreso, problemas encontrados, etc..."></textarea>
+  </div>
+   </div>
+    <div class="modal-footer">
+     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      <button type="submit" class="btn btn-info">Guardar</button>
+         </div>
+    </form>
         </div>
     </div>
 </div>

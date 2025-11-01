@@ -2,104 +2,94 @@ using Microsoft.AspNetCore.Mvc;
 using PepsicoChile.Models;
 using PepsicoChile.Models.ViewModels;
 using PepsicoChile.Filters;
+using PepsicoChile.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace PepsicoChile.Controllers
 {
     [AuthorizeSession]
     public class HomeController : Controller
-    {
-        public IActionResult Index()
-      {
-     // Simulación de usuario logueado - En producción vendría de la sesión/auth
-var usuarioActual = ObtenerUsuarioActual();
-     
-       var model = new DashboardViewModel
-          {
- NombreUsuario = usuarioActual.Nombre + " " + usuarioActual.Apellido,
- RolUsuario = usuarioActual.Rol,
-VehiculosEnTaller = 12,
-        VehiculosProgramados = 8,
-        TareasPendientes = 15,
-     TareasEnProceso = 7,
-    IngresosRecientes = ObtenerIngresosRecientes(),
-     TareasUrgentes = ObtenerTareasUrgentes()
-       };
+  {
+   private readonly ApplicationDbContext _context;
 
-       return View(model);
-      }
+        public HomeController(ApplicationDbContext context)
+      {
+   _context = context;
+ }
+
+        public async Task<IActionResult> Index()
+   {
+ var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+    var usuarioRol = HttpContext.Session.GetString("UsuarioRol");
+   var usuarioNombre = HttpContext.Session.GetString("UsuarioNombre");
+      
+// Obtener datos reales del dashboard
+     var ingresosRecientes = await _context.IngresosTaller
+      .Include(i => i.Vehiculo)
+    .Include(i => i.Chofer)
+   .Include(i => i.MecanicoAsignado)
+  .Where(i => i.Estado != "Completado" && i.Estado != "Cancelado")
+        .OrderByDescending(i => i.FechaProgramada)
+.Take(5)
+ .ToListAsync();
+
+      List<TareaTaller> tareasUrgentes;
+  if (usuarioRol == "Mecanico")
+        {
+    // Si es mecánico, solo sus tareas
+   tareasUrgentes = await _context.TareasTaller
+   .Include(t => t.IngresoTaller)
+       .ThenInclude(i => i.Vehiculo)
+   .Where(t => t.MecanicoAsignadoId == usuarioId 
+          && t.Estado != "Completada" 
+      && t.Prioridad == "Alta")
+   .OrderBy(t => t.FechaAsignacion)
+     .Take(5)
+.ToListAsync();
+       }
+   else
+  {
+   // Para otros roles, todas las tareas urgentes
+   tareasUrgentes = await _context.TareasTaller
+        .Include(t => t.IngresoTaller)
+ .ThenInclude(i => i.Vehiculo)
+    .Include(t => t.MecanicoAsignado)
+     .Where(t => t.Estado != "Completada" && t.Prioridad == "Alta")
+    .OrderBy(t => t.FechaAsignacion)
+  .Take(5)
+       .ToListAsync();
+  }
+
+       var model = new DashboardViewModel
+     {
+NombreUsuario = usuarioNombre ?? "Usuario",
+     RolUsuario = usuarioRol ?? "Sin Rol",
+        VehiculosEnTaller = await _context.Vehiculos.CountAsync(v => v.Estado == "En Taller"),
+VehiculosProgramados = await _context.IngresosTaller.CountAsync(i => i.Estado == "Programado"),
+    TareasPendientes = usuarioRol == "Mecanico"
+      ? await _context.TareasTaller.CountAsync(t => t.MecanicoAsignadoId == usuarioId && t.Estado == "Pendiente")
+     : await _context.TareasTaller.CountAsync(t => t.Estado == "Pendiente"),
+    TareasEnProceso = usuarioRol == "Mecanico"
+     ? await _context.TareasTaller.CountAsync(t => t.MecanicoAsignadoId == usuarioId && t.Estado == "En Proceso")
+   : await _context.TareasTaller.CountAsync(t => t.Estado == "En Proceso"),
+      IngresosRecientes = ingresosRecientes,
+  TareasUrgentes = tareasUrgentes
+     };
+
+     return View(model);
+   }
 
         public IActionResult CambiarRol(string rol)
-    {
-       // Simulación de cambio de rol para testing
-  HttpContext.Session.SetString("RolActual", rol);
-       HttpContext.Session.SetString("UsuarioRol", rol);
-    return RedirectToAction("Index");
-        }
-
-        public IActionResult Error()
    {
-     return View();
-        }
+   // Simulación de cambio de rol para testing
+   HttpContext.Session.SetString("RolActual", rol);
+         HttpContext.Session.SetString("UsuarioRol", rol);
+      return RedirectToAction("Index");
+ }
 
-     // Métodos auxiliares para datos de ejemplo
-private Usuario ObtenerUsuarioActual()
-        {
-        var rol = HttpContext.Session.GetString("UsuarioRol") ?? "Supervisor";
-            var nombre = HttpContext.Session.GetString("UsuarioNombre") ?? "Usuario";
-    return new Usuario
-  {
-     Id = HttpContext.Session.GetInt32("UsuarioId") ?? 1,
-        Nombre = nombre.Split(' ')[0],
- Apellido = nombre.Contains(' ') ? nombre.Split(' ')[1] : "",
-         Rol = rol,
-    Email = HttpContext.Session.GetString("UsuarioEmail") ?? "usuario@pepsico.cl"
-    };
+  public IActionResult Error()
+{
+  return View();
         }
-
-     private List<IngresoTaller> ObtenerIngresosRecientes()
-        {
-        return new List<IngresoTaller>
- {
- new IngresoTaller
-    {
-         Id = 1,
-           Vehiculo = new Vehiculo { Patente = "ABCD-12", Marca = "Volvo", Modelo = "FH16" },
-            FechaProgramada = DateTime.Now,
-           Estado = "En Proceso",
-        MotivoIngreso = "Mantenimiento Preventivo"
-     },
-          new IngresoTaller
-    {
-        Id = 2,
-     Vehiculo = new Vehiculo { Patente = "EFGH-34", Marca = "Mercedes", Modelo = "Actros" },
-    FechaProgramada = DateTime.Now.AddDays(1),
-   Estado = "Programado",
-  MotivoIngreso = "Reparación"
-       }
-        };
-        }
-
-        private List<TareaTaller> ObtenerTareasUrgentes()
-        {
-            return new List<TareaTaller>
-   {
-     new TareaTaller
-       {
-Id = 1,
-      Descripcion = "Cambio de frenos delanteros",
-        Prioridad = "Alta",
-         Estado = "En Proceso",
-  FechaAsignacion = DateTime.Now.AddHours(-2)
-         },
-     new TareaTaller
-      {
-    Id = 2,
-              Descripcion = "Revisión sistema eléctrico",
-          Prioridad = "Alta",
-  Estado = "Pendiente",
-FechaAsignacion = DateTime.Now.AddHours(-1)
-         }
-         };
-    }
     }
 }
