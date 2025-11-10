@@ -1,0 +1,459 @@
+@model PepsicoChile.Models.SolicitudRepuesto
+
+@{
+    ViewData["Title"] = "Detalle de Solicitud";
+    var usuarioRol = Context.Session.GetString("UsuarioRol");
+    var diasDesdeCreacion = (DateTime.Now - Model.FechaSolicitud).Days;
+    var tiempoRespuesta = Model.FechaEntrega.HasValue 
+        ? (Model.FechaEntrega.Value - Model.FechaSolicitud).Days
+        : (int?)null;
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="bi bi-file-earmark-text"></i> Detalle de Solicitud #@Model.Id</h2>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver al Listado
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Panel Principal de Información -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información de la Solicitud</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-5">Repuesto:</dt>
+                                <dd class="col-sm-7">
+                                    <strong class="fs-5">@Model.Nombre</strong>
+                                </dd>
+
+                                <dt class="col-sm-5">Código:</dt>
+                                <dd class="col-sm-7">
+                                    @if (!string.IsNullOrEmpty(Model.CodigoRepuesto))
+                                    {
+                                        <code class="fs-6">@Model.CodigoRepuesto</code>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No especificado</span>
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-5">Cantidad:</dt>
+                                <dd class="col-sm-7">
+                                    <span class="badge bg-primary fs-5">@Model.Cantidad unidades</span>
+                                </dd>
+
+                                <dt class="col-sm-5">Proveedor:</dt>
+                                <dd class="col-sm-7">
+                                    @if (!string.IsNullOrEmpty(Model.Proveedor))
+                                    {
+                                        <i class="bi bi-building"></i> @Model.Proveedor
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No especificado</span>
+                                    }
+                                </dd>
+                            </dl>
+                        </div>
+
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-5">Fecha Solicitud:</dt>
+                                <dd class="col-sm-7">
+                                    <i class="bi bi-calendar3"></i> @Model.FechaSolicitud.ToString("dd/MM/yyyy")<br/>
+                                    <i class="bi bi-clock"></i> @Model.FechaSolicitud.ToString("HH:mm")
+                                    <br/><small class="text-muted">Hace @diasDesdeCreacion día(s)</small>
+                                </dd>
+
+                                <dt class="col-sm-5">Fecha Entrega:</dt>
+                                <dd class="col-sm-7">
+                                    @if (Model.FechaEntrega.HasValue)
+                                    {
+                                        <i class="bi bi-calendar-check"></i> @Model.FechaEntrega.Value.ToString("dd/MM/yyyy")<br/>
+                                        <i class="bi bi-clock"></i> @Model.FechaEntrega.Value.ToString("HH:mm")
+                                        @if (tiempoRespuesta.HasValue)
+                                        {
+                                            <br/><small class="text-success">Tiempo: @tiempoRespuesta.Value día(s)</small>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Pendiente de entrega</span>
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-5">Solicitado por:</dt>
+                                <dd class="col-sm-7">
+                                    @if (Model.SolicitadoPor != null)
+                                    {
+                                        <i class="bi bi-person-circle"></i> @Model.SolicitadoPor.Nombre @Model.SolicitadoPor.Apellido
+                                        <br/><small class="text-muted">@Model.SolicitadoPor.Rol</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No disponible</span>
+                                    }
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información de la Tarea Asociada -->
+            @if (Model.TareaTaller != null)
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-wrench"></i> Tarea Asociada</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Descripción de la Tarea:</strong></p>
+                                <p class="text-muted">@Model.TareaTaller.Descripcion</p>
+                                
+                                <p class="mb-1">
+                                    <strong>Estado:</strong> 
+                                    @switch (Model.TareaTaller.Estado)
+                                    {
+                                        case "Pendiente":
+                                            <span class="badge bg-secondary">Pendiente</span>
+                                            break;
+                                        case "En Proceso":
+                                            <span class="badge bg-primary">En Proceso</span>
+                                            break;
+                                        case "Completada":
+                                            <span class="badge bg-success">Completada</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">@Model.TareaTaller.Estado</span>
+                                            break;
+                                    }
+                                </p>
+
+                                <p class="mb-1">
+                                    <strong>Prioridad:</strong> 
+                                    @switch (Model.TareaTaller.Prioridad)
+                                    {
+                                        case "Alta":
+                                            <span class="badge bg-danger">Alta</span>
+                                            break;
+                                        case "Media":
+                                            <span class="badge bg-warning text-dark">Media</span>
+                                            break;
+                                        case "Baja":
+                                            <span class="badge bg-info">Baja</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">@Model.TareaTaller.Prioridad</span>
+                                            break;
+                                    }
+                                </p>
+                            </div>
+
+                            <div class="col-md-6">
+                                @if (Model.TareaTaller.IngresoTaller?.Vehiculo != null)
+                                {
+                                    var vehiculo = Model.TareaTaller.IngresoTaller.Vehiculo;
+                                    <p><strong>Vehículo:</strong></p>
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6 class="mb-2">
+                                                <i class="bi bi-truck-front"></i> 
+                                                <strong>@vehiculo.Patente</strong>
+                                            </h6>
+                                            <p class="mb-1"><small>@vehiculo.Marca @vehiculo.Modelo (@vehiculo.Año)</small></p>
+                                            <p class="mb-0"><small class="text-muted">Tipo: @vehiculo.TipoVehiculo</small></p>
+                                        </div>
+                                    </div>
+                                }
+
+                                @if (Model.TareaTaller.MecanicoAsignado != null)
+                                {
+                                    <p class="mt-3"><strong>Mecánico Asignado:</strong></p>
+                                    <p class="mb-0">
+                                        <i class="bi bi-person-gear"></i> 
+                                        @Model.TareaTaller.MecanicoAsignado.Nombre @Model.TareaTaller.MecanicoAsignado.Apellido
+                                    </p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Panel Lateral - Estado y Acciones -->
+        <div class="col-lg-4">
+            <!-- Estado Actual -->
+            <div class="card shadow-sm mb-4 @(Model.Estado == "Entregado" ? "border-success" : Model.Estado == "En Tránsito" ? "border-info" : "border-warning")">
+                <div class="card-header @(Model.Estado == "Entregado" ? "bg-success" : Model.Estado == "En Tránsito" ? "bg-info" : "bg-warning") text-white">
+                    <h5 class="mb-0"><i class="bi bi-circle-fill"></i> Estado Actual</h5>
+                </div>
+                <div class="card-body text-center py-4">
+                    @switch (Model.Estado)
+                    {
+                        case "Solicitado":
+                            <i class="bi bi-clock-history display-1 text-warning"></i>
+                            <h3 class="mt-3 text-warning">Solicitado</h3>
+                            <p class="text-muted">En espera de procesamiento</p>
+                            break;
+                        case "En Tránsito":
+                            <i class="bi bi-truck display-1 text-info"></i>
+                            <h3 class="mt-3 text-info">En Tránsito</h3>
+                            <p class="text-muted">En camino desde proveedor</p>
+                            break;
+                        case "Entregado":
+                            <i class="bi bi-hand-thumbs-up display-1 text-success"></i>
+                            <h3 class="mt-3 text-success">Entregado</h3>
+                            <p class="text-muted">Entregado al mecánico</p>
+                            break;
+                        case "Instalado":
+                            <i class="bi bi-check-circle display-1 text-primary"></i>
+                            <h3 class="mt-3 text-primary">Instalado</h3>
+                            <p class="text-muted">Repuesto instalado en vehículo</p>
+                            break;
+                        default:
+                            <i class="bi bi-question-circle display-1 text-secondary"></i>
+                            <h3 class="mt-3 text-secondary">@Model.Estado</h3>
+                            break;
+                    }
+                </div>
+            </div>
+
+            <!-- Acciones -->
+            @if (usuarioRol == "Administrador" || usuarioRol == "JefeTaller" || usuarioRol == "Supervisor" || usuarioRol == "AsistenteRepuestos" || usuarioRol == "Mecanico")
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h6 class="mb-0"><i class="bi bi-lightning"></i> Cambiar Estado</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            @if (usuarioRol == "AsistenteRepuestos" || usuarioRol == "Administrador" || usuarioRol == "JefeTaller" || usuarioRol == "Supervisor")
+                            {
+                                @* AsistenteRepuestos puede gestionar hasta Entregado *@
+                                @if (Model.Estado != "Solicitado")
+                                {
+                                    <button class="btn btn-outline-warning" onclick="cambiarEstado(@Model.Id, 'Solicitado')">
+                                        <i class="bi bi-clock"></i> Marcar como Solicitado
+                                    </button>
+                                }
+                                @if (Model.Estado != "En Tránsito")
+                                {
+                                    <button class="btn btn-outline-info" onclick="cambiarEstado(@Model.Id, 'En Tránsito')">
+                                        <i class="bi bi-truck"></i> Marcar En Tránsito
+                                    </button>
+                                }
+                                @if (Model.Estado != "Entregado")
+                                {
+                                    <button class="btn btn-outline-success" onclick="cambiarEstado(@Model.Id, 'Entregado')">
+                                        <i class="bi bi-hand-thumbs-up"></i> Marcar como Entregado
+                                    </button>
+                                }
+                            }
+                            
+                            @if (usuarioRol == "Mecanico" || usuarioRol == "Administrador" || usuarioRol == "JefeTaller" || usuarioRol == "Supervisor")
+                            {
+                                @* Solo Mecánico (y superiores) pueden marcar como Instalado *@
+                                @if (Model.Estado != "Instalado")
+                                {
+                                    @if (Model.Estado == "Entregado" || usuarioRol == "Administrador" || usuarioRol == "JefeTaller" || usuarioRol == "Supervisor")
+                                    {
+                                        <button class="btn btn-outline-primary" onclick="cambiarEstado(@Model.Id, 'Instalado')">
+                                            <i class="bi bi-check-circle"></i> Marcar como Instalado
+                                        </button>
+                                    }
+                                    else if (usuarioRol == "Mecanico")
+                                    {
+                                        <button class="btn btn-outline-secondary" disabled title="Debe estar en estado 'Entregado' primero">
+                                            <i class="bi bi-check-circle"></i> Marcar como Instalado
+                                        </button>
+                                        <small class="text-muted">El repuesto debe estar entregado primero</small>
+                                    }
+                                }
+                            }
+                        </div>
+                        
+                        @if (usuarioRol == "AsistenteRepuestos")
+                        {
+                            <div class="alert alert-info mt-3 mb-0">
+                                <small>
+                                    <i class="bi bi-info-circle"></i> 
+                                    Solo el mecánico puede marcar el repuesto como <strong>Instalado</strong> una vez que lo haya montado en el vehículo.
+                                </small>
+                            </div>
+                        }
+                        
+                        @if (usuarioRol == "Mecanico" && Model.Estado != "Entregado" && Model.Estado != "Instalado")
+                        {
+                            <div class="alert alert-warning mt-3 mb-0">
+                                <small>
+                                    <i class="bi bi-exclamation-triangle"></i> 
+                                    El repuesto aún no ha sido entregado. Espera a que el Asistente de Repuestos te lo entregue y lo marque como <strong>Entregado</strong>.
+                                </small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Línea de Tiempo -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="bi bi-clock-history"></i> Historial</h6>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-warning"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Solicitado</h6>
+                                <small class="text-muted">@Model.FechaSolicitud.ToString("dd/MM/yyyy HH:mm")</small>
+                            </div>
+                        </div>
+
+                        @if (Model.Estado == "En Tránsito" || Model.Estado == "Entregado" || Model.Estado == "Instalado")
+                        {
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-info"></div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-1">En Tránsito</h6>
+                                    <small class="text-muted">Procesado</small>
+                                </div>
+                            </div>
+                        }
+
+                        @if (Model.FechaEntrega.HasValue)
+                        {
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-success"></div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-1">Entregado</h6>
+                                    <small class="text-muted">@Model.FechaEntrega.Value.ToString("dd/MM/yyyy HH:mm")</small>
+                                </div>
+                            </div>
+                        }
+
+                        @if (Model.Estado == "Instalado")
+                        {
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-primary"></div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-1">Instalado</h6>
+                                    <small class="text-muted">Completado</small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Html.AntiForgeryToken()
+    <script>
+        function cambiarEstado(id, nuevoEstado) {
+            if (confirm(`¿Está seguro de cambiar el estado a '${nuevoEstado}'?`)) {
+                var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                
+                fetch('@Url.Action("CambiarEstado", "SolicitudesRepuesto")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({ id: id, nuevoEstado: nuevoEstado })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert('? ' + data.message);
+                        window.location.reload();
+                    } else {
+                        alert('? ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al cambiar el estado: ' + error.message);
+                });
+            }
+        }
+    </script>
+}
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 20px;
+    }
+
+    .timeline-item:not(:last-child):before {
+        content: '';
+        position: absolute;
+        left: 7px;
+        top: 20px;
+        height: calc(100% - 10px);
+        width: 2px;
+        background: #dee2e6;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: 0;
+        top: 5px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #dee2e6;
+    }
+
+    .timeline-content {
+        margin-left: 15px;
+    }
+
+    .card {
+        border-radius: 10px;
+        transition: transform 0.2s;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+    }
+
+    dl dt {
+        font-weight: 600;
+        color: #6c757d;
+    }
+
+    .display-1 {
+        font-size: 4rem;
+    }
+</style>

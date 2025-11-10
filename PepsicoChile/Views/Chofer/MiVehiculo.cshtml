@@ -1,0 +1,322 @@
+@model Vehiculo
+@{
+    ViewData["Title"] = "Mi Vehículo Asignado";
+    var sinVehiculo = ViewBag.SinVehiculo ?? false;
+    var asignacion = ViewBag.Asignacion as AsignacionVehiculo;
+    var documentos = ViewBag.Documentos as List<DocumentoVehiculo> ?? new List<DocumentoVehiculo>();
+    var ingresos = ViewBag.Ingresos as List<IngresoTaller> ?? new List<IngresoTaller>();
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-4">
+            <i class="bi bi-truck"></i> Mi Vehículo Asignado
+        </h1>
+        <p class="lead">Información del vehículo que tienes asignado</p>
+    </div>
+</div>
+
+@if (sinVehiculo)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-warning">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle fs-1 me-3"></i>
+                    <div>
+                        <h5 class="alert-heading">Sin Vehículo Asignado</h5>
+                        <p class="mb-0">Actualmente no tienes ningún vehículo asignado.</p>
+                        <small>Por favor, contacta con tu supervisor para solicitar la asignación de un vehículo.</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-truck text-muted" style="font-size: 5rem;"></i>
+                    <h3 class="mt-3 text-muted">No hay vehículo asignado</h3>
+                    <p class="text-muted">Una vez que te asignen un vehículo, podrás ver toda su información aquí.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Información del Vehículo -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-truck-front"></i> Información del Vehículo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h2 class="text-primary mb-0">@Model.Patente</h2>
+                            <p class="text-muted">@Model.Marca @Model.Modelo (@Model.Año)</p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <span class="badge bg-@(Model.Estado == "Disponible" ? "success" : Model.Estado == "En Taller" ? "warning" : Model.Estado == "En Ruta" ? "info" : "secondary") fs-5">
+                                @Model.Estado
+                            </span>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <strong><i class="bi bi-ui-radios"></i> Tipo:</strong>
+                            <p class="mb-0">@Model.TipoVehiculo</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="bi bi-hash"></i> Número de Flota:</strong>
+                            <p class="mb-0">@(Model.NumeroFlota ?? "N/A")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="bi bi-palette"></i> Color:</strong>
+                            <p class="mb-0">@(Model.Color ?? "N/A")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="bi bi-fuel-pump"></i> Combustible:</strong>
+                            <p class="mb-0">@(Model.Combustible ?? "N/A")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="bi bi-speedometer2"></i> Kilometraje:</strong>
+                            <p class="mb-0 fs-5 text-info fw-bold">@(Model.KilometrajeActual?.ToString("N0") ?? "N/A") km</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="bi bi-box"></i> Capacidad de Carga:</strong>
+                            <p class="mb-0">@(Model.CapacidadCarga?.ToString("N2") ?? "N/A") ton</p>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Observaciones))
+                    {
+                        <hr>
+                        <div class="alert alert-info mb-0">
+                            <strong><i class="bi bi-info-circle"></i> Observaciones:</strong>
+                            <p class="mb-0 mt-2">@Model.Observaciones</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Información de Asignación -->
+        <div class="col-md-4">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-calendar-check"></i> Información de Asignación
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @if (asignacion != null)
+                    {
+                        <p class="mb-2">
+                            <strong>Asignado el:</strong><br>
+                            <i class="bi bi-calendar"></i> @asignacion.FechaAsignacion.ToString("dd/MM/yyyy")<br>
+                            <small class="text-muted">@asignacion.FechaAsignacion.ToString("HH:mm")</small>
+                        </p>
+                        
+                        <p class="mb-2">
+                            <strong>Días asignado:</strong><br>
+                            <span class="badge bg-info">
+                                @((DateTime.Now - asignacion.FechaAsignacion).Days) días
+                            </span>
+                        </p>
+
+                        @if (asignacion.AsignadoPor != null)
+                        {
+                            <p class="mb-0">
+                                <strong>Asignado por:</strong><br>
+                                @asignacion.AsignadoPor.Nombre @asignacion.AsignadoPor.Apellido
+                            </p>
+                        }
+
+                        @if (!string.IsNullOrEmpty(asignacion.Observaciones))
+                        {
+                            <hr>
+                            <p class="mb-0">
+                                <strong>Observaciones:</strong><br>
+                                <small>@asignacion.Observaciones</small>
+                            </p>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Mantenimiento -->
+            <div class="card shadow">
+                <div class="card-header bg-warning">
+                    <h6 class="mb-0">
+                        <i class="bi bi-wrench"></i> Mantenimiento
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.ProximoMantenimiento.HasValue)
+                    {
+                        var diasParaMantenimiento = (Model.ProximoMantenimiento.Value - DateTime.Now).Days;
+                        var esCercano = diasParaMantenimiento <= 30 && diasParaMantenimiento >= 0;
+                        var esVencido = diasParaMantenimiento < 0;
+
+                        <div class="alert alert-@(esVencido ? "danger" : esCercano ? "warning" : "success") mb-2">
+                            <strong>Próximo Mantenimiento:</strong><br>
+                            @Model.ProximoMantenimiento.Value.ToString("dd/MM/yyyy")
+                            @if (esVencido)
+                            {
+                                <br><span class="badge bg-danger mt-1">VENCIDO</span>
+                            }
+                            else if (esCercano)
+                            {
+                                <br><span class="badge bg-warning mt-1">Próximo (@diasParaMantenimiento días)</span>
+                            }
+                        </div>
+                    }
+
+                    @if (Model.UltimoMantenimiento.HasValue)
+                    {
+                        <p class="mb-0 small">
+                            <strong>Último Mantenimiento:</strong><br>
+                            @Model.UltimoMantenimiento.Value.ToString("dd/MM/yyyy")
+                        </p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Documentos -->
+    @if (documentos.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-file-earmark-text"></i> Documentos del Vehículo (@documentos.Count)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach (var doc in documentos.Take(6))
+                            {
+                                var esVencido = doc.FechaVencimiento.HasValue && doc.FechaVencimiento.Value < DateTime.Now;
+                                var porVencer = doc.FechaVencimiento.HasValue && 
+                                                doc.FechaVencimiento.Value >= DateTime.Now && 
+                                                doc.FechaVencimiento.Value <= DateTime.Now.AddDays(30);
+
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-@(esVencido ? "danger" : porVencer ? "warning" : "secondary")">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <i class="bi bi-@(doc.TipoDocumento == "RevisionTecnica" ? "file-check" :
+                                                          doc.TipoDocumento == "SeguroObligatorio" ? "shield-check" :
+                                                          doc.TipoDocumento == "PermisoCirculacion" ? "card-checklist" :
+                                                          "file-earmark")"></i>
+                                                @doc.TipoDocumento
+                                            </h6>
+                                            @if (doc.FechaVencimiento.HasValue)
+                                            {
+                                                <p class="mb-0 small">
+                                                    <strong>Vence:</strong>
+                                                    <span class="badge bg-@(esVencido ? "danger" : porVencer ? "warning" : "success")">
+                                                        @doc.FechaVencimiento.Value.ToString("dd/MM/yyyy")
+                                                    </span>
+                                                </p>
+                                            }
+                                            <a href="@doc.RutaArchivo" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                                <i class="bi bi-download"></i> Ver
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Historial de Ingresos -->
+    @if (ingresos.Any())
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clock-history"></i> Mis Últimos Ingresos al Taller
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Motivo</th>
+                                        <th>Estado</th>
+                                        <th>Mecánico</th>
+                                        <th>Observaciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var ingreso in ingresos)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <i class="bi bi-calendar"></i>
+                                                @ingreso.FechaProgramada.ToString("dd/MM/yyyy")
+                                            </td>
+                                            <td>@ingreso.MotivoIngreso</td>
+                                            <td>
+                                                <span class="badge bg-@(ingreso.Estado == "Completado" ? "success" : 
+                                                                       ingreso.Estado == "En Proceso" ? "warning" : 
+                                                                       "secondary")">
+                                                    @ingreso.Estado
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if (ingreso.MecanicoAsignado != null)
+                                                {
+                                                    @ingreso.MecanicoAsignado.Nombre @ingreso.MecanicoAsignado.Apellido
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <small>@(ingreso.ObservacionesChofer ?? "-")</small>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+<div class="row mt-4">
+    <div class="col-12">
+        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver al Dashboard
+        </a>
+        @if (!sinVehiculo)
+        {
+            <a asp-controller="Chofer" asp-action="RegistrarLlegada" class="btn btn-primary">
+                <i class="bi bi-box-arrow-in-down"></i> Registrar Ingreso al Taller
+            </a>
+        }
+    </div>
+</div>

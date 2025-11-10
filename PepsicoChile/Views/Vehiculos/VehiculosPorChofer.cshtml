@@ -1,0 +1,191 @@
+@model List<AsignacionVehiculo>
+@{
+    ViewData["Title"] = "Vehículos por Chofer";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-4">
+            <i class="bi bi-truck-front"></i> Vehículos Asignados por Chofer
+        </h1>
+        <p class="lead">Vista general de todos los vehículos con su chofer asignado</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-check"></i> Asignaciones Activas (@Model.Count)
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Chofer</th>
+                                    <th>Vehículo</th>
+                                    <th>Tipo</th>
+                                    <th>Estado</th>
+                                    <th>Fecha Asignación</th>
+                                    <th>Días Asignado</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var asignacion in Model)
+                                {
+                                    var diasAsignado = (DateTime.Now - asignacion.FechaAsignacion).Days;
+                                    
+                                    <tr>
+                                        <td>
+                                            <i class="bi bi-person-circle text-primary"></i>
+                                            <strong>@asignacion.Chofer?.Nombre @asignacion.Chofer?.Apellido</strong>
+                                            <br>
+                                            <small class="text-muted">@asignacion.Chofer?.Rut</small>
+                                        </td>
+                                        <td>
+                                            <i class="bi bi-truck"></i>
+                                            <strong>@asignacion.Vehiculo?.Patente</strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                @asignacion.Vehiculo?.Marca @asignacion.Vehiculo?.Modelo
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">
+                                                @asignacion.Vehiculo?.TipoVehiculo
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @{
+                                                var estado = asignacion.Vehiculo?.Estado ?? "Desconocido";
+                                                var badgeColor = estado switch
+                                                {
+                                                    "Disponible" => "success",
+                                                    "En Taller" => "warning",
+                                                    "En Ruta" => "info",
+                                                    _ => "secondary"
+                                                };
+                                            }
+                                            <span class="badge bg-@badgeColor">@estado</span>
+                                        </td>
+                                        <td>
+                                            <i class="bi bi-calendar"></i>
+                                            @asignacion.FechaAsignacion.ToString("dd/MM/yyyy")
+                                            <br>
+                                            <small class="text-muted">
+                                                @asignacion.FechaAsignacion.ToString("HH:mm")
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">
+                                                @diasAsignado días
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group" role="group">
+                                                <a asp-controller="Vehiculos" 
+                                                   asp-action="Detalle" 
+                                                   asp-route-id="@asignacion.VehiculoId" 
+                                                   class="btn btn-sm btn-info"
+                                                   data-bs-toggle="tooltip"
+                                                   title="Ver Detalle">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a asp-controller="Vehiculos" 
+                                                   asp-action="AsignarChofer" 
+                                                   asp-route-id="@asignacion.VehiculoId" 
+                                                   class="btn btn-sm btn-warning"
+                                                   data-bs-toggle="tooltip"
+                                                   title="Cambiar Chofer">
+                                                    <i class="bi bi-arrow-repeat"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        No hay vehículos asignados actualmente.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resumen por Estado -->
+@if (Model.Any())
+{
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-bar-chart"></i> Resumen por Estado
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        @{
+                            var porEstado = Model
+                                .GroupBy(a => a.Vehiculo?.Estado ?? "Desconocido")
+                                .Select(g => new { Estado = g.Key, Cantidad = g.Count() })
+                                .OrderByDescending(x => x.Cantidad);
+                        }
+                        @foreach (var grupo in porEstado)
+                        {
+                            var porcentaje = (double)grupo.Cantidad / Model.Count * 100;
+                            var badgeColor = grupo.Estado switch
+                            {
+                                "Disponible" => "success",
+                                "En Taller" => "warning",
+                                "En Ruta" => "info",
+                                _ => "secondary"
+                            };
+                            
+                            <div class="col-md-3 mb-3">
+                                <div class="card border-@badgeColor">
+                                    <div class="card-body">
+                                        <h3 class="text-@badgeColor">@grupo.Cantidad</h3>
+                                        <p class="mb-0">@grupo.Estado</p>
+                                        <small class="text-muted">@porcentaje.ToString("F1")%</small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row mt-4">
+    <div class="col-12">
+        <a asp-controller="Vehiculos" asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver a Vehículos
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Inicializar tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
+}

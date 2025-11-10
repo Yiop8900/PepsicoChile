@@ -230,6 +230,137 @@ namespace PepsicoChile.Controllers
             return View(usuarios);
         }
 
+        [HttpGet]
+        [AuthorizeSession]
+        [AuthorizeRole("Administrador")]
+        public async Task<IActionResult> Editar(int id)
+        {
+            var usuario = await _context.Usuarios.FindAsync(id);
+            
+            if (usuario == null)
+            {
+                TempData["Error"] = "Usuario no encontrado";
+                return RedirectToAction("ListarUsuarios");
+            }
+
+            var model = new EditarUsuarioViewModel
+            {
+                Id = usuario.Id,
+                Nombre = usuario.Nombre,
+                Apellido = usuario.Apellido,
+                Email = usuario.Email,
+                Telefono = usuario.Telefono,
+                Rut = usuario.Rut,
+                Rol = usuario.Rol,
+                Activo = usuario.Activo
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AuthorizeSession]
+        [AuthorizeRole("Administrador")]
+        public async Task<IActionResult> Editar(EditarUsuarioViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var usuario = await _context.Usuarios.FindAsync(model.Id);
+                
+                if (usuario == null)
+                {
+                    TempData["Error"] = "Usuario no encontrado";
+                    return RedirectToAction("ListarUsuarios");
+                }
+
+                // Verificar si el email ya existe (excepto el actual)
+                var existeEmail = await _context.Usuarios
+                    .AnyAsync(u => u.Email == model.Email && u.Id != model.Id);
+                
+                if (existeEmail)
+                {
+                    ModelState.AddModelError("Email", "Este email ya está en uso por otro usuario");
+                    return View(model);
+                }
+
+                // Verificar si el RUT ya existe (excepto el actual)
+                var existeRut = await _context.Usuarios
+                    .AnyAsync(u => u.Rut == model.Rut && u.Id != model.Id);
+                
+                if (existeRut)
+                {
+                    ModelState.AddModelError("Rut", "Este RUT ya está en uso por otro usuario");
+                    return View(model);
+                }
+
+                // Actualizar datos
+                usuario.Nombre = model.Nombre;
+                usuario.Apellido = model.Apellido;
+                usuario.Email = model.Email;
+                usuario.Telefono = model.Telefono ?? string.Empty;
+                usuario.Rut = model.Rut;
+                usuario.Rol = model.Rol;
+                usuario.Activo = model.Activo;
+
+                // Si se proporciona nueva contraseña, actualizarla
+                if (!string.IsNullOrWhiteSpace(model.NuevaPassword))
+                {
+                    usuario.Password = HashPassword(model.NuevaPassword);
+                }
+
+                _context.Update(usuario);
+                await _context.SaveChangesAsync();
+
+                TempData["Mensaje"] = "Usuario actualizado exitosamente";
+                return RedirectToAction("ListarUsuarios");
+            }
+
+            return View(model);
+        }
+
+        [HttpGet]
+        [AuthorizeSession]
+        [AuthorizeRole("Administrador")]
+        public async Task<IActionResult> Detalle(int id)
+        {
+            var usuario = await _context.Usuarios.FindAsync(id);
+            
+            if (usuario == null)
+            {
+                TempData["Error"] = "Usuario no encontrado";
+                return RedirectToAction("ListarUsuarios");
+            }
+
+            return View(usuario);
+        }
+
+        [HttpPost]
+        [AuthorizeSession]
+        [AuthorizeRole("Administrador")]
+        public async Task<IActionResult> CambiarPassword(int id, string nuevaPassword)
+        {
+            if (string.IsNullOrWhiteSpace(nuevaPassword))
+            {
+                TempData["Error"] = "La contraseña no puede estar vacía";
+                return RedirectToAction("Editar", new { id });
+            }
+
+            var usuario = await _context.Usuarios.FindAsync(id);
+            
+            if (usuario == null)
+            {
+                TempData["Error"] = "Usuario no encontrado";
+                return RedirectToAction("ListarUsuarios");
+            }
+
+            usuario.Password = HashPassword(nuevaPassword);
+            await _context.SaveChangesAsync();
+
+            TempData["Mensaje"] = "Contraseña actualizada exitosamente";
+            return RedirectToAction("Editar", new { id });
+        }
+
         [HttpPost]
         [AuthorizeSession]
         [AuthorizeRole("Administrador")]
@@ -243,6 +374,46 @@ namespace PepsicoChile.Controllers
                 TempData["Mensaje"] = $"Usuario {(usuario.Activo ? "activado" : "desactivado")} correctamente";
             }
 
+            return RedirectToAction("ListarUsuarios");
+        }
+
+        [HttpPost]
+        [AuthorizeSession]
+        [AuthorizeRole("Administrador")]
+        public async Task<IActionResult> Eliminar(int id)
+        {
+            var usuario = await _context.Usuarios.FindAsync(id);
+            
+            if (usuario == null)
+            {
+                TempData["Error"] = "Usuario no encontrado";
+                return RedirectToAction("ListarUsuarios");
+            }
+
+            // No permitir eliminar administradores
+            if (usuario.Rol == "Administrador")
+            {
+                TempData["Error"] = "No se puede eliminar un usuario administrador";
+                return RedirectToAction("ListarUsuarios");
+            }
+
+            // Verificar si tiene registros relacionados
+            var tieneIngresos = await _context.IngresosTaller
+                .AnyAsync(i => i.ChoferId == id || i.MecanicoAsignadoId == id || i.SupervisorId == id);
+
+            var tieneTareas = await _context.TareasTaller
+                .AnyAsync(t => t.MecanicoAsignadoId == id);
+
+            if (tieneIngresos || tieneTareas)
+            {
+                TempData["Error"] = "No se puede eliminar el usuario porque tiene registros asociados. Desactívelo en su lugar.";
+                return RedirectToAction("ListarUsuarios");
+            }
+
+            _context.Usuarios.Remove(usuario);
+            await _context.SaveChangesAsync();
+
+            TempData["Mensaje"] = "Usuario eliminado exitosamente";
             return RedirectToAction("ListarUsuarios");
         }
     }

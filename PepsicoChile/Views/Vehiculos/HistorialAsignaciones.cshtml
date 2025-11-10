@@ -1,0 +1,158 @@
+@model List<AsignacionVehiculo>
+@{
+    ViewData["Title"] = "Historial de Asignaciones";
+    var vehiculo = ViewBag.Vehiculo as Vehiculo;
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5">
+            <i class="bi bi-clock-history"></i> Historial de Asignaciones
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-action="Index">Vehículos</a></li>
+                <li class="breadcrumb-item"><a asp-action="Detalle" asp-route-id="@vehiculo?.Id">@vehiculo?.Patente</a></li>
+                <li class="breadcrumb-item active">Historial</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+@if (vehiculo != null)
+{
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="mb-0">
+                        <i class="bi bi-truck"></i> @vehiculo.Patente
+                        <span class="text-muted">- @vehiculo.Marca @vehiculo.Modelo</span>
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-ul"></i> Historial Completo (@Model.Count asignaciones)
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Any())
+                {
+                    <div class="timeline">
+                        @foreach (var asignacion in Model)
+                        {
+                            var duracion = asignacion.Activa 
+                                ? (DateTime.Now - asignacion.FechaAsignacion).Days 
+                                : asignacion.FechaDesasignacion.HasValue 
+                                    ? (asignacion.FechaDesasignacion.Value - asignacion.FechaAsignacion).Days 
+                                    : 0;
+
+                            <div class="card mb-3 @(asignacion.Activa ? "border-success" : "")">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h5 class="card-title">
+                                                <i class="bi bi-person-circle text-primary"></i>
+                                                @asignacion.Chofer?.Nombre @asignacion.Chofer?.Apellido
+                                                @if (asignacion.Activa)
+                                                {
+                                                    <span class="badge bg-success">Actual</span>
+                                                }
+                                            </h5>
+                                            <p class="card-text mb-2">
+                                                <i class="bi bi-credit-card"></i> @asignacion.Chofer?.Rut
+                                                <br>
+                                                <i class="bi bi-envelope"></i> @asignacion.Chofer?.Email
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="text-md-end">
+                                                <p class="mb-2">
+                                                    <strong>
+                                                        <i class="bi bi-calendar-check"></i> Fecha Asignación:
+                                                    </strong>
+                                                    <br>
+                                                    @asignacion.FechaAsignacion.ToString("dd/MM/yyyy HH:mm")
+                                                </p>
+                                                @if (asignacion.FechaDesasignacion.HasValue)
+                                                {
+                                                    <p class="mb-2">
+                                                        <strong>
+                                                            <i class="bi bi-calendar-x"></i> Fecha Desasignación:
+                                                        </strong>
+                                                        <br>
+                                                        @asignacion.FechaDesasignacion.Value.ToString("dd/MM/yyyy HH:mm")
+                                                    </p>
+                                                }
+                                                <p class="mb-0">
+                                                    <strong>
+                                                        <i class="bi bi-clock"></i> Duración:
+                                                    </strong>
+                                                    <br>
+                                                    <span class="badge bg-info">
+                                                        @duracion días
+                                                        @if (asignacion.Activa)
+                                                        {
+                                                            <text>(en curso)</text>
+                                                        }
+                                                    </span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(asignacion.Observaciones))
+                                    {
+                                        <hr>
+                                        <div class="alert alert-light mb-0">
+                                            <i class="bi bi-chat-text"></i>
+                                            <strong>Observaciones:</strong>
+                                            <br>
+                                            @asignacion.Observaciones
+                                        </div>
+                                    }
+
+                                    @if (asignacion.AsignadoPor != null)
+                                    {
+                                        <hr>
+                                        <small class="text-muted">
+                                            <i class="bi bi-person"></i>
+                                            <strong>Asignado por:</strong> 
+                                            @asignacion.AsignadoPor.Nombre @asignacion.AsignadoPor.Apellido
+                                        </small>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        No hay historial de asignaciones para este vehículo.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <a asp-action="Detalle" asp-route-id="@vehiculo?.Id" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver al Detalle
+        </a>
+        <a asp-action="AsignarChofer" asp-route-id="@vehiculo?.Id" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i> Nueva Asignación
+        </a>
+    </div>
+</div>

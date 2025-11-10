@@ -1,0 +1,225 @@
+@model List<PepsicoChile.Models.SolicitudRepuesto>
+
+@{
+    ViewData["Title"] = "Mis Solicitudes de Repuestos";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-cart-check"></i> Mis Solicitudes de Repuestos</h2>
+            <p class="text-muted">Aquí puedes ver todas tus solicitudes y marcar como instalados los repuestos que ya hayas montado.</p>
+        </div>
+    </div>
+
+    <!-- Estadísticas Rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-warning shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-clock-history fs-1 text-warning"></i>
+                    <h3 class="mt-2">@Model.Count(s => s.Estado == "Solicitado")</h3>
+                    <p class="text-muted mb-0">Solicitadas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-truck fs-1 text-info"></i>
+                    <h3 class="mt-2">@Model.Count(s => s.Estado == "En Tránsito")</h3>
+                    <p class="text-muted mb-0">En Tránsito</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-hand-thumbs-up fs-1 text-success"></i>
+                    <h3 class="mt-2">@Model.Count(s => s.Estado == "Entregado")</h3>
+                    <p class="text-muted mb-0">Listos para instalar</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-primary shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-check-circle fs-1 text-primary"></i>
+                    <h3 class="mt-2">@Model.Count(s => s.Estado == "Instalado")</h3>
+                    <p class="text-muted mb-0">Instalados</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Solicitudes -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-list-ul"></i> Mis Solicitudes</h5>
+                <a asp-action="Crear" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Nueva Solicitud
+                </a>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Repuesto</th>
+                            <th>Cantidad</th>
+                            <th>Vehículo</th>
+                            <th>Tarea</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var solicitud in Model.OrderByDescending(s => s.FechaSolicitud))
+                        {
+                            var puedeInstalar = solicitud.Estado == "Entregado";
+                            
+                            <tr class="@(puedeInstalar ? "table-success" : "")">
+                                <td>
+                                    <small>
+                                        @solicitud.FechaSolicitud.ToString("dd/MM/yyyy")<br/>
+                                        @solicitud.FechaSolicitud.ToString("HH:mm")
+                                    </small>
+                                </td>
+                                <td>
+                                    <strong>@solicitud.Nombre</strong>
+                                    @if (!string.IsNullOrEmpty(solicitud.CodigoRepuesto))
+                                    {
+                                        <br/><small><code>@solicitud.CodigoRepuesto</code></small>
+                                    }
+                                </td>
+                                <td><span class="badge bg-primary">@solicitud.Cantidad</span></td>
+                                <td>
+                                    @if (solicitud.TareaTaller?.IngresoTaller?.Vehiculo != null)
+                                    {
+                                        <strong>@solicitud.TareaTaller.IngresoTaller.Vehiculo.Patente</strong>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (solicitud.TareaTaller != null)
+                                    {
+                                        <small class="text-muted">@solicitud.TareaTaller.Descripcion</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @switch (solicitud.Estado)
+                                    {
+                                        case "Solicitado":
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="bi bi-clock"></i> Solicitado
+                                            </span>
+                                            break;
+                                        case "En Tránsito":
+                                            <span class="badge bg-info">
+                                                <i class="bi bi-truck"></i> En Tránsito
+                                            </span>
+                                            break;
+                                        case "Entregado":
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-hand-thumbs-up"></i> Listo para instalar
+                                            </span>
+                                            break;
+                                        case "Instalado":
+                                            <span class="badge bg-primary">
+                                                <i class="bi bi-check-circle"></i> Instalado
+                                            </span>
+                                            break;
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Detalle" asp-route-id="@solicitud.Id" 
+                                           class="btn btn-outline-info" 
+                                           title="Ver Detalle">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        
+                                        @if (puedeInstalar)
+                                        {
+                                            <button type="button" 
+                                                    class="btn btn-success" 
+                                                    onclick="marcarInstalado(@solicitud.Id)"
+                                                    title="Marcar como Instalado">
+                                                <i class="bi bi-check-circle"></i> Instalar
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-inbox fs-1 text-muted"></i>
+            <p class="text-muted mt-3">No tienes solicitudes de repuestos registradas.</p>
+            <a asp-action="Crear" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Crear Primera Solicitud
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    @Html.AntiForgeryToken()
+    <script>
+        function marcarInstalado(id) {
+            if (confirm('¿Confirmas que has instalado este repuesto en el vehículo?')) {
+                var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                
+                fetch('@Url.Action("CambiarEstado", "SolicitudesRepuesto")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({ id: id, nuevoEstado: 'Instalado' })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert('? ' + data.message);
+                        location.reload();
+                    } else {
+                        alert('? ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al actualizar el estado: ' + error.message);
+                });
+            }
+        }
+    </script>
+}
+
+<style>
+    .table-success {
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+</style>

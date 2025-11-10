@@ -17,8 +17,12 @@ namespace PepsicoChile.Data
         public DbSet<Pausa> Pausas { get; set; }
         public DbSet<Documento> Documentos { get; set; }
         public DbSet<Repuesto> Repuestos { get; set; }
+        public DbSet<MovimientoRepuesto> MovimientosRepuesto { get; set; }
+        public DbSet<SolicitudRepuesto> SolicitudesRepuesto { get; set; }
         public DbSet<DocumentoVehiculo> DocumentosVehiculo { get; set; }
         public DbSet<Notificacion> Notificaciones { get; set; }
+        public DbSet<AsignacionVehiculo> AsignacionesVehiculo { get; set; }
+        public DbSet<ImagenIngreso> ImagenesIngreso { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -134,26 +138,69 @@ namespace PepsicoChile.Data
              {
                  entity.ToTable("Repuestos");
                  entity.HasKey(e => e.Id);
-
-                 entity.HasOne(e => e.TareaTaller)
-        .WithMany()
-               .HasForeignKey(e => e.TareaTallerId)
-             .OnDelete(DeleteBehavior.Cascade);
+                 
+                 // Índice único compuesto: Nombre + Proveedor
+                 entity.HasIndex(e => new { e.Nombre, e.Proveedor })
+                     .IsUnique()
+                     .HasDatabaseName("IX_Repuestos_Nombre_Proveedor");
+                 
+                 entity.HasIndex(e => e.CodigoRepuesto);
+                 entity.HasIndex(e => e.Categoria);
              });
 
-            // Configuración de Notificacion
-            modelBuilder.Entity<Notificacion>(entity =>
+            // Configuración de MovimientoRepuesto
+            modelBuilder.Entity<MovimientoRepuesto>(entity =>
             {
-                entity.ToTable("Notificaciones");
+                entity.ToTable("MovimientosRepuesto");
                 entity.HasKey(e => e.Id);
 
-                entity.HasOne(e => e.Usuario)
-                .WithMany()
-  .HasForeignKey(e => e.UsuarioId)
- .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Repuesto)
+                    .WithMany()
+                    .HasForeignKey(e => e.RepuestoId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasIndex(e => e.UsuarioId);
-     entity.HasIndex(e => new { e.UsuarioId, e.Leida });
+                entity.HasOne(e => e.Vehiculo)
+                    .WithMany()
+                    .HasForeignKey(e => e.VehiculoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.TareaTaller)
+                    .WithMany()
+                    .HasForeignKey(e => e.TareaTallerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Mecanico)
+                    .WithMany()
+                    .HasForeignKey(e => e.MecanicoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.UsuarioRegistro)
+                    .WithMany()
+                    .HasForeignKey(e => e.UsuarioRegistroId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.FechaMovimiento);
+                entity.HasIndex(e => e.TipoMovimiento);
+            });
+
+            // Configuración de SolicitudRepuesto
+            modelBuilder.Entity<SolicitudRepuesto>(entity =>
+            {
+                entity.ToTable("SolicitudesRepuesto");
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.TareaTaller)
+                    .WithMany()
+                    .HasForeignKey(e => e.TareaTallerId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.SolicitadoPor)
+                    .WithMany()
+                    .HasForeignKey(e => e.SolicitadoPorId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.Estado);
+                entity.HasIndex(e => e.FechaSolicitud);
             });
         }
     }

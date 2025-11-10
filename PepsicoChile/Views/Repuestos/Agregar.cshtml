@@ -1,0 +1,162 @@
+@model PepsicoChile.Models.ViewModels.AgregarRepuestoViewModel
+
+@{
+    ViewData["Title"] = ViewBag.IsEdit == true ? "Editar Repuesto" : "Agregar Repuesto";
+    var isEdit = ViewBag.IsEdit == true;
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi @(isEdit ? "bi-pencil-square" : "bi-plus-circle")"></i> 
+                        @ViewData["Title"]
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="@(isEdit ? "Editar" : "Agregar")" method="post">
+                        @if (isEdit)
+                        {
+                            <input type="hidden" name="id" value="@ViewBag.RepuestoId" />
+                        }
+                        
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label asp-for="Nombre" class="form-label">
+                                        <i class="bi bi-tag"></i> Nombre del Repuesto *
+                                    </label>
+                                    <input asp-for="Nombre" class="form-control" placeholder="Ej: Filtro de aceite" />
+                                    <span asp-validation-for="Nombre" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> El código del repuesto se generará automáticamente basado en la categoría seleccionada.
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Proveedor" class="form-label">
+                                        <i class="bi bi-building"></i> Proveedor/Marca *
+                                    </label>
+                                    <input asp-for="Proveedor" class="form-control" placeholder="Nombre del proveedor o marca" />
+                                    <span asp-validation-for="Proveedor" class="text-danger"></span>
+                                    <small class="text-muted">El sistema valida que no existan repuestos duplicados con el mismo nombre y proveedor</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Categoria" class="form-label">
+                                        <i class="bi bi-folder"></i> Categoría
+                                    </label>
+                                    <select asp-for="Categoria" class="form-select">
+                                        <option value="">Seleccione una categoría</option>
+                                        <option value="Motor">Motor</option>
+                                        <option value="Transmisión">Transmisión</option>
+                                        <option value="Frenos">Frenos</option>
+                                        <option value="Suspensión">Suspensión</option>
+                                        <option value="Eléctrico">Eléctrico</option>
+                                        <option value="Neumáticos">Neumáticos</option>
+                                        <option value="Filtros">Filtros</option>
+                                        <option value="Lubricantes">Lubricantes</option>
+                                        <option value="Refrigeración">Refrigeración</option>
+                                        <option value="Carrocería">Carrocería</option>
+                                        <option value="Otros">Otros</option>
+                                    </select>
+                                    <span asp-validation-for="Categoria" class="text-danger"></span>
+                                    <small class="text-muted">La categoría determina el prefijo del código automático</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label asp-for="Ubicacion" class="form-label">
+                                        <i class="bi bi-geo-alt"></i> Ubicación
+                                    </label>
+                                    <input asp-for="Ubicacion" class="form-control" placeholder="Ej: Estante A-3" />
+                                    <span asp-validation-for="Ubicacion" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Descripcion" class="form-label">
+                                <i class="bi bi-card-text"></i> Descripción
+                            </label>
+                            <textarea asp-for="Descripcion" class="form-control" rows="3" 
+                                      placeholder="Descripción detallada del repuesto..."></textarea>
+                            <span asp-validation-for="Descripcion" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="StockInicial" class="form-label">
+                                        <i class="bi bi-boxes"></i> @(isEdit ? "Stock Actual" : "Stock Inicial") *
+                                    </label>
+                                    @if (isEdit)
+                                    {
+                                        <input asp-for="StockInicial" type="number" class="form-control" readonly />
+                                        <small class="text-muted">Use "Recibir Stock" para modificar</small>
+                                    }
+                                    else
+                                    {
+                                        <input asp-for="StockInicial" type="number" class="form-control" />
+                                    }
+                                    <span asp-validation-for="StockInicial" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="StockMinimo" class="form-label">
+                                        <i class="bi bi-exclamation-triangle"></i> Stock Mínimo *
+                                    </label>
+                                    <input asp-for="StockMinimo" type="number" class="form-control" />
+                                    <span asp-validation-for="StockMinimo" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="PrecioUnitario" class="form-label">
+                                        <i class="bi bi-currency-dollar"></i> Precio Unitario
+                                    </label>
+                                    <input asp-for="PrecioUnitario" type="number" step="0.01" class="form-control" 
+                                           placeholder="0.00" />
+                                    <span asp-validation-for="PrecioUnitario" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi @(isEdit ? "bi-check-circle" : "bi-plus-circle")"></i> 
+                                @(isEdit ? "Guardar Cambios" : "Agregar Repuesto")
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

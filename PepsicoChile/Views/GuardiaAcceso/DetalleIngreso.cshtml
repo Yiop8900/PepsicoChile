@@ -1,0 +1,443 @@
+@model IngresoTaller
+@{
+    ViewData["Title"] = "Detalle del Ingreso";
+    var imagenes = ViewBag.Imagenes as List<ImagenIngreso> ?? new List<ImagenIngreso>();
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-info-circle"></i> Detalle del Ingreso</h2>
+                <p class="text-muted mb-0">Información completa del ingreso al taller</p>
+            </div>
+            <div>
+                <a asp-action="Agenda" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver a Agenda
+                </a>
+                @if (Model.FechaIngresoReal.HasValue && !Model.FechaSalidaReal.HasValue)
+                {
+                    <a asp-action="VehiculosEnTaller" class="btn btn-primary">
+                        <i class="bi bi-truck"></i> Ver Vehículos en Taller
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estado del Ingreso -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-@(Model.Estado == "Completado" ? "success" : Model.Estado == "En Proceso" ? "warning" : Model.Estado == "Pausado" ? "danger" : "info") shadow">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <h5 class="mb-1 text-muted">Estado Actual</h5>
+                        <h2 class="mb-0">
+                            <span class="badge bg-@(Model.Estado == "Completado" ? "success" : Model.Estado == "En Proceso" ? "warning" : Model.Estado == "Pausado" ? "danger" : "info") fs-5">
+                                @Model.Estado
+                            </span>
+                        </h2>
+                    </div>
+                    <div class="col-md-6">
+                        @if (!string.IsNullOrEmpty(Model.NumeroOT))
+                        {
+                            <p class="mb-1"><strong>Número de OT:</strong> <span class="badge bg-dark">@Model.NumeroOT</span></p>
+                        }
+                        <p class="mb-1"><strong>Motivo:</strong> <span class="badge bg-info">@Model.MotivoIngreso</span></p>
+                        <p class="mb-0"><strong>Requiere Repuestos:</strong> 
+                            @if (Model.RequiereRepuestos)
+                            {
+                                <span class="badge bg-warning text-dark"><i class="bi bi-check-circle"></i> Sí</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary"><i class="bi bi-x-circle"></i> No</span>
+                            }
+                        </p>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        @if (Model.Estado == "Completado" && !Model.FechaSalidaReal.HasValue)
+                        {
+                            <a asp-action="RegistrarSalida" asp-route-id="@Model.Id" class="btn btn-success btn-lg">
+                                <i class="bi bi-box-arrow-right"></i> Registrar Salida
+                            </a>
+                        }
+                        @if (Model.FechaSalidaReal.HasValue)
+                        {
+                            <span class="badge bg-success fs-6">
+                                <i class="bi bi-check-all"></i> Vehículo Retirado
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Columna Izquierda -->
+    <div class="col-lg-6">
+        <!-- Información del Vehículo -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-truck-front"></i> Información del Vehículo</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="text-muted">Patente</label>
+                        <h2 class="text-primary mb-0">
+                            <i class="bi bi-truck"></i> @Model.Vehiculo?.Patente
+                        </h2>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">Marca</label>
+                        <p class="mb-0 fw-bold">@Model.Vehiculo?.Marca</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">Modelo</label>
+                        <p class="mb-0 fw-bold">@Model.Vehiculo?.Modelo</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">Año</label>
+                        <p class="mb-0">@Model.Vehiculo?.Año</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">Tipo</label>
+                        <p class="mb-0">@Model.Vehiculo?.TipoVehiculo</p>
+                    </div>
+                    @if (Model.KilometrajeIngreso.HasValue)
+                    {
+                        <div class="col-md-12">
+                            <label class="text-muted">Kilometraje de Ingreso</label>
+                            <p class="mb-0">
+                                <span class="badge bg-info fs-6">
+                                    <i class="bi bi-speedometer2"></i> @Model.KilometrajeIngreso.Value.ToString("N0") km
+                                </span>
+                            </p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Información del Chofer -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="bi bi-person-badge"></i> Información del Chofer</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="text-muted">Nombre</label>
+                        <p class="mb-0 fw-bold fs-5">@Model.Chofer?.Nombre @Model.Chofer?.Apellido</p>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.Chofer?.Rut))
+                    {
+                        <div class="col-md-6">
+                            <label class="text-muted">RUT</label>
+                            <p class="mb-0">@Model.Chofer.Rut</p>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Chofer?.Telefono))
+                    {
+                        <div class="col-md-6">
+                            <label class="text-muted">Teléfono</label>
+                            <p class="mb-0">
+                                <i class="bi bi-telephone"></i> @Model.Chofer.Telefono
+                            </p>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Chofer?.Email))
+                    {
+                        <div class="col-12">
+                            <label class="text-muted">Email</label>
+                            <p class="mb-0">
+                                <i class="bi bi-envelope"></i> @Model.Chofer.Email
+                            </p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Personal Asignado -->
+        @if (Model.Supervisor != null || Model.MecanicoAsignado != null)
+        {
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-people"></i> Personal Asignado</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        @if (Model.Supervisor != null)
+                        {
+                            <div class="col-md-6">
+                                <label class="text-muted">Supervisor</label>
+                                <p class="mb-0 fw-bold">
+                                    <i class="bi bi-person-check"></i> @Model.Supervisor.Nombre @Model.Supervisor.Apellido
+                                </p>
+                            </div>
+                        }
+                        @if (Model.MecanicoAsignado != null)
+                        {
+                            <div class="col-md-6">
+                                <label class="text-muted">Mecánico Asignado</label>
+                                <p class="mb-0 fw-bold">
+                                    <i class="bi bi-wrench"></i> @Model.MecanicoAsignado.Nombre @Model.MecanicoAsignado.Apellido
+                                </p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Columna Derecha -->
+    <div class="col-lg-6">
+        <!-- Fechas e Información del Ingreso -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="bi bi-calendar-event"></i> Fechas e Información</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="text-muted">Fecha Programada</label>
+                        <p class="mb-0 fw-bold">
+                            <i class="bi bi-calendar"></i> @Model.FechaProgramada.ToString("dd/MM/yyyy")
+                        </p>
+                        <small class="text-muted">@Model.FechaProgramada.ToString("HH:mm")</small>
+                    </div>
+                    @if (Model.FechaIngresoReal.HasValue)
+                    {
+                        <div class="col-md-6">
+                            <label class="text-muted">Fecha Ingreso Real</label>
+                            <p class="mb-0 fw-bold text-success">
+                                <i class="bi bi-calendar-check"></i> @Model.FechaIngresoReal.Value.ToString("dd/MM/yyyy")
+                            </p>
+                            <small class="text-muted">@Model.FechaIngresoReal.Value.ToString("HH:mm")</small>
+                        </div>
+
+                        var diferenciaMinutos = (Model.FechaIngresoReal.Value - Model.FechaProgramada).TotalMinutes;
+                        <div class="col-md-6">
+                            <label class="text-muted">Diferencia de Llegada</label>
+                            <p class="mb-0">
+                                @if (Math.Abs(diferenciaMinutos) < 5)
+                                {
+                                    <span class="badge bg-success">A tiempo</span>
+                                }
+                                else if (diferenciaMinutos > 0)
+                                {
+                                    <span class="badge bg-warning text-dark">+@diferenciaMinutos.ToString("N0") min (Tarde)</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info">@diferenciaMinutos.ToString("N0") min (Anticipado)</span>
+                                }
+                            </p>
+                        </div>
+                    }
+                    @if (Model.FechaSalidaEstimada.HasValue)
+                    {
+                        <div class="col-md-6">
+                            <label class="text-muted">Fecha Salida Estimada</label>
+                            <p class="mb-0">
+                                <i class="bi bi-calendar-plus"></i> @Model.FechaSalidaEstimada.Value.ToString("dd/MM/yyyy HH:mm")
+                            </p>
+                        </div>
+                    }
+                    @if (Model.FechaSalidaReal.HasValue)
+                    {
+                        <div class="col-md-6">
+                            <label class="text-muted">Fecha Salida Real</label>
+                            <p class="mb-0 fw-bold text-success">
+                                <i class="bi bi-box-arrow-right"></i> @Model.FechaSalidaReal.Value.ToString("dd/MM/yyyy")
+                            </p>
+                            <small class="text-muted">@Model.FechaSalidaReal.Value.ToString("HH:mm")</small>
+                        </div>
+
+                        var tiempoTotalHoras = (Model.FechaSalidaReal.Value - Model.FechaIngresoReal!.Value).TotalHours;
+                        <div class="col-12">
+                            <label class="text-muted">Tiempo Total en Taller</label>
+                            <p class="mb-0">
+                                @if (tiempoTotalHoras < 24)
+                                {
+                                    <span class="badge bg-success fs-6">@tiempoTotalHoras.ToString("N1") horas</span>
+                                }
+                                else
+                                {
+                                    var dias = (int)(tiempoTotalHoras / 24);
+                                    var horas = tiempoTotalHoras % 24;
+                                    <span class="badge bg-info fs-6">@dias día(s) @horas.ToString("N0") horas</span>
+                                }
+                            </p>
+                        </div>
+                    }
+                    else if (Model.FechaIngresoReal.HasValue)
+                    {
+                        var tiempoTranscurrido = (DateTime.Now - Model.FechaIngresoReal.Value).TotalHours;
+                        <div class="col-12">
+                            <label class="text-muted">Tiempo en Taller (Actual)</label>
+                            <p class="mb-0">
+                                @if (tiempoTranscurrido < 24)
+                                {
+                                    <span class="badge bg-warning text-dark fs-6">@tiempoTranscurrido.ToString("N1") horas</span>
+                                }
+                                else
+                                {
+                                    var dias = (int)(tiempoTranscurrido / 24);
+                                    var horas = tiempoTranscurrido % 24;
+                                    <span class="badge bg-warning text-dark fs-6">@dias día(s) @horas.ToString("N0") horas</span>
+                                }
+                            </p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Descripción del Problema -->
+        @if (!string.IsNullOrEmpty(Model.DescripcionProblema))
+        {
+            <div class="card shadow mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Descripción del Problema</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0 p-3 bg-light rounded" style="white-space: pre-wrap;">@Model.DescripcionProblema</p>
+                </div>
+            </div>
+        }
+
+        <!-- Observaciones -->
+        @if (!string.IsNullOrEmpty(Model.ObservacionesChofer))
+        {
+            <div class="card shadow mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-chat-left-text"></i> Observaciones</h5>
+                </div>
+                <div class="card-body">
+                    <pre class="mb-0 p-3 bg-light rounded" style="white-space: pre-wrap; max-height: 300px; overflow-y: auto;">@Model.ObservacionesChofer</pre>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Imágenes del Ingreso -->
+@if (imagenes.Any())
+{
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-images"></i> Imágenes del Ingreso (@imagenes.Count)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @{
+                        var imagenesLlegada = imagenes.Where(i => i.TipoImagen == "Llegada").ToList();
+                        var imagenesTrabajo = imagenes.Where(i => i.TipoImagen == "Trabajo Completado").ToList();
+                        var imagenesSalida = imagenes.Where(i => i.TipoImagen == "Salida").ToList();
+                    }
+
+                    @if (imagenesLlegada.Any())
+                    {
+                        <h6 class="mb-3"><i class="bi bi-box-arrow-in-down"></i> Imágenes de Llegada (@imagenesLlegada.Count)</h6>
+                        <div class="row g-3 mb-4">
+                            @foreach (var imagen in imagenesLlegada)
+                            {
+                                <div class="col-md-3 col-sm-6">
+                                    <div class="card">
+                                        <img src="~/@imagen.RutaArchivo" class="card-img-top" alt="@imagen.NombreArchivo" style="height: 200px; object-fit: cover; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#modalImagen" onclick="mostrarImagen('~/@imagen.RutaArchivo', '@imagen.Descripcion')">
+                                        <div class="card-body p-2">
+                                            <small class="text-muted d-block">@imagen.FechaSubida.ToString("dd/MM/yyyy HH:mm")</small>
+                                            @if (!string.IsNullOrEmpty(imagen.Descripcion))
+                                            {
+                                                <small class="text-muted">@imagen.Descripcion</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    @if (imagenesTrabajo.Any())
+                    {
+                        <h6 class="mb-3"><i class="bi bi-tools"></i> Imágenes de Trabajo Completado (@imagenesTrabajo.Count)</h6>
+                        <div class="row g-3 mb-4">
+                            @foreach (var imagen in imagenesTrabajo)
+                            {
+                                <div class="col-md-3 col-sm-6">
+                                    <div class="card">
+                                        <img src="~/@imagen.RutaArchivo" class="card-img-top" alt="@imagen.NombreArchivo" style="height: 200px; object-fit: cover; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#modalImagen" onclick="mostrarImagen('~/@imagen.RutaArchivo', '@imagen.Descripcion')">
+                                        <div class="card-body p-2">
+                                            <small class="text-muted d-block">@imagen.FechaSubida.ToString("dd/MM/yyyy HH:mm")</small>
+                                            @if (!string.IsNullOrEmpty(imagen.Descripcion))
+                                            {
+                                                <small class="text-muted">@imagen.Descripcion</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    @if (imagenesSalida.Any())
+                    {
+                        <h6 class="mb-3"><i class="bi bi-box-arrow-right"></i> Imágenes de Salida (@imagenesSalida.Count)</h6>
+                        <div class="row g-3">
+                            @foreach (var imagen in imagenesSalida)
+                            {
+                                <div class="col-md-3 col-sm-6">
+                                    <div class="card">
+                                        <img src="~/@imagen.RutaArchivo" class="card-img-top" alt="@imagen.NombreArchivo" style="height: 200px; object-fit: cover; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#modalImagen" onclick="mostrarImagen('~/@imagen.RutaArchivo', '@imagen.Descripcion')">
+                                        <div class="card-body p-2">
+                                            <small class="text-muted d-block">@imagen.FechaSubida.ToString("dd/MM/yyyy HH:mm")</small>
+                                            @if (!string.IsNullOrEmpty(imagen.Descripcion))
+                                            {
+                                                <small class="text-muted">@imagen.Descripcion</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal para ver imagen en grande -->
+<div class="modal fade" id="modalImagen" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalImagenTitulo">Imagen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImagenSrc" src="" class="img-fluid" alt="Imagen" style="max-height: 70vh;">
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function mostrarImagen(ruta, descripcion) {
+            document.getElementById('modalImagenSrc').src = ruta;
+            document.getElementById('modalImagenTitulo').textContent = descripcion || 'Imagen';
+        }
+    </script>
+}

@@ -1,57 +1,192 @@
-@model Repuesto
+@model SolicitudRepuesto
 @{
     ViewData["Title"] = "Solicitar Repuesto";
-    var tareaId = ViewBag.TareaId;
+    var tarea = ViewBag.Tarea as TareaTaller;
+    var repuestos = ViewBag.Repuestos as List<Repuesto>;
 }
 
 <div class="row">
-<div class="col-md-8 offset-md-2">
-   <div class="card">
-<div class="card-header bg-info text-white">
-    <h4 class="mb-0"><i class="bi bi-box-seam"></i> Solicitar Repuesto</h4>
-   </div>
-      <div class="card-body">
-   <form asp-action="SolicitarRepuesto" method="post">
-        <input type="hidden" asp-for="TareaTallerId" value="@tareaId" />
-   <input type="hidden" asp-for="FechaSolicitud" value="@DateTime.Now" />
-       <input type="hidden" asp-for="Estado" value="Solicitado" />
-    
-   <div class="mb-3">
-   <label asp-for="Nombre" class="form-label">Nombre del Repuesto</label>
- <input asp-for="Nombre" type="text" class="form-control" placeholder="Ej: Filtro de aceite" required />
-     </div>
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0"><i class="bi bi-box-seam"></i> Solicitar Repuesto</h4>
+                @if (tarea != null)
+                {
+                    <small>Tarea: @tarea.Descripcion</small>
+                    @if (tarea.IngresoTaller?.Vehiculo != null)
+                    {
+                        <br /><small>Vehículo: @tarea.IngresoTaller.Vehiculo.Patente</small>
+                    }
+                }
+            </div>
+            <div class="card-body">
+                <form asp-action="SolicitarRepuesto" method="post" id="formSolicitud">
+                    <input type="hidden" name="tareaId" value="@tarea?.Id" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Seleccionar Repuesto</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="tipoSeleccion" id="radioDropdown" value="dropdown" checked>
+                            <label class="form-check-label" for="radioDropdown">
+                                Seleccionar del catálogo
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipoSeleccion" id="radioManual" value="manual">
+                            <label class="form-check-label" for="radioManual">
+                                Ingresar manualmente
+                            </label>
+                        </div>
+                    </div>
 
-     <div class="mb-3">
- <label asp-for="CodigoRepuesto" class="form-label">Código del Repuesto</label>
-     <input asp-for="CodigoRepuesto" type="text" class="form-control" placeholder="Código o referencia del fabricante" />
-   </div>
+                    <!-- Sección: Seleccionar del Dropdown -->
+                    <div id="seccionDropdown">
+                        <div class="mb-3">
+                            <label for="repuestoId" class="form-label">Repuesto <span class="text-danger">*</span></label>
+                            <select name="repuestoId" id="repuestoId" class="form-select">
+                                <option value="">-- Seleccione un repuesto --</option>
+                                @if (repuestos != null)
+                                {
+                                    @foreach (var repuesto in repuestos)
+                                    {
+                                        <option value="@repuesto.Id" 
+                                                data-codigo="@repuesto.CodigoRepuesto" 
+                                                data-proveedor="@repuesto.Proveedor"
+                                                data-stock="@repuesto.StockActual">
+                                            @repuesto.Nombre (@repuesto.CodigoRepuesto) - Stock: @repuesto.StockActual - @repuesto.Proveedor
+                                        </option>
+                                    }
+                                }
+                            </select>
+                            <small class="form-text text-muted">Seleccione el repuesto del catálogo disponible</small>
+                        </div>
 
-     <div class="row">
-  <div class="col-md-6 mb-3">
-  <label asp-for="Cantidad" class="form-label">Cantidad</label>
-     <input asp-for="Cantidad" type="number" class="form-control" min="1" value="1" required />
-     </div>
+                        <div class="row" id="infoRepuesto" style="display: none;">
+                            <div class="col-md-6">
+                                <div class="alert alert-info">
+                                    <strong>Código:</strong> <span id="infoCodigo"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-info">
+                                    <strong>Proveedor:</strong> <span id="infoProveedor"></span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="alert alert-warning" id="alertStock" style="display: none;">
+                                    <i class="bi bi-exclamation-triangle"></i> <strong>Stock bajo:</strong> <span id="infoStock"></span> unidades disponibles
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-     <div class="col-md-6 mb-3">
-   <label asp-for="Proveedor" class="form-label">Proveedor (opcional)</label>
-   <input asp-for="Proveedor" type="text" class="form-control" placeholder="Nombre del proveedor" />
-       </div>
- </div>
+                    <!-- Sección: Ingreso Manual -->
+                    <div id="seccionManual" style="display: none;">
+                        <div class="mb-3">
+                            <label for="nombreManual" class="form-label">Nombre del Repuesto <span class="text-danger">*</span></label>
+                            <input name="nombreManual" id="nombreManual" type="text" class="form-control" placeholder="Ej: Filtro de aceite" />
+                        </div>
 
-   <div class="alert alert-warning">
-  <i class="bi bi-exclamation-triangle"></i> <strong>Nota:</strong> La solicitud será enviada al supervisor para su aprobación y gestión.
-  </div>
+                        <div class="mb-3">
+                            <label for="codigoManual" class="form-label">Código del Repuesto</label>
+                            <input name="codigoManual" id="codigoManual" type="text" class="form-control" placeholder="Código o referencia del fabricante" />
+                        </div>
 
-        <div class="d-grid gap-2">
-  <button type="submit" class="btn btn-info btn-lg">
- <i class="bi bi-send"></i> Enviar Solicitud
- </button>
-  <a asp-action="DetalleTarea" asp-route-id="@tareaId" class="btn btn-secondary">
-      <i class="bi bi-arrow-left"></i> Cancelar
-   </a>
-   </div>
-   </form>
-  </div>
-  </div>
+                        <div class="mb-3">
+                            <label for="proveedor" class="form-label">Proveedor</label>
+                            <input name="proveedor" id="proveedor" type="text" class="form-control" placeholder="Nombre del proveedor" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="cantidad" class="form-label">Cantidad <span class="text-danger">*</span></label>
+                        <input name="cantidad" id="cantidad" type="number" class="form-control" min="1" value="1" required />
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> <strong>Nota:</strong> La solicitud será enviada al área de repuestos para su gestión.
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-info btn-lg">
+                            <i class="bi bi-send"></i> Enviar Solicitud
+                        </button>
+                        <a asp-action="DetalleTarea" asp-route-id="@tarea?.Id" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Manejar cambio entre dropdown y manual
+            $('input[name="tipoSeleccion"]').change(function() {
+                if ($(this).val() === 'dropdown') {
+                    $('#seccionDropdown').show();
+                    $('#seccionManual').hide();
+                    $('#repuestoId').prop('required', true);
+                    $('#nombreManual').prop('required', false);
+                } else {
+                    $('#seccionDropdown').hide();
+                    $('#seccionManual').show();
+                    $('#repuestoId').prop('required', false);
+                    $('#nombreManual').prop('required', true);
+                }
+            });
+
+            // Mostrar información del repuesto seleccionado
+            $('#repuestoId').change(function() {
+                var selectedOption = $(this).find('option:selected');
+                if ($(this).val()) {
+                    var codigo = selectedOption.data('codigo');
+                    var proveedor = selectedOption.data('proveedor');
+                    var stock = selectedOption.data('stock');
+
+                    $('#infoCodigo').text(codigo);
+                    $('#infoProveedor').text(proveedor);
+                    $('#infoStock').text(stock);
+                    $('#infoRepuesto').show();
+
+                    if (stock < 5) {
+                        $('#alertStock').show();
+                    } else {
+                        $('#alertStock').hide();
+                    }
+                } else {
+                    $('#infoRepuesto').hide();
+                }
+            });
+
+            // Validación del formulario
+            $('#formSolicitud').submit(function(e) {
+                var tipoSeleccion = $('input[name="tipoSeleccion"]:checked').val();
+                
+                if (tipoSeleccion === 'dropdown') {
+                    if (!$('#repuestoId').val()) {
+                        e.preventDefault();
+                        alert('Debe seleccionar un repuesto del catálogo');
+                        return false;
+                    }
+                } else {
+                    if (!$('#nombreManual').val().trim()) {
+                        e.preventDefault();
+                        alert('Debe ingresar el nombre del repuesto');
+                        return false;
+                    }
+                }
+
+                var cantidad = parseInt($('#cantidad').val());
+                if (cantidad < 1) {
+                    e.preventDefault();
+                    alert('La cantidad debe ser mayor a 0');
+                    return false;
+                }
+            });
+        });
+    </script>
+}

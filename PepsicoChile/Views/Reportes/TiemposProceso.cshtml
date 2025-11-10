@@ -1,0 +1,367 @@
+@model PepsicoChile.Models.ViewModels.TiempoProcesoViewModel
+@{
+    ViewData["Title"] = "Tiempos de Proceso";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-4">
+            <i class="bi bi-clock-history"></i> Tiempos de Proceso
+        </h1>
+        <p class="lead">Análisis de tiempos de mantenimiento y reparación</p>
+    </div>
+</div>
+
+@if (Model.TotalIngresos == 0)
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> No hay datos de ingresos completados para mostrar.
+        <br>
+        <small>Complete al menos un ingreso para ver las estadísticas de tiempos.</small>
+    </div>
+}
+else
+{
+    <!-- Resumen de Métricas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Total Ingresos</h6>
+                            <h2 class="card-title mb-0">@Model.TotalIngresos</h2>
+                        </div>
+                        <i class="bi bi-clipboard-check fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Tiempo Promedio</h6>
+                            <h2 class="card-title mb-0">@Model.TiempoPromedioEfectivo.ToString("F1")h</h2>
+                            <small>@((Model.TiempoPromedioEfectivo / 24).ToString("F1")) días</small>
+                        </div>
+                        <i class="bi bi-clock fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Tiempo Mínimo</h6>
+                            <h2 class="card-title mb-0">@Model.TiempoMinimo.ToString("F1")h</h2>
+                            <small>@((Model.TiempoMinimo / 24).ToString("F1")) días</small>
+                        </div>
+                        <i class="bi bi-speedometer2 fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Tiempo Máximo</h6>
+                            <h2 class="card-title mb-0">@Model.TiempoMaximo.ToString("F1")h</h2>
+                            <small>@((Model.TiempoMaximo / 24).ToString("F1")) días</small>
+                        </div>
+                        <i class="bi bi-speedometer fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tiempos por Tipo de Servicio -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-wrench"></i> Tiempo Promedio por Tipo</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="p-3 border-end">
+                                <i class="bi bi-tools text-primary fs-1"></i>
+                                <h3 class="mt-2">@Model.TiempoPromedioMantenimiento.ToString("F1")h</h3>
+                                <p class="text-muted mb-0">Mantenimiento</p>
+                                <small class="text-muted">@((Model.TiempoPromedioMantenimiento / 24).ToString("F1")) días</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3">
+                                <i class="bi bi-hammer text-danger fs-1"></i>
+                                <h3 class="mt-2">@Model.TiempoPromedioReparacion.ToString("F1")h</h3>
+                                <p class="text-muted mb-0">Reparación</p>
+                                <small class="text-muted">@((Model.TiempoPromedioReparacion / 24).ToString("F1")) días</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pausas -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0"><i class="bi bi-pause-circle"></i> Análisis de Pausas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <h3>@Model.TotalPausas</h3>
+                            <p class="text-muted mb-0">Total Pausas</p>
+                        </div>
+                        <div class="col-6">
+                            <h3>@Model.TiempoTotalPausas.ToString("F1")h</h3>
+                            <p class="text-muted mb-0">Tiempo Total</p>
+                            <small class="text-muted">@((Model.TiempoTotalPausas / 24).ToString("F1")) días</small>
+                        </div>
+                    </div>
+                    
+                    @if (Model.TotalIngresos > 0)
+                    {
+                        <div class="progress" style="height: 25px;">
+                            @{
+                                var porcentajePausas = (Model.TiempoPromedioPausas / Model.TiempoPromedioTotal) * 100;
+                                var porcentajeEfectivo = 100 - porcentajePausas;
+                            }
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: @porcentajeEfectivo.ToString("F1")%" 
+                                 aria-valuenow="@porcentajeEfectivo" aria-valuemin="0" aria-valuemax="100">
+                                Efectivo @porcentajeEfectivo.ToString("F0")%
+                            </div>
+                            <div class="progress-bar bg-warning" role="progressbar" 
+                                 style="width: @porcentajePausas.ToString("F1")%" 
+                                 aria-valuenow="@porcentajePausas" aria-valuemin="0" aria-valuemax="100">
+                                Pausas @porcentajePausas.ToString("F0")%
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pausas por Motivo -->
+    @if (Model.PausasPorMotivo.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Pausas por Motivo</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Motivo</th>
+                                        <th class="text-center">Cantidad</th>
+                                        <th class="text-end">Tiempo Total</th>
+                                        <th class="text-end">Tiempo Promedio</th>
+                                        <th style="width: 30%">Distribución</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var pausa in Model.PausasPorMotivo)
+                                    {
+                                        var tiempoPromedio = pausa.TiempoTotal / pausa.Cantidad;
+                                        var porcentaje = (pausa.TiempoTotal / Model.TiempoTotalPausas) * 100;
+                                        
+                                        <tr>
+                                            <td>
+                                                <i class="bi bi-pause-fill text-warning"></i>
+                                                <strong>@pausa.Motivo</strong>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">@pausa.Cantidad</span>
+                                            </td>
+                                            <td class="text-end">
+                                                @pausa.TiempoTotal.ToString("F1")h
+                                                <br>
+                                                <small class="text-muted">@((pausa.TiempoTotal / 24).ToString("F1")) días</small>
+                                            </td>
+                                            <td class="text-end">
+                                                @tiempoPromedio.ToString("F1")h
+                                            </td>
+                                            <td>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar bg-warning" role="progressbar" 
+                                                         style="width: @porcentaje.ToString("F1")%" 
+                                                         aria-valuenow="@porcentaje" aria-valuemin="0" aria-valuemax="100">
+                                                        @porcentaje.ToString("F0")%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Detalles de Ingresos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-list-check"></i> Detalle de Ingresos Completados</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Vehículo</th>
+                                    <th>Tipo</th>
+                                    <th>Mecánico</th>
+                                    <th>Fecha Ingreso</th>
+                                    <th>Fecha Salida</th>
+                                    <th class="text-end">Tiempo Total</th>
+                                    <th class="text-end">Pausas</th>
+                                    <th class="text-end">Tiempo Efectivo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var ingreso in Model.IngresosDetallados)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@ingreso.Ingreso.Vehiculo?.Patente</strong>
+                                            <br>
+                                            <small class="text-muted">@ingreso.Ingreso.Vehiculo?.Marca @ingreso.Ingreso.Vehiculo?.Modelo</small>
+                                        </td>
+                                        <td>
+                                            @if (ingreso.Ingreso.MotivoIngreso == "Mantenimiento")
+                                            {
+                                                <span class="badge bg-info">
+                                                    <i class="bi bi-tools"></i> Mantenimiento
+                                                </span>
+                                            }
+                                            else if (ingreso.Ingreso.MotivoIngreso == "Reparación")
+                                            {
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-hammer"></i> Reparación
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">@ingreso.Ingreso.MotivoIngreso</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (ingreso.Ingreso.MecanicoAsignado != null)
+                                            {
+                                                @ingreso.Ingreso.MecanicoAsignado.Nombre @ingreso.Ingreso.MecanicoAsignado.Apellido
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Sin asignar</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @ingreso.Ingreso.FechaIngresoReal?.ToString("dd/MM/yyyy HH:mm")
+                                        </td>
+                                        <td>
+                                            @ingreso.Ingreso.FechaSalidaReal?.ToString("dd/MM/yyyy HH:mm")
+                                        </td>
+                                        <td class="text-end">
+                                            <strong>@ingreso.TiempoTotal.ToString("F1")h</strong>
+                                            <br>
+                                            <small class="text-muted">@ingreso.DiasTranscurridos días</small>
+                                        </td>
+                                        <td class="text-end">
+                                            @if (ingreso.TiempoPausas > 0)
+                                            {
+                                                <span class="text-warning">
+                                                    <i class="bi bi-pause-fill"></i>
+                                                    @ingreso.TiempoPausas.ToString("F1")h
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            <strong class="text-success">@ingreso.TiempoEfectivo.ToString("F1")h</strong>
+                                            <br>
+                                            <small class="text-muted">@((ingreso.TiempoEfectivo / 24).ToString("F1")) días</small>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Botones de Acción -->
+<div class="row mt-4">
+    <div class="col-12">
+        
+        @if (Model.TotalIngresos > 0)
+        {
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="bi bi-printer"></i> Imprimir Reporte
+            </button>
+            
+            <button class="btn btn-success" onclick="exportarExcel()">
+                <i class="bi bi-file-earmark-excel"></i> Exportar a Excel
+            </button>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function exportarExcel() {
+            alert('Función de exportación a Excel en desarrollo');
+            // Aquí se implementaría la exportación a Excel
+        }
+
+        // Estilos para impresión
+        window.onbeforeprint = function() {
+            document.body.classList.add('printing');
+        };
+
+        window.onafterprint = function() {
+            document.body.classList.remove('printing');
+        };
+    </script>
+
+    <style>
+        @@media print {
+            .btn, .card-header { 
+                page-break-inside: avoid; 
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+}

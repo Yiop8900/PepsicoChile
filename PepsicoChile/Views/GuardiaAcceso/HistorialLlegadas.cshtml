@@ -1,0 +1,267 @@
+@model List<IngresoTaller>
+@{
+    ViewData["Title"] = "Historial de Llegadas";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-clock-history"></i> Historial de Llegadas</h2>
+                <p class="text-muted mb-0">Registro de vehículos que han ingresado a la instalación</p>
+            </div>
+            <div>
+                <a asp-action="VehiculosEnTaller" class="btn btn-primary">
+                    <i class="bi bi-truck"></i> Vehículos en Instalación
+                </a>
+                <a asp-action="Agenda" class="btn btn-secondary">
+                    <i class="bi bi-calendar"></i> Agenda
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-body">
+                <form asp-action="HistorialLlegadas" method="get" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label"><i class="bi bi-calendar"></i> Fecha Inicio</label>
+                        <input type="date" name="fechaInicio" class="form-control" value="@ViewBag.FechaInicio?.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label"><i class="bi bi-calendar"></i> Fecha Fin</label>
+                        <input type="date" name="fechaFin" class="form-control" value="@ViewBag.FechaFin?.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i> Buscar
+                        </button>
+                        <a asp-action="HistorialLlegadas" class="btn btn-outline-secondary ms-2">
+                            <i class="bi bi-arrow-clockwise"></i> Últimos 7 días
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estadísticas -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card border-left-info shadow">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Total de Llegadas Registradas
+                        </div>
+                        <div class="h3 mb-0 font-weight-bold text-gray-800">
+                            @ViewBag.TotalLlegadas vehículo(s)
+                            <small class="text-muted">
+                                del @ViewBag.FechaInicio?.ToString("dd/MM/yyyy") al @ViewBag.FechaFin?.ToString("dd/MM/yyyy")
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-box-arrow-in-down fs-2 text-info opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Listado de Llegadas -->
+@if (Model.Any())
+{
+    <div class="card shadow">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-list-ul"></i> Listado de Llegadas</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 12%">Vehículo</th>
+                            <th style="width: 12%">Chofer</th>
+                            <th style="width: 10%">Programada</th>
+                            <th style="width: 10%">Llegada Real</th>
+                            <th style="width: 10%">Diferencia</th>
+                            <th style="width: 10%">Kilometraje</th>
+                            <th style="width: 12%">Motivo</th>
+                            <th style="width: 10%">Estado Actual</th>
+                            <th style="width: 10%">Supervisor</th>
+                            <th style="width: 8%" class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ingreso in Model)
+                        {
+                            var diferencia = ingreso.FechaIngresoReal.HasValue 
+                                ? (ingreso.FechaIngresoReal.Value - ingreso.FechaProgramada).TotalMinutes 
+                                : 0;
+                            var enTiempo = Math.Abs(diferencia) < 5;
+
+                            <tr>
+                                <td>
+                                    <strong>@ingreso.Vehiculo?.Patente</strong>
+                                    <br/>
+                                    <small class="text-muted">@ingreso.Vehiculo?.Marca @ingreso.Vehiculo?.Modelo</small>
+                                </td>
+                                <td>
+                                    @ingreso.Chofer?.Nombre @ingreso.Chofer?.Apellido
+                                    @if (!string.IsNullOrEmpty(ingreso.Chofer?.Telefono))
+                                    {
+                                        <br/><small class="text-muted"><i class="bi bi-telephone"></i> @ingreso.Chofer.Telefono</small>
+                                    }
+                                </td>
+                                <td>
+                                    <span>@ingreso.FechaProgramada.ToString("dd/MM/yyyy")</span>
+                                    <br/><small class="text-muted">@ingreso.FechaProgramada.ToString("HH:mm")</small>
+                                </td>
+                                <td>
+                                    @if (ingreso.FechaIngresoReal.HasValue)
+                                    {
+                                        <span class="text-info fw-bold">@ingreso.FechaIngresoReal.Value.ToString("dd/MM/yyyy")</span>
+                                        <br/><small class="text-muted">@ingreso.FechaIngresoReal.Value.ToString("HH:mm")</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning">No llegó</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (ingreso.FechaIngresoReal.HasValue)
+                                    {
+                                        if (enTiempo)
+                                        {
+                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> A tiempo</span>
+                                        }
+                                        else if (diferencia > 0)
+                                        {
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="bi bi-clock"></i> +@diferencia.ToString("N0") min
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-info">
+                                                <i class="bi bi-check"></i> @diferencia.ToString("N0") min
+                                            </span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (ingreso.KilometrajeIngreso.HasValue)
+                                    {
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-speedometer2"></i> @ingreso.KilometrajeIngreso.Value.ToString("N0") km
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No registrado</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">@ingreso.MotivoIngreso</span>
+                                    @if (!string.IsNullOrEmpty(ingreso.NumeroOT))
+                                    {
+                                        <br/><small class="text-muted">OT: @ingreso.NumeroOT</small>
+                                    }
+                                    @if (ingreso.RequiereRepuestos)
+                                    {
+                                        <br/><small class="text-warning"><i class="bi bi-tools"></i> Req. Repuestos</small>
+                                    }
+                                </td>
+                                <td>
+                                    @if (ingreso.FechaSalidaReal.HasValue)
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-all"></i> Ya salió
+                                        </span>
+                                    }
+                                    else if (ingreso.Estado == "Completado")
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Completado
+                                        </span>
+                                    }
+                                    else if (ingreso.Estado == "En Proceso")
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-gear"></i> En Proceso
+                                        </span>
+                                    }
+                                    else if (ingreso.Estado == "Pausado")
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-pause-circle"></i> Pausado
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">@ingreso.Estado</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (ingreso.Supervisor != null)
+                                    {
+                                        <small>@ingreso.Supervisor.Nombre</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Sin asignar</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <a asp-action="DetalleIngreso" asp-route-id="@ingreso.Id" 
+                                       class="btn btn-sm btn-outline-info" title="Ver Detalle">
+                                        <i class="bi bi-eye"></i> Ver
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card shadow">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-inbox text-muted" style="font-size: 5rem;"></i>
+            <h4 class="mt-4 text-muted">No se encontraron llegadas</h4>
+            <p class="text-muted">No hay llegadas registradas para el rango de fechas seleccionado</p>
+            <a asp-action="Agenda" class="btn btn-primary mt-3">
+                <i class="bi bi-calendar"></i> Ver Agenda
+            </a>
+        </div>
+    </div>
+}
+
+<style>
+    .border-left-info {
+        border-left: 4px solid #17a2b8 !important;
+    }
+    
+    tbody tr {
+        transition: all 0.2s ease;
+    }
+    
+    tbody tr:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+</style>

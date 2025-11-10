@@ -1,0 +1,370 @@
+@model RegistroSalidaViewModel
+@{
+    ViewData["Title"] = "Registrar Salida del Vehículo";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-box-arrow-right"></i> Registrar Salida de la Instalación</h2>
+                <p class="text-muted mb-0">Seleccione el vehículo y registre su salida física de la instalación</p>
+            </div>
+            <div>
+                <a asp-action="VehiculosEnTaller" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Cancelar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!Model.IngresosDisponibles.Any())
+{
+    <div class="alert alert-info shadow">
+        <h4><i class="bi bi-info-circle"></i> No hay vehículos para registrar salida</h4>
+        <p class="mb-0">Actualmente no hay vehículos en la instalación listos para salir.</p>
+        <hr />
+        <a asp-action="VehiculosEnTaller" class="btn btn-primary">
+            <i class="bi bi-truck"></i> Ver Vehículos en Instalación
+        </a>
+    </div>
+}
+else
+{
+    <form asp-action="RegistrarSalidaNuevo" method="post" enctype="multipart/form-data" id="formSalida">
+        <div class="row">
+            <!-- Columna Izquierda: Selección de Vehículo -->
+            <div class="col-lg-6">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-truck-front"></i> Seleccionar Vehículo</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="IngresoId" class="form-label">Vehículo en Instalación</label>
+                            <select asp-for="IngresoId" class="form-select form-select-lg" id="selectIngreso" required>
+                                <option value="">-- Seleccione un vehículo --</option>
+                                @foreach (var ingreso in Model.IngresosDisponibles)
+                                {
+                                    <option value="@ingreso.Id"
+                                            data-patente="@ingreso.Patente"
+                                            data-vehiculo="@ingreso.VehiculoInfo"
+                                            data-chofer="@ingreso.ChoferNombre"
+                                            data-fecha="@ingreso.FechaLlegada.ToString("dd/MM/yyyy HH:mm")"
+                                            data-km="@ingreso.KilometrajeIngreso"
+                                            data-estado="@ingreso.Estado"
+                                            data-color="@ingreso.EstadoColor"
+                                            data-ot="@ingreso.NumeroOT"
+                                            data-tiempo="@ingreso.TiempoEnTaller">
+                                        @ingreso.Patente - @ingreso.VehiculoInfo
+                                        @if (ingreso.Estado == "Completado")
+                                        {
+                                            <text>? LISTO</text>
+                                        }
+                                        else
+                                        {
+                                            <text>(@ingreso.Estado)</text>
+                                        }
+                                    </option>
+                                }
+                            </select>
+                            <span asp-validation-for="IngresoId" class="text-danger"></span>
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i> Vehículos marcados con ? LISTO tienen el trabajo completado
+                            </small>
+                        </div>
+
+                        <!-- Información del Vehículo Seleccionado -->
+                        <div id="infoVehiculo" style="display: none;" class="mt-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title text-primary"><i class="bi bi-info-circle"></i> Información del Ingreso</h6>
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <strong>Patente:</strong>
+                                            <p class="mb-1" id="infoPatente">-</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>Vehículo:</strong>
+                                            <p class="mb-1" id="infoVehiculoDetalle">-</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>Chofer:</strong>
+                                            <p class="mb-1" id="infoChofer">-</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>Llegada:</strong>
+                                            <p class="mb-1" id="infoFechaLlegada">-</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>Km Ingreso:</strong>
+                                            <p class="mb-1" id="infoKmIngreso">-</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>Tiempo en taller:</strong>
+                                            <p class="mb-1" id="infoTiempo">-</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>Estado:</strong>
+                                            <p class="mb-1">
+                                                <span class="badge" id="infoEstado">-</span>
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>Número OT:</strong>
+                                            <p class="mb-1" id="infoOT">-</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Alerta si no está completado -->
+                        <div id="alertaNoCompletado" class="alert alert-warning mt-3" style="display: none;">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>Advertencia:</strong> El trabajo de este vehículo NO está completado.
+                            Solo se puede registrar salida de vehículos con trabajo completado.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Datos de Salida -->
+            <div class="col-lg-6">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-speedometer2"></i> Datos de Salida</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="KilometrajeSalida" class="form-label">Kilometraje de Salida *</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text"><i class="bi bi-speedometer2"></i></span>
+                                <input asp-for="KilometrajeSalida" class="form-control" type="number" min="0" required />
+                                <span class="input-group-text">km</span>
+                            </div>
+                            <span asp-validation-for="KilometrajeSalida" class="text-danger"></span>
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i> Debe ser mayor o igual al kilometraje de ingreso
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ObservacionesSalida" class="form-label">Observaciones de Salida</label>
+                            <textarea asp-for="ObservacionesSalida" class="form-control" rows="4" 
+                                      placeholder="Ej: Vehículo en buen estado, sin daños visibles..."></textarea>
+                            <span asp-validation-for="ObservacionesSalida" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ImagenesSalida" class="form-label">
+                                <i class="bi bi-camera"></i> Imágenes de Salida (Opcional)
+                            </label>
+                            <input asp-for="ImagenesSalida" type="file" class="form-control" 
+                                   accept="image/*" multiple />
+                            <small class="text-muted">
+                                Puede seleccionar múltiples imágenes. Formatos: JPG, PNG, GIF
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen -->
+                <div class="card shadow border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-check-circle"></i> Resumen</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2"><i class="bi bi-calendar"></i> <strong>Fecha de salida:</strong> @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</p>
+                        <p class="mb-0"><i class="bi bi-person-badge"></i> <strong>Registrado por:</strong> Guardia de Acceso</p>
+                        <hr />
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle"></i>
+                            Al registrar la salida:
+                            <ul class="mb-0 mt-2">
+                                <li>Se registrará la fecha y hora de salida</li>
+                                <li>El vehículo cambiará a estado "Disponible"</li>
+                                <li>Se notificará al chofer automáticamente</li>
+                                <li>El kilometraje del vehículo se actualizará</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-body text-center">
+                        <button type="submit" class="btn btn-success btn-lg px-5" id="btnRegistrar" disabled>
+                            <i class="bi bi-check-circle"></i> Registrar Salida
+                        </button>
+                        <a asp-action="VehiculosEnTaller" class="btn btn-secondary btn-lg px-5 ms-3">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+}
+
+<!-- Lista de vehículos disponibles -->
+@if (Model.IngresosDisponibles.Any())
+{
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="bi bi-list"></i> Vehículos en Instalación (@Model.IngresosDisponibles.Count)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Patente</th>
+                                    <th>Vehículo</th>
+                                    <th>Chofer</th>
+                                    <th>Llegada</th>
+                                    <th>Tiempo</th>
+                                    <th>Estado</th>
+                                    <th>OT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var ingreso in Model.IngresosDisponibles.OrderByDescending(i => i.Estado == "Completado"))
+                                {
+                                    <tr class="@(ingreso.Estado == "Completado" ? "table-success" : "")">
+                                        <td><strong>@ingreso.Patente</strong></td>
+                                        <td>@ingreso.VehiculoInfo</td>
+                                        <td>@ingreso.ChoferNombre</td>
+                                        <td>@ingreso.FechaLlegada.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            @if (ingreso.TiempoEnTaller < 24)
+                                            {
+                                                <span>@ingreso.TiempoEnTaller h</span>
+                                            }
+                                            else
+                                            {
+                                                var dias = ingreso.TiempoEnTaller / 24;
+                                                var horas = ingreso.TiempoEnTaller % 24;
+                                                <span>@dias día(s) @horas h</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-@ingreso.EstadoColor">
+                                                @if (ingreso.Estado == "Completado")
+                                                {
+                                                    <i class="bi bi-check-circle"></i>
+                                                }
+                                                @ingreso.Estado
+                                            </span>
+                                        </td>
+                                        <td>@ingreso.NumeroOT</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            var kmIngresoActual = 0;
+
+            // Cuando se selecciona un vehículo
+            $('#selectIngreso').on('change', function() {
+                var selectedOption = $(this).find('option:selected');
+                
+                if (selectedOption.val()) {
+                    // Obtener datos del vehículo seleccionado
+                    var patente = selectedOption.data('patente');
+                    var vehiculo = selectedOption.data('vehiculo');
+                    var chofer = selectedOption.data('chofer');
+                    var fecha = selectedOption.data('fecha');
+                    var kmIngreso = selectedOption.data('km');
+                    var estado = selectedOption.data('estado');
+                    var color = selectedOption.data('color');
+                    var ot = selectedOption.data('ot');
+                    var tiempo = selectedOption.data('tiempo');
+
+                    kmIngresoActual = kmIngreso;
+
+                    // Mostrar información
+                    $('#infoPatente').text(patente);
+                    $('#infoVehiculoDetalle').text(vehiculo);
+                    $('#infoChofer').text(chofer);
+                    $('#infoFechaLlegada').text(fecha);
+                    $('#infoKmIngreso').html('<span class="badge bg-secondary">' + kmIngreso + ' km</span>');
+                    $('#infoOT').text(ot);
+                    
+                    // Tiempo en taller
+                    if (tiempo < 24) {
+                        $('#infoTiempo').text(tiempo + ' horas');
+                    } else {
+                        var dias = Math.floor(tiempo / 24);
+                        var horas = tiempo % 24;
+                        $('#infoTiempo').text(dias + ' día(s) ' + horas + ' horas');
+                    }
+
+                    // Estado con color
+                    $('#infoEstado').removeClass().addClass('badge bg-' + color).text(estado);
+                    
+                    $('#infoVehiculo').fadeIn();
+
+                    // Verificar si está completado
+                    if (estado === 'Completado') {
+                        $('#alertaNoCompletado').hide();
+                        $('#btnRegistrar').prop('disabled', false);
+                        $('#KilometrajeSalida').attr('min', kmIngreso);
+                        $('#KilometrajeSalida').val(kmIngreso);
+                    } else {
+                        $('#alertaNoCompletado').fadeIn();
+                        $('#btnRegistrar').prop('disabled', true);
+                    }
+                } else {
+                    $('#infoVehiculo').hide();
+                    $('#alertaNoCompletado').hide();
+                    $('#btnRegistrar').prop('disabled', true);
+                }
+            });
+
+            // Validar kilometraje
+            $('#KilometrajeSalida').on('input', function() {
+                var kmSalida = parseInt($(this).val());
+                
+                if (kmSalida < kmIngresoActual) {
+                    $(this).addClass('is-invalid');
+                    $('#btnRegistrar').prop('disabled', true);
+                } else {
+                    $(this).removeClass('is-invalid');
+                    if ($('#selectIngreso').val() && $('#selectIngreso option:selected').data('estado') === 'Completado') {
+                        $('#btnRegistrar').prop('disabled', false);
+                    }
+                }
+            });
+
+            // Confirmación al enviar
+            $('#formSalida').on('submit', function(e) {
+                var patente = $('#selectIngreso option:selected').data('patente');
+                var kmSalida = $('#KilometrajeSalida').val();
+                
+                if (!confirm('¿Está seguro de registrar la SALIDA de la instalación del vehículo ' + patente + ' con kilometraje ' + kmSalida + ' km?\n\nEl chofer será notificado automáticamente.')) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
+    </script>
+}

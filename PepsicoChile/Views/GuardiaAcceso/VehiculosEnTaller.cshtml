@@ -1,0 +1,313 @@
+@model List<IngresoTaller>
+@{
+    ViewData["Title"] = "Vehículos en Taller";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-truck"></i> Vehículos en la Instalación</h2>
+                <p class="text-muted mb-0">Control de vehículos dentro de la instalación - Registrar salida cuando el trabajo esté completado</p>
+            </div>
+            <div>
+                <a asp-action="RegistrarSalidaNuevo" class="btn btn-success me-2">
+                    <i class="bi bi-box-arrow-right"></i> Registrar Salida
+                </a>
+                <a asp-action="Agenda" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver a Agenda
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estadísticas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-left-primary shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total en Taller
+                        </div>
+                        <div class="h3 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalEnTaller</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-truck fs-2 text-primary opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-left-success shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Listos para Salir
+                        </div>
+                        <div class="h3 mb-0 font-weight-bold text-gray-800">@ViewBag.ListosParaSalir</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-check-circle fs-2 text-success opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-left-warning shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            En Proceso
+                        </div>
+                        <div class="h3 mb-0 font-weight-bold text-gray-800">@ViewBag.EnProceso</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-gear fs-2 text-warning opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-left-danger shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                            Pausados
+                        </div>
+                        <div class="h3 mb-0 font-weight-bold text-gray-800">@ViewBag.Pausados</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-pause-circle fs-2 text-danger opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Vehículos -->
+@if (Model.Any())
+{
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-list-ul"></i> Listado de Vehículos</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 12%">Vehículo</th>
+                            <th style="width: 12%">Chofer</th>
+                            <th style="width: 10%">Ingreso</th>
+                            <th style="width: 12%">Tiempo en Taller</th>
+                            <th style="width: 8%">Km Ingreso</th>
+                            <th style="width: 15%">Motivo</th>
+                            <th style="width: 10%">Estado</th>
+                            <th style="width: 10%">Mecánico</th>
+                            <th style="width: 11%" class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ingreso in Model)
+                        {
+                            var tiempoEnTaller = ingreso.FechaIngresoReal.HasValue 
+                                ? (DateTime.Now - ingreso.FechaIngresoReal.Value).TotalHours 
+                                : 0;
+                            var esListo = ingreso.Estado == "Completado";
+
+                            <tr class="@(esListo ? "table-success" : "")">
+                                <td>
+                                    <strong class="@(esListo ? "text-success" : "")">
+                                        @ingreso.Vehiculo?.Patente
+                                    </strong>
+                                    <br/>
+                                    <small class="text-muted">@ingreso.Vehiculo?.Marca @ingreso.Vehiculo?.Modelo</small>
+                                </td>
+                                <td>
+                                    @ingreso.Chofer?.Nombre @ingreso.Chofer?.Apellido
+                                    @if (!string.IsNullOrEmpty(ingreso.Chofer?.Telefono))
+                                    {
+                                        <br/><small class="text-muted"><i class="bi bi-telephone"></i> @ingreso.Chofer.Telefono</small>
+                                    }
+                                </td>
+                                <td>
+                                    @if (ingreso.FechaIngresoReal.HasValue)
+                                    {
+                                        <strong>@ingreso.FechaIngresoReal.Value.ToString("dd/MM/yyyy")</strong>
+                                        <br/><small class="text-muted">@ingreso.FechaIngresoReal.Value.ToString("HH:mm")</small>
+                                    }
+                                </td>
+                                <td>
+                                    @if (tiempoEnTaller > 0)
+                                    {
+                                        if (tiempoEnTaller < 24)
+                                        {
+                                            <span class="@(tiempoEnTaller > 8 ? "text-warning" : "")">
+                                                @tiempoEnTaller.ToString("N1") horas
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            var dias = (int)(tiempoEnTaller / 24);
+                                            var horas = tiempoEnTaller % 24;
+                                            <span class="@(dias > 2 ? "text-danger" : "text-warning")">
+                                                @dias día(s) @horas.ToString("N0")h
+                                            </span>
+                                        }
+                                    }
+                                </td>
+                                <td>
+                                    @if (ingreso.KilometrajeIngreso.HasValue)
+                                    {
+                                        <span>@ingreso.KilometrajeIngreso.Value.ToString("N0") km</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">@ingreso.MotivoIngreso</span>
+                                    @if (!string.IsNullOrEmpty(ingreso.NumeroOT))
+                                    {
+                                        <br/><small class="text-muted">OT: @ingreso.NumeroOT</small>
+                                    }
+                                </td>
+                                <td>
+                                    @if (esListo)
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Completado
+                                        </span>
+                                    }
+                                    else if (ingreso.Estado == "En Proceso")
+                                    {
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-gear"></i> En Proceso
+                                        </span>
+                                    }
+                                    else if (ingreso.Estado == "Pausado")
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-pause-circle"></i> Pausado
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">@ingreso.Estado</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (ingreso.MecanicoAsignado != null)
+                                    {
+                                        <small>@ingreso.MecanicoAsignado.Nombre</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Sin asignar</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (esListo)
+                                    {
+                                        <a asp-action="RegistrarSalidaNuevo" asp-route-id="@ingreso.Id"
+                                           class="btn btn-sm btn-success" title="Registrar Salida de la Instalación">
+                                            <i class="bi bi-box-arrow-right"></i> Salida
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-sm btn-secondary" disabled 
+                                                title="El trabajo debe estar completado para poder salir">
+                                            <i class="bi bi-lock"></i> Bloqueado
+                                        </button>
+                                        <small class="d-block text-muted mt-1">Trabajo en proceso</small>
+                                    }
+                                    <a asp-action="DetalleIngreso" asp-route-id="@ingreso.Id" 
+                                       class="btn btn-sm btn-outline-info mt-1" title="Ver Detalle">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card shadow">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-truck-flatbed text-muted" style="font-size: 5rem;"></i>
+            <h4 class="mt-4 text-muted">No hay vehículos en el taller</h4>
+            <p class="text-muted">Todos los vehículos han sido retirados o no hay ingresos registrados</p>
+            <a asp-action="Agenda" class="btn btn-primary mt-3">
+                <i class="bi bi-calendar"></i> Ver Agenda
+            </a>
+        </div>
+    </div>
+}
+
+<!-- Leyenda -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-body">
+                <h6><i class="bi bi-info-circle"></i> Información Importante:</h6>
+                <ul class="mb-0">
+                    <li><span class="badge bg-success">Completado</span> - El trabajo está finalizado. <strong>El vehículo PUEDE salir de la instalación.</strong></li>
+                    <li><span class="badge bg-warning">En Proceso</span> - El mecánico está trabajando en el vehículo. <strong>NO puede salir aún.</strong></li>
+                    <li><span class="badge bg-danger">Pausado</span> - El trabajo está pausado (esperando repuestos, autorización, etc.). <strong>NO puede salir aún.</strong></li>
+                    <li><strong>IMPORTANTE:</strong> Solo se puede registrar la <strong>salida física de la instalación</strong> cuando el estado es <span class="badge bg-success">Completado</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-refresh cada 2 minutos
+        setTimeout(function() {
+            location.reload();
+        }, 120000);
+    </script>
+}
+
+<style>
+    .border-left-primary {
+        border-left: 4px solid #4e73df !important;
+    }
+    .border-left-success {
+        border-left: 4px solid #28a745 !important;
+    }
+    .border-left-warning {
+        border-left: 4px solid #f6c23e !important;
+    }
+    .border-left-danger {
+        border-left: 4px solid #e74a3b !important;
+    }
+    
+    tbody tr {
+        transition: all 0.2s ease;
+    }
+    
+    tbody tr:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+</style>

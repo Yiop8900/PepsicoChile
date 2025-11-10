@@ -1,0 +1,118 @@
+@{
+    ViewData["Title"] = "Recibir Stock";
+    var repuesto = ViewBag.Repuesto as PepsicoChile.Models.Repuesto;
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Información del Repuesto -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información del Repuesto</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Nombre:</strong> @repuesto?.Nombre</p>
+                            <p><strong>Código:</strong> <code>@repuesto?.CodigoRepuesto</code></p>
+                            @if (!string.IsNullOrEmpty(repuesto?.Categoria))
+                            {
+                                <p><strong>Categoría:</strong> <span class="badge bg-info">@repuesto.Categoria</span></p>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <p>
+                                <strong>Stock Actual:</strong> 
+                                <span class="badge @(repuesto?.StockActual <= repuesto?.StockMinimo ? "bg-warning text-dark" : "bg-success") fs-5">
+                                    @repuesto?.StockActual unidades
+                                </span>
+                            </p>
+                            <p><strong>Stock Mínimo:</strong> @repuesto?.StockMinimo</p>
+                            @if (!string.IsNullOrEmpty(repuesto?.Ubicacion))
+                            {
+                                <p><strong>Ubicación:</strong> @repuesto.Ubicacion</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario de Recepción -->
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-box-arrow-in-down"></i> Recibir Stock
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="RecibirStock" asp-route-id="@repuesto?.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="mb-4">
+                            <label for="cantidad" class="form-label">
+                                <i class="bi bi-hash"></i> Cantidad a Recibir *
+                            </label>
+                            <input type="number" id="cantidad" name="cantidad" class="form-control form-control-lg" 
+                                   min="1" required placeholder="Ingrese la cantidad recibida" />
+                            <small class="text-muted">Stock actual: @repuesto?.StockActual unidades</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="motivo" class="form-label">
+                                <i class="bi bi-chat-left-text"></i> Motivo o Comentarios
+                            </label>
+                            <textarea id="motivo" name="motivo" class="form-control" rows="3" 
+                                      placeholder="Ej: Compra a proveedor, devolución, ajuste de inventario..."></textarea>
+                        </div>
+
+                        <!-- Previsualización -->
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-calculator"></i> Previsualización</h6>
+                            <p class="mb-1">
+                                <strong>Stock Actual:</strong> 
+                                <span id="stockActual">@repuesto?.StockActual</span> unidades
+                            </p>
+                            <p class="mb-1">
+                                <strong>Cantidad a Recibir:</strong> 
+                                <span id="cantidadRecibir">0</span> unidades
+                            </p>
+                            <hr />
+                            <p class="mb-0">
+                                <strong>Nuevo Stock:</strong> 
+                                <span id="nuevoStock" class="text-success fw-bold">@repuesto?.StockActual</span> unidades
+                            </p>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-box-arrow-in-down"></i> Confirmar Recepción
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            var stockActual = @repuesto?.StockActual ?? 0;
+
+            $('#cantidad').on('input', function() {
+                var cantidad = parseInt($(this).val()) || 0;
+                var nuevoStock = stockActual + cantidad;
+
+                $('#cantidadRecibir').text(cantidad);
+                $('#nuevoStock').text(nuevoStock);
+            });
+        });
+    </script>
+}

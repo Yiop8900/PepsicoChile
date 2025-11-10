@@ -1,0 +1,185 @@
+@model AsignarVehiculoViewModel
+@{
+    ViewData["Title"] = "Asignar Vehículo a Chofer";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5">
+            <i class="bi bi-person-badge"></i> Asignar Vehículo a Chofer
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-action="Index">Vehículos</a></li>
+                <li class="breadcrumb-item"><a asp-action="Detalle" asp-route-id="@Model.VehiculoId">@Model.Patente</a></li>
+                <li class="breadcrumb-item active">Asignar Chofer</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-truck"></i> @Model.Patente - @Model.MarcaModelo
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (Model.ChoferActualId.HasValue)
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Asignación Actual:</strong> @Model.ChoferActualNombre
+                        <br>
+                        <small>Al asignar un nuevo chofer, se desactivará automáticamente la asignación anterior.</small>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Este vehículo no tiene un chofer asignado actualmente.
+                    </div>
+                }
+
+                <form asp-action="AsignarChofer" method="post">
+                    <input type="hidden" asp-for="VehiculoId" />
+
+                    <div class="mb-3">
+                        <label asp-for="ChoferSeleccionadoId" class="form-label">
+                            Seleccionar Chofer <span class="text-danger">*</span>
+                        </label>
+                        <select asp-for="ChoferSeleccionadoId" class="form-select">
+                            <option value="">-- Seleccione un chofer --</option>
+                            @foreach (var chofer in Model.Choferes)
+                            {
+                                <option value="@chofer.Id">
+                                    @chofer.Nombre @chofer.Apellido (@chofer.Rut)
+                                </option>
+                            }
+                        </select>
+                        <span asp-validation-for="ChoferSeleccionadoId" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Observaciones" class="form-label">
+                            Observaciones
+                        </label>
+                        <textarea asp-for="Observaciones" class="form-control" rows="3" 
+                                  placeholder="Motivo de la asignación, cambio de ruta, etc."></textarea>
+                        <span asp-validation-for="Observaciones" class="text-danger"></span>
+                    </div>
+
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle"></i>
+                        <strong>Nota:</strong> Esta asignación quedará registrada en el historial del vehículo.
+                    </div>
+
+                    <hr />
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-save"></i> Asignar Chofer
+                        </button>
+                        
+                        @if (Model.ChoferActualId.HasValue)
+                        {
+                            <button type="button" 
+                                    class="btn btn-warning btn-lg" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#desasignarModal">
+                                <i class="bi bi-x-circle"></i> Desasignar Chofer Actual
+                            </button>
+                        }
+                        
+                        <a asp-action="Detalle" asp-route-id="@Model.VehiculoId" class="btn btn-secondary btn-lg">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Choferes disponibles -->
+        @if (Model.Choferes.Any())
+        {
+            <div class="card shadow mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-people"></i> Choferes Disponibles (@Model.Choferes.Count)
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>RUT</th>
+                                    <th>Email</th>
+                                    <th>Teléfono</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var chofer in Model.Choferes.OrderBy(c => c.Nombre))
+                                {
+                                    <tr class="@(chofer.Id == Model.ChoferActualId ? "table-info" : "")">
+                                        <td>
+                                            <i class="bi bi-person"></i>
+                                            @chofer.Nombre @chofer.Apellido
+                                            @if (chofer.Id == Model.ChoferActualId)
+                                            {
+                                                <span class="badge bg-info">Actual</span>
+                                            }
+                                        </td>
+                                        <td>@chofer.Rut</td>
+                                        <td>@chofer.Email</td>
+                                        <td>@chofer.Telefono</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal de Confirmación para Desasignar -->
+<div class="modal fade" id="desasignarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle"></i> Confirmar Desasignación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de desasignar el chofer actual de este vehículo?</p>
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    El vehículo quedará sin chofer asignado hasta que asigne uno nuevo.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x"></i> Cancelar
+                </button>
+                <form asp-action="DesasignarChofer" method="post" style="display:inline;">
+                    <input type="hidden" name="vehiculoId" value="@Model.VehiculoId" />
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-x-circle"></i> Desasignar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

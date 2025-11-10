@@ -13,129 +13,136 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
-   body {
-  background: linear-gradient(135deg, #004B8D 0%, #0066CC 100%);
-       min-height: 100vh;
-       padding: 2rem 0;
+        body {
+            background: linear-gradient(135deg, #004B8D 0%, #0066CC 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
         }
-    .register-container {
-max-width: 600px;
-margin: 0 auto;
-}
-   .register-card {
-     border-radius: 15px;
-   box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-   }
+
+        .register-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .register-card {
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
         .register-header {
-    background: white;
- padding: 1.5rem;
-   text-align: center;
-   border-radius: 15px 15px 0 0;
+            background: white;
+            padding: 1.5rem;
+            text-align: center;
+            border-radius: 15px 15px 0 0;
         }
-     .btn-register {
-   background: #004B8D;
- color: white;
-      font-weight: 600;
+
+        .btn-register {
+            background: #004B8D;
+            color: white;
+            font-weight: 600;
         }
- .btn-register:hover {
-     background: #003d73;
-        color: white;
-        }
+
+            .btn-register:hover {
+                background: #003d73;
+                color: white;
+            }
     </style>
 </head>
 <body>
     <div class="register-container">
-     <div class="card register-card">
-       <div class="register-header">
-    <h2 class="text-primary mb-1"><i class="bi bi-person-plus"></i> Registro de Usuario</h2>
-   <p class="text-muted mb-0">Panel de Administración</p>
-  </div>
-          <div class="card-body bg-white p-4">
-    @if (ViewData.ModelState.ErrorCount > 0)
-      {
-      <div class="alert alert-danger">
-  <i class="bi bi-exclamation-triangle"></i> 
-      @Html.ValidationSummary(false)
-  </div>
-  }
+        <div class="card register-card">
+            <div class="register-header">
+                <h2 class="text-primary mb-1"><i class="bi bi-person-plus"></i> Registro de Usuario</h2>
+                <p class="text-muted mb-0">Panel de Administración</p>
+            </div>
+            <div class="card-body bg-white p-4">
+                @if (ViewData.ModelState.ErrorCount > 0)
+                {
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        @Html.ValidationSummary(false)
+                    </div>
+                }
 
-  <form asp-action="Register" method="post">
-  <div class="row">
-         <div class="col-md-6 mb-3">
-    <label asp-for="Nombre" class="form-label"></label>
-     <input asp-for="Nombre" class="form-control" placeholder="Juan" />
-   <span asp-validation-for="Nombre" class="text-danger small"></span>
-   </div>
-   <div class="col-md-6 mb-3">
-      <label asp-for="Apellido" class="form-label"></label>
-      <input asp-for="Apellido" class="form-control" placeholder="Pérez" />
-       <span asp-validation-for="Apellido" class="text-danger small"></span>
-     </div>
-  </div>
+                <form asp-action="Register" method="post">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Nombre" class="form-label"></label>
+                            <input asp-for="Nombre" class="form-control" placeholder="Juan" />
+                            <span asp-validation-for="Nombre" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Apellido" class="form-label"></label>
+                            <input asp-for="Apellido" class="form-control" placeholder="Pérez" />
+                            <span asp-validation-for="Apellido" class="text-danger small"></span>
+                        </div>
+                    </div>
 
-   <div class="row">
-    <div class="col-md-6 mb-3">
-  <label asp-for="Rut" class="form-label"></label>
-     <input asp-for="Rut" class="form-control" placeholder="12.345.678-9" />
-     <span asp-validation-for="Rut" class="text-danger small"></span>
-  </div>
-   <div class="col-md-6 mb-3">
-       <label asp-for="Telefono" class="form-label"></label>
-      <input asp-for="Telefono" class="form-control" placeholder="+56912345678" />
-      <span asp-validation-for="Telefono" class="text-danger small"></span>
-       </div>
-   </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Rut" class="form-label"></label>
+                            <input asp-for="Rut" class="form-control" placeholder="12.345.678-9" />
+                            <span asp-validation-for="Rut" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Telefono" class="form-label"></label>
+                            <input asp-for="Telefono" class="form-control" placeholder="+56912345678" />
+                            <span asp-validation-for="Telefono" class="text-danger small"></span>
+                        </div>
+                    </div>
 
-   <div class="mb-3">
-    <label asp-for="Email" class="form-label"></label>
-        <input asp-for="Email" class="form-control" placeholder="correo@ejemplo.com" />
-   <span asp-validation-for="Email" class="text-danger small"></span>
-  </div>
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" placeholder="correo@ejemplo.com" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
 
-       <div class="mb-3">
-    <label asp-for="Rol" class="form-label"></label>
-     <select asp-for="Rol" class="form-select" required>
-   <option value="">-- Seleccione un rol --</option>
-    <option value="Mecanico">Mecánico de Flota</option>
-    <option value="JefeTaller">Jefe de Taller</option>
-    <option value="CoordinadorZona">Coordinador de Zona</option>
-    <option value="GuardiaAcceso">Guardia de Acceso / Vigilancia</option>
-  <option value="Recepcionista">Recepcionista de Vehículos</option>
-  <option value="AsistenteRepuestos">Asistente de Repuestos</option>
-  <option value="Supervisor">Supervisor de Flotas</option>
-          <option value="EncargadoLlaves">Encargado de Llaves y Control Documental</option>
-     </select>
-    <span asp-validation-for="Rol" class="text-danger small"></span>
-  </div>
+                    <div class="mb-3">
+                        <label asp-for="Rol" class="form-label"></label>
+                        <select asp-for="Rol" class="form-select" required>
+                            <option value="">-- Seleccione un rol --</option>
+                            <option value="Administrador">Administrador</option>
+                            <option value="Mecanico">Mecánico de Flota</option>
+                            <option value="JefeTaller">Jefe de Taller</option>
+                            <option value="CoordinadorZona">Coordinador de Zona</option>
+                            <option value="GuardiaAcceso">Guardia de Acceso / Vigilancia</option>
+                            <option value="RecepcionistaVehiculos">Recepcionista de Vehículos</option>
+                            <option value="AsistenteRepuestos">Asistente de Repuestos</option>
+                            <option value="Supervisor">Supervisor de Flotas</option>
+                            <option value="EncargadoLlaves">Encargado de Llaves y Control Documental</option>
+                            <option value="Chofer">Chofer</option>
+                        </select>
+                        <span asp-validation-for="Rol" class="text-danger small"></span>
+                    </div>
 
-   <div class="row">
-        <div class="col-md-6 mb-3">
-  <label asp-for="Password" class="form-label"></label>
-      <input asp-for="Password" class="form-control" placeholder="Mínimo 6 caracteres" />
-       <span asp-validation-for="Password" class="text-danger small"></span>
-    </div>
-       <div class="col-md-6 mb-3">
-   <label asp-for="ConfirmPassword" class="form-label"></label>
-    <input asp-for="ConfirmPassword" class="form-control" />
-   <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
-      </div>
-       </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Password" class="form-label"></label>
+                            <input asp-for="Password" class="form-control" placeholder="Mínimo 6 caracteres" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="ConfirmPassword" class="form-label"></label>
+                            <input asp-for="ConfirmPassword" class="form-control" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+                    </div>
 
-      <div class="d-grid gap-2 mb-3">
-    <button type="submit" class="btn btn-register btn-lg">
-      <i class="bi bi-save"></i> Registrar Usuario
-    </button>
-     <a asp-action="ListarUsuarios" class="btn btn-outline-secondary">
-   <i class="bi bi-arrow-left"></i> Volver a Lista de Usuarios
-   </a>
- </div>
-        </form>
-       </div>
-   </div>
+                    <div class="d-grid gap-2 mb-3">
+                        <button type="submit" class="btn btn-register btn-lg">
+                            <i class="bi bi-save"></i> Registrar Usuario
+                        </button>
+                        <a asp-action="ListarUsuarios" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Volver a Lista de Usuarios
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
 </body>

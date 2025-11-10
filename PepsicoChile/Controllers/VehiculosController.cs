@@ -222,20 +222,27 @@ namespace PepsicoChile.Controllers
             }
 
             var documentos = await _context.DocumentosVehiculo
-              .Where(d => d.VehiculoId == id && d.Activo)
-              .Include(d => d.UsuarioSubida)
+                .Where(d => d.VehiculoId == id && d.Activo)
+                .Include(d => d.UsuarioSubida)
                 .OrderByDescending(d => d.FechaSubida)
-               .ToListAsync();
+                .ToListAsync();
 
             var ingresos = await _context.IngresosTaller
-      .Where(i => i.VehiculoId == id)
-.Include(i => i.Chofer)
-   .OrderByDescending(i => i.FechaProgramada)
-  .Take(5)
-             .ToListAsync();
+                .Where(i => i.VehiculoId == id)
+                .Include(i => i.Chofer)
+                .OrderByDescending(i => i.FechaProgramada)
+                .Take(5)
+                .ToListAsync();
+
+            // Obtener asignación activa actual
+            var asignacionActual = await _context.AsignacionesVehiculo
+                .Include(a => a.Chofer)
+                .Include(a => a.AsignadoPor)
+                .FirstOrDefaultAsync(a => a.VehiculoId == id && a.Activa);
 
             ViewBag.Documentos = documentos;
             ViewBag.Ingresos = ingresos;
+            ViewBag.AsignacionActual = asignacionActual;
 
             return View(vehiculo);
         }
@@ -252,6 +259,154 @@ namespace PepsicoChile.Controllers
             ViewBag.Vehiculo = vehiculo;
 
             return View(documentos);
+        }
+
+        // ASIGNACIÓN DE VEHÍCULOS A CHOFERES
+        [HttpGet]
+        [AuthorizeRole("Administrador", "JefeTaller", "Supervisor", "CoordinadorZona")]
+        public async Task<IActionResult> AsignarChofer(int id)
+        {
+            var vehiculo = await _context.Vehiculos.FindAsync(id);
+            if (vehiculo == null)
+            {
+                TempData["Error"] = "Vehículo no encontrado";
+                return RedirectToAction("Index");
+            }
+
+            // Obtener asignación activa actual si existe
+            var asignacionActual = await _context.AsignacionesVehiculo
+                .Include(a => a.Chofer)
+                .FirstOrDefaultAsync(a => a.VehiculoId == id && a.Activa);
+
+            // Obtener lista de choferes activos
+            var choferes = await _context.Usuarios
+                .Where(u => u.Rol == "Chofer" && u.Activo)
+                .OrderBy(u => u.Nombre)
+                .ToListAsync();
+
+            var model = new AsignarVehiculoViewModel
+            {
+                VehiculoId = id,
+                Patente = vehiculo.Patente,
+                MarcaModelo = $"{vehiculo.Marca} {vehiculo.Modelo}",
+                ChoferActualId = asignacionActual?.ChoferId,
+                ChoferActualNombre = asignacionActual != null 
+                    ? $"{asignacionActual.Chofer?.Nombre} {asignacionActual.Chofer?.Apellido}" 
+                    : null,
+                Choferes = choferes
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AuthorizeRole("Administrador", "JefeTaller", "Supervisor", "CoordinadorZona")]
+        public async Task<IActionResult> AsignarChofer(AsignarVehiculoViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+
+                    // Desactivar asignación actual si existe
+                    var asignacionActual = await _context.AsignacionesVehiculo
+                        .FirstOrDefaultAsync(a => a.VehiculoId == model.VehiculoId && a.Activa);
+
+                    if (asignacionActual != null)
+                    {
+                        asignacionActual.Activa = false;
+                        asignacionActual.FechaDesasignacion = DateTime.Now;
+                        _context.Update(asignacionActual);
+                    }
+
+                    // Crear nueva asignación
+                    var nuevaAsignacion = new AsignacionVehiculo
+                    {
+                        VehiculoId = model.VehiculoId,
+                        ChoferId = model.ChoferSeleccionadoId,
+                        FechaAsignacion = DateTime.Now,
+                        Activa = true,
+                        Observaciones = model.Observaciones,
+                        AsignadoPorId = usuarioId
+                    };
+
+                    _context.AsignacionesVehiculo.Add(nuevaAsignacion);
+                    await _context.SaveChangesAsync();
+
+                    TempData["Mensaje"] = "Vehículo asignado exitosamente";
+                    return RedirectToAction("Detalle", new { id = model.VehiculoId });
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", $"Error al asignar vehículo: {ex.Message}");
+                }
+            }
+
+            // Recargar lista de choferes en caso de error
+            model.Choferes = await _context.Usuarios
+                .Where(u => u.Rol == "Chofer" && u.Activo)
+                .OrderBy(u => u.Nombre)
+                .ToListAsync();
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AuthorizeRole("Administrador", "JefeTaller", "Supervisor", "CoordinadorZona")]
+        public async Task<IActionResult> DesasignarChofer(int vehiculoId)
+        {
+            var asignacionActual = await _context.AsignacionesVehiculo
+                .FirstOrDefaultAsync(a => a.VehiculoId == vehiculoId && a.Activa);
+
+            if (asignacionActual != null)
+            {
+                asignacionActual.Activa = false;
+                asignacionActual.FechaDesasignacion = DateTime.Now;
+                _context.Update(asignacionActual);
+                await _context.SaveChangesAsync();
+
+                TempData["Mensaje"] = "Vehículo desasignado exitosamente";
+            }
+
+            return RedirectToAction("Detalle", new { id = vehiculoId });
+        }
+
+        [HttpGet]
+        [AuthorizeRole("Administrador", "JefeTaller", "Supervisor", "CoordinadorZona")]
+        public async Task<IActionResult> HistorialAsignaciones(int vehiculoId)
+        {
+            var vehiculo = await _context.Vehiculos.FindAsync(vehiculoId);
+            if (vehiculo == null)
+            {
+                return NotFound();
+            }
+
+            var historial = await _context.AsignacionesVehiculo
+                .Include(a => a.Chofer)
+                .Include(a => a.AsignadoPor)
+                .Where(a => a.VehiculoId == vehiculoId)
+                .OrderByDescending(a => a.FechaAsignacion)
+                .ToListAsync();
+
+            ViewBag.Vehiculo = vehiculo;
+            return View(historial);
+        }
+
+        [HttpGet]
+        [AuthorizeRole("Administrador", "JefeTaller", "Supervisor", "CoordinadorZona")]
+        public async Task<IActionResult> VehiculosPorChofer()
+        {
+            var asignaciones = await _context.AsignacionesVehiculo
+                .Include(a => a.Vehiculo)
+                .Include(a => a.Chofer)
+                .Where(a => a.Activa)
+                .OrderBy(a => a.Chofer!.Nombre)
+                .ToListAsync();
+
+            return View(asignaciones);
         }
 
         private async Task GuardarDocumentos(int vehiculoId, AgregarVehiculoViewModel model, int? usuarioId)

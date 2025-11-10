@@ -13,5 +13,10 @@ namespace PepsicoChile.Models
         public Usuario? UsuarioSubida { get; set; }
         public string? Descripcion { get; set; }
         public long TamañoBytes { get; set; }
+        
+        // Nuevas propiedades para validación de documentos por Recepcionista
+        public string? EstadoValidacion { get; set; } = "Pendiente"; // Pendiente, Aprobado, Rechazado
+        public string? ObservacionesValidacion { get; set; }
+        public DateTime? FechaValidacion { get; set; }
     }
 }

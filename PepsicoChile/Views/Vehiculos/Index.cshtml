@@ -1,6 +1,9 @@
 @model List<Vehiculo>
 @{
     ViewData["Title"] = "Gestión de Vehículos";
+    var usuarioRol = Context.Session.GetString("UsuarioRol");
+    var puedeAsignar = usuarioRol == "Administrador" || usuarioRol == "JefeTaller" ||
+                       usuarioRol == "Supervisor" || usuarioRol == "CoordinadorZona" || usuarioRol == "Recepcionista";
 }
 
 <div class="row mb-4">
@@ -8,9 +11,16 @@
         <h2><i class="bi bi-truck-front-fill"></i> Gestión de Vehículos</h2>
     </div>
     <div class="col-md-6 text-end">
-        <a asp-action="Agregar" class="btn btn-primary btn-lg">
-            <i class="bi bi-plus-circle"></i> Agregar Vehículo
-        </a>
+        @if (puedeAsignar)
+        {
+            <a asp-action="VehiculosPorChofer" class="btn btn-info btn-lg me-2">
+                <i class="bi bi-person-badge"></i> Vehículos por Chofer
+            </a>
+            <a asp-action="Agregar" class="btn btn-primary btn-lg">
+                <i class="bi bi-plus-circle"></i> Agregar Vehículo
+            </a>
+        }
+
     </div>
 </div>
 
@@ -94,8 +104,8 @@
                         <div class="col-12 mt-2">
                             <span class="badge bg-@colorEstado">
                                 <i class="bi bi-@(vehiculo.Estado == "Disponible" ? "check-circle" :
-                                         vehiculo.Estado == "En Taller" ? "tools" :
-                                           vehiculo.Estado == "En Ruta" ? "geo-alt" : "x-circle")"></i>
+                                                                                                                                                  vehiculo.Estado == "En Taller" ? "tools" :
+                                                                                                                                                    vehiculo.Estado == "En Ruta" ? "geo-alt" : "x-circle")"></i>
                                 @vehiculo.Estado
                             </span>
                         </div>
@@ -116,40 +126,53 @@
                                 <i class="bi bi-three-dots"></i> Acciones
                             </button>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-action="Detalle" asp-route-id="@vehiculo.Id">
-    <i class="bi bi-eye"></i> Ver Detalle
- </a></li>
-                                <li><a class="dropdown-item" asp-action="Editar" asp-route-id="@vehiculo.Id">
-                                        <i class="bi bi-pencil"></i> Editar
+                                <li>
+                                    <a class="dropdown-item" asp-action="Detalle" asp-route-id="@vehiculo.Id">
+                                        <i class="bi bi-eye"></i> Ver Detalle
                                     </a>
                                 </li>
+
+                                @if (puedeAsignar)
+                                {
+                                    <li>
+                                        <a class="dropdown-item" asp-action="AsignarChofer" asp-route-id="@vehiculo.Id">
+                                            <i class="bi bi-person-plus"></i> Asignar Chofer
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-action="Editar" asp-route-id="@vehiculo.Id">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><h6 class="dropdown-header">Cambiar Estado</h6></li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="cambiarEstado(@vehiculo.Id, 'Disponible'); return false;">
+                                            <i class="bi bi-check-circle text-success"></i> Disponible
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="cambiarEstado(@vehiculo.Id, 'En Taller'); return false;">
+                                            <i class="bi bi-tools text-warning"></i> En Taller
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="cambiarEstado(@vehiculo.Id, 'En Ruta'); return false;">
+                                            <i class="bi bi-geo-alt text-info"></i> En Ruta
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="cambiarEstado(@vehiculo.Id, 'Inactivo'); return false;">
+                                            <i class="bi bi-x-circle text-danger"></i> Inactivo
+                                        </a>
+                                    </li>
+                                }
                                 <li>
                                     <a class="dropdown-item" asp-action="VerDocumentos" asp-route-id="@vehiculo.Id">
                                         <i class="bi bi-file-earmark-text"></i> Documentos
                                     </a>
                                 </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><h6 class="dropdown-header">Cambiar Estado</h6></li>
-                                <li>
-                                    <a class="dropdown-item" href="#" onclick="cambiarEstado(@vehiculo.Id, 'Disponible'); return false;">
-                                        <i class="bi bi-check-circle text-success"></i> Disponible
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="#" onclick="cambiarEstado(@vehiculo.Id, 'En Taller'); return false;">
-                                        <i class="bi bi-tools text-warning"></i> En Taller
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="#" onclick="cambiarEstado(@vehiculo.Id, 'En Ruta'); return false;">
-                                        <i class="bi bi-geo-alt text-info"></i> En Ruta
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="#" onclick="cambiarEstado(@vehiculo.Id, 'Inactivo'); return false;">
-                                        <i class="bi bi-x-circle text-danger"></i> Inactivo
-                                    </a>
-                                </li>
+
                             </ul>
                         </div>
                     </div>

@@ -1,0 +1,202 @@
+@model EditarUsuarioViewModel
+@{
+    ViewData["Title"] = "Editar Usuario";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5">
+            <i class="bi bi-pencil-square"></i> Editar Usuario
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-action="ListarUsuarios">Usuarios</a></li>
+                <li class="breadcrumb-item active">Editar</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-badge"></i> Información del Usuario #@Model.Id
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Editar" method="post">
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        Los campos marcados con <span class="text-danger">*</span> son obligatorios.
+                    </div>
+
+                    <!-- Datos Personales -->
+                    <h6 class="mb-3 text-primary">
+                        <i class="bi bi-person"></i> Datos Personales
+                    </h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Nombre" class="form-label">
+                                Nombre <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Nombre" class="form-control" />
+                            <span asp-validation-for="Nombre" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Apellido" class="form-label">
+                                Apellido <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Apellido" class="form-control" />
+                            <span asp-validation-for="Apellido" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Rut" class="form-label">
+                                RUT <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-credit-card-2-front"></i>
+                                </span>
+                                <input asp-for="Rut" class="form-control" placeholder="12.345.678-9" />
+                            </div>
+                            <span asp-validation-for="Rut" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Telefono" class="form-label">
+                                Teléfono
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-telephone"></i>
+                                </span>
+                                <input asp-for="Telefono" class="form-control" placeholder="+56912345678" />
+                            </div>
+                            <span asp-validation-for="Telefono" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <hr class="my-4" />
+
+                    <!-- Acceso al Sistema -->
+                    <h6 class="mb-3 text-primary">
+                        <i class="bi bi-shield-lock"></i> Acceso al Sistema
+                    </h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label">
+                                Email <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-envelope"></i>
+                                </span>
+                                <input asp-for="Email" class="form-control" type="email" />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Rol" class="form-label">
+                                Rol <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Rol" class="form-select">
+                                <option value="">-- Seleccione un rol --</option>
+                                <option value="Administrador">Administrador</option>
+                                <option value="JefeTaller">Jefe de Taller</option>
+                                <option value="Supervisor">Supervisor</option>
+                                <option value="CoordinadorZona">Coordinador de Zona</option>
+                                <option value="Mecanico">Mecánico</option>
+                                <option value="Chofer">Chofer</option>
+                                <option value="Recepcionista">Recepcionista</option>
+                                <option value="GuardiaAcceso">Guardia de Acceso</option>
+                                <option value="AsistenteRepuestos">Asistente de Repuestos</option>
+                                <option value="EncargadoLlaves">Encargado de Llaves</option>
+                            </select>
+                            <span asp-validation-for="Rol" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input asp-for="Activo" class="form-check-input" type="checkbox" role="switch" />
+                            <label asp-for="Activo" class="form-check-label">
+                                Usuario Activo
+                            </label>
+                        </div>
+                        <small class="text-muted">
+                            Los usuarios inactivos no podrán iniciar sesión en el sistema.
+                        </small>
+                    </div>
+
+                    <hr class="my-4" />
+
+                    <!-- Cambiar Contraseña -->
+                    <h6 class="mb-3 text-primary">
+                        <i class="bi bi-key"></i> Cambiar Contraseña
+                    </h6>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Deje estos campos vacíos si no desea cambiar la contraseña.
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="NuevaPassword" class="form-label">
+                                Nueva Contraseña
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-lock"></i>
+                                </span>
+                                <input asp-for="NuevaPassword" class="form-control" type="password" />
+                            </div>
+                            <span asp-validation-for="NuevaPassword" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ConfirmarPassword" class="form-label">
+                                Confirmar Contraseña
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-lock-fill"></i>
+                                </span>
+                                <input asp-for="ConfirmarPassword" class="form-control" type="password" />
+                            </div>
+                            <span asp-validation-for="ConfirmarPassword" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <hr class="my-4" />
+
+                    <!-- Botones de Acción -->
+                    <div class="row">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-save"></i> Guardar Cambios
+                            </button>
+                            <a asp-action="ListarUsuarios" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <a asp-action="Detalle" asp-route-id="@Model.Id" class="btn btn-info btn-lg">
+                                <i class="bi bi-eye"></i> Ver Detalle
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

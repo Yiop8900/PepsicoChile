@@ -3,71 +3,230 @@
     ViewData["Title"] = "Registrar Llegada de Vehículo";
 }
 
-<div class="row">
-    <div class="col-md-8 offset-md-2">
-   <div class="card">
-      <div class="card-header bg-primary text-white">
-     <h4 class="mb-0"><i class="bi bi-box-arrow-in-down"></i> Registrar Llegada de Vehículo</h4>
-      </div>
-     <div class="card-body">
-    <form asp-action="RegistrarLlegada" method="post">
-   <div class="mb-3">
-         <label asp-for="VehiculoId" class="form-label">Seleccione el Vehículo</label>
-  <select asp-for="VehiculoId" class="form-select" required>
-       <option value="">-- Seleccione un vehículo --</option>
-       @foreach (var vehiculo in Model.VehiculosDisponibles)
-     {
-   <option value="@vehiculo.Id">@vehiculo.Patente - @vehiculo.Marca @vehiculo.Modelo</option>
-  }
-    </select>
-      </div>
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5">
+            <i class="bi bi-box-arrow-in-down"></i> Registrar Llegada de Vehículo
+        </h1>
+        <p class="lead">Registre la llegada del vehículo al taller</p>
+    </div>
+</div>
 
-      <div class="mb-3">
-    <label asp-for="FechaHoraLlegada" class="form-label">Fecha y Hora de Llegada</label>
-     <input asp-for="FechaHoraLlegada" type="datetime-local" class="form-control" required />
-        </div>
-
-   <div class="mb-3">
-   <label asp-for="MotivoIngreso" class="form-label">Motivo del Ingreso</label>
-          <select asp-for="MotivoIngreso" class="form-select" required>
-          <option value="">-- Seleccione --</option>
-    <option value="Mantenimiento Preventivo">Mantenimiento Preventivo</option>
-   <option value="Reparación">Reparación</option>
-  <option value="Siniestro">Siniestro</option>
-    <option value="Inspección">Inspección</option>
-        </select>
-  </div>
-
-  <div class="mb-3">
-    <label asp-for="DescripcionProblema" class="form-label">Descripción del Problema</label>
-           <textarea asp-for="DescripcionProblema" class="form-control" rows="3" placeholder="Describa el problema o motivo del ingreso" required></textarea>
- </div>
-
-       <div class="mb-3">
-    <label asp-for="ObservacionesChofer" class="form-label">Observaciones Adicionales</label>
-      <textarea asp-for="ObservacionesChofer" class="form-control" rows="2" placeholder="Ingrese cualquier observación adicional (opcional)"></textarea>
-   </div>
-
-  <div class="mb-3">
-     <label asp-for="KilometrajeIngreso" class="form-label">Kilometraje Actual</label>
-  <input asp-for="KilometrajeIngreso" type="number" class="form-control" placeholder="Ej: 125000" required />
-      </div>
-
- <div class="mb-3 form-check">
-     <input asp-for="RequiereRepuestos" type="checkbox" class="form-check-input" />
-      <label asp-for="RequiereRepuestos" class="form-check-label">¿Requiere repuestos?</label>
-        </div>
-
-    <div class="d-grid gap-2">
-    <button type="submit" class="btn btn-primary btn-lg">
-       <i class="bi bi-save"></i> Registrar Llegada
-    </button>
-      <a asp-action="MisIngresos" class="btn btn-secondary">
-      <i class="bi bi-arrow-left"></i> Cancelar
- </a>
-      </div>
-       </form>
+@if (!Model.VehiculosDisponibles.Any())
+{
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="alert alert-warning">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle fs-1 me-3"></i>
+                    <div>
+                        <h5 class="alert-heading">No hay vehículos programados</h5>
+                        <p class="mb-0">Actualmente no hay vehículos con ingresos programados para hoy o mañana.</p>
+                        <small>Por favor, coordine con el supervisor para programar un ingreso.</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <a asp-action="MisIngresos" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver a Mis Ingresos
+                </a>
             </div>
         </div>
     </div>
-</div>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-clipboard-check"></i> Formulario de Registro
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="RegistrarLlegada" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label asp-for="VehiculoId" class="form-label">Seleccione el Vehículo <span class="text-danger">*</span></label>
+                            <select asp-for="VehiculoId" class="form-select" id="selectVehiculo" required>
+                                <option value="">-- Seleccione un vehículo programado --</option>
+                                @foreach (var vehiculo in Model.VehiculosDisponibles)
+                                {
+                                    <option value="@vehiculo.Id" 
+                                            data-patente="@vehiculo.Patente" 
+                                            data-marca="@vehiculo.Marca" 
+                                            data-modelo="@vehiculo.Modelo"
+                                            data-km="@(vehiculo.KilometrajeActual ?? 0)">
+                                        @vehiculo.Patente - @vehiculo.Marca @vehiculo.Modelo
+                                    </option>
+                                }
+                            </select>
+                            <span asp-validation-for="VehiculoId" class="text-danger"></span>
+                            <small class="text-muted">Solo se muestran vehículos con ingresos programados</small>
+                        </div>
+
+                        <div id="infoVehiculo" class="alert alert-info" style="display:none;">
+                            <h6><i class="bi bi-info-circle"></i> Información del Vehículo</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Patente:</strong> <span id="vehiculoPatente"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Marca/Modelo:</strong> <span id="vehiculoMarca"></span>
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <strong>Kilometraje actual:</strong> <span id="vehiculoKm"></span> km
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="FechaHoraLlegada" class="form-label">Fecha y Hora de Llegada <span class="text-danger">*</span></label>
+                            <input asp-for="FechaHoraLlegada" type="datetime-local" class="form-control" required />
+                            <span asp-validation-for="FechaHoraLlegada" class="text-danger"></span>
+                            <small class="text-muted">Hora actual del registro</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="KilometrajeIngreso" class="form-label">Kilometraje Actual <span class="text-danger">*</span></label>
+                            <input asp-for="KilometrajeIngreso" type="number" class="form-control" id="inputKilometraje" placeholder="Ej: 125000" required />
+                            <span asp-validation-for="KilometrajeIngreso" class="text-danger"></span>
+                            <small class="text-muted">Se auto-completará con el último kilometraje registrado</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ObservacionesChofer" class="form-label">Observaciones del Guardia</label>
+                            <textarea asp-for="ObservacionesChofer" class="form-control" rows="3" 
+                                      placeholder="Describa cualquier observación importante sobre el estado del vehículo"></textarea>
+                            <span asp-validation-for="ObservacionesChofer" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="ImagenesVehiculo" class="form-label">
+                                <i class="bi bi-camera"></i> Imágenes del Vehículo
+                            </label>
+                            <input type="file" 
+                                   class="form-control" 
+                                   id="inputImagenes" 
+                                   name="ImagenesVehiculo" 
+                                   accept="image/*" 
+                                   multiple
+                                   onchange="previsualizarImagenes()" />
+                            <small class="text-muted">
+                                Puede seleccionar múltiples imágenes (máximo 5MB cada una). 
+                                Formatos: JPG, PNG, GIF, BMP
+                            </small>
+                            
+                            <!-- Vista previa de imágenes -->
+                            <div id="preview" class="row mt-3" style="display:none;"></div>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-save"></i> Registrar Llegada
+                            </button>
+                            <a asp-action="MisIngresos" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Información Importante
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Solo se muestran vehículos con ingresos programados para hoy o mañana</li>
+                        <li>Verifique que el kilometraje ingresado sea correcto</li>
+                        <li>Registre cualquier observación relevante sobre el estado del vehículo</li>
+                        <li><strong>Importante:</strong> Tome fotos del estado general del vehículo al momento de la llegada</li>
+                        <li>Puede adjuntar hasta 10 imágenes (máximo 5MB cada una)</li>
+                        <li>Al registrar la llegada, el vehículo cambiará su estado a "En Taller"</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Mostrar información del vehículo seleccionado
+        document.getElementById('selectVehiculo')?.addEventListener('change', function() {
+            var selected = this.options[this.selectedIndex];
+            var infoDiv = document.getElementById('infoVehiculo');
+
+            if (this.value) {
+                document.getElementById('vehiculoPatente').textContent = selected.dataset.patente;
+                document.getElementById('vehiculoMarca').textContent = selected.dataset.marca + ' ' + selected.dataset.modelo;
+                document.getElementById('vehiculoKm').textContent = parseInt(selected.dataset.km).toLocaleString();
+
+                // Auto-completar kilometraje
+                document.getElementById('inputKilometraje').value = selected.dataset.km;
+
+                infoDiv.style.display = 'block';
+            } else {
+                infoDiv.style.display = 'none';
+            }
+        });
+
+        // Previsualizar imágenes seleccionadas
+        function previsualizarImagenes() {
+            const input = document.getElementById('inputImagenes');
+            const preview = document.getElementById('preview');
+            preview.innerHTML = '';
+            preview.style.display = 'none';
+
+            if (input.files && input.files.length > 0) {
+                preview.style.display = 'flex';
+
+                // Límite de 10 imágenes
+                const maxFiles = Math.min(input.files.length, 10);
+
+                for (let i = 0; i < maxFiles; i++) {
+                    const file = input.files[i];
+
+                    // Validar que sea imagen
+                    if (!file.type.startsWith('image/')) {
+                        continue;
+                    }
+
+                    // Validar tamaño (5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert(`La imagen "${file.name}" excede el tamaño máximo de 5MB`);
+                        continue;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const col = document.createElement('div');
+                        col.className = 'col-md-3 col-sm-6 mb-3';
+                        
+                        col.innerHTML = `
+                            <div class="card">
+                                <img src="${e.target.result}" class="card-img-top" style="height: 150px; object-fit: cover;">
+                                <div class="card-body p-2">
+                                    <small class="text-muted">${file.name}</small>
+                                    <br>
+                                    <small class="text-muted">${(file.size / 1024).toFixed(2)} KB</small>
+                                </div>
+                            </div>
+                        `;
+                        
+                        preview.appendChild(col);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        }
+    </script>
+}

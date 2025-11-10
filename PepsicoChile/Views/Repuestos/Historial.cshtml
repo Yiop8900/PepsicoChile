@@ -1,0 +1,202 @@
+@model PepsicoChile.Models.ViewModels.HistorialMovimientosViewModel
+
+@{
+    ViewData["Title"] = "Historial de Movimientos";
+    var repuesto = ViewBag.Repuesto as PepsicoChile.Models.Repuesto;
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-clock-history"></i> 
+                        @if (repuesto != null)
+                        {
+                            <text>Historial de Movimientos - @repuesto.Nombre</text>
+                        }
+                        else
+                        {
+                            <text>Historial General de Movimientos</text>
+                        }
+                    </h4>
+                </div>
+                <div class="card-body">
+                    @if (repuesto != null)
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p><strong>Código:</strong> <code>@repuesto.CodigoRepuesto</code></p>
+                                <p><strong>Categoría:</strong> @(repuesto.Categoria ?? "N/A")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p>
+                                    <strong>Stock Actual:</strong> 
+                                    <span class="badge bg-success fs-6">@repuesto.StockActual unidades</span>
+                                </p>
+                                <p><strong>Stock Mínimo:</strong> @repuesto.StockMinimo</p>
+                            </div>
+                        </div>
+                        <hr />
+                    }
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <p class="mb-0 text-muted">
+                            <i class="bi bi-info-circle"></i> 
+                            Mostrando los últimos @Model.Movimientos.Count movimientos
+                        </p>
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Volver a Repuestos
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Movimientos.Any())
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha y Hora</th>
+                                        <th>Tipo</th>
+                                        <th>Repuesto</th>
+                                        <th class="text-center">Cantidad</th>
+                                        <th class="text-center">Stock Anterior</th>
+                                        <th class="text-center">Stock Nuevo</th>
+                                        <th>Motivo</th>
+                                        <th>Vehículo</th>
+                                        <th>Mecánico</th>
+                                        <th>Registrado por</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var mov in Model.Movimientos)
+                                    {
+                                        var esEntrada = mov.TipoMovimiento == "Entrada";
+                                        var esSalida = mov.TipoMovimiento == "Salida";
+                                        
+                                        <tr>
+                                            <td>
+                                                <small>
+                                                    <i class="bi bi-calendar3"></i> @mov.FechaMovimiento.ToString("dd/MM/yyyy")<br/>
+                                                    <i class="bi bi-clock"></i> @mov.FechaMovimiento.ToString("HH:mm")
+                                                </small>
+                                            </td>
+                                            <td>
+                                                @if (esEntrada)
+                                                {
+                                                    <span class="badge bg-success">
+                                                        <i class="bi bi-arrow-down-circle"></i> Entrada
+                                                    </span>
+                                                }
+                                                else if (esSalida)
+                                                {
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="bi bi-arrow-up-circle"></i> Salida
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-info">
+                                                        <i class="bi bi-arrow-left-right"></i> Ajuste
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <strong>@mov.Repuesto?.Nombre</strong><br/>
+                                                <small class="text-muted">@mov.Repuesto?.CodigoRepuesto</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge @(esEntrada ? "bg-success" : "bg-warning") fs-6">
+                                                    @(esEntrada ? "+" : "-")@mov.Cantidad
+                                                </span>
+                                            </td>
+                                            <td class="text-center">@mov.StockAnterior</td>
+                                            <td class="text-center">
+                                                <strong>@mov.StockNuevo</strong>
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(mov.Motivo))
+                                                {
+                                                    <small>@mov.Motivo</small>
+                                                }
+                                                else
+                                                {
+                                                    <small class="text-muted">-</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (mov.Vehiculo != null)
+                                                {
+                                                    <span class="badge bg-secondary">
+                                                        <i class="bi bi-truck"></i> @mov.Vehiculo.Patente
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <small class="text-muted">-</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (mov.Mecanico != null)
+                                                {
+                                                    <small>
+                                                        <i class="bi bi-person-gear"></i> 
+                                                        @mov.Mecanico.Nombre @mov.Mecanico.Apellido
+                                                    </small>
+                                                }
+                                                else
+                                                {
+                                                    <small class="text-muted">-</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (mov.UsuarioRegistro != null)
+                                                {
+                                                    <small>
+                                                        <i class="bi bi-person"></i> 
+                                                        @mov.UsuarioRegistro.Nombre
+                                                    </small>
+                                                }
+                                                else
+                                                {
+                                                    <small class="text-muted">Sistema</small>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-inbox fs-1 text-muted"></i>
+            <p class="text-muted mt-3">No hay movimientos registrados.</p>
+        </div>
+    }
+</div>
+
+<style>
+    .table td {
+        vertical-align: middle;
+    }
+    
+    .table small {
+        display: block;
+        line-height: 1.4;
+    }
+</style>

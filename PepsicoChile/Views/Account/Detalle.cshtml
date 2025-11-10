@@ -1,0 +1,217 @@
+@model Usuario
+@{
+    ViewData["Title"] = "Detalle de Usuario";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5">
+            <i class="bi bi-person-badge"></i> Detalle de Usuario
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-action="ListarUsuarios">Usuarios</a></li>
+                <li class="breadcrumb-item active">Detalle</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Card Principal -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-circle"></i> @Model.Nombre @Model.Apellido
+                    </h5>
+                    @if (Model.Activo)
+                    {
+                        <span class="badge bg-success">Activo</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Inactivo</span>
+                    }
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Información Personal -->
+                <h6 class="text-primary mb-3">
+                    <i class="bi bi-person"></i> Información Personal
+                </h6>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">
+                                <i class="bi bi-hash"></i> ID:
+                            </dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-secondary">#@Model.Id</span>
+                            </dd>
+
+                            <dt class="col-sm-4">
+                                <i class="bi bi-person"></i> Nombre:
+                            </dt>
+                            <dd class="col-sm-8">
+                                @Model.Nombre @Model.Apellido
+                            </dd>
+
+                            <dt class="col-sm-4">
+                                <i class="bi bi-credit-card-2-front"></i> RUT:
+                            </dt>
+                            <dd class="col-sm-8">
+                                @Model.Rut
+                            </dd>
+                        </dl>
+                    </div>
+
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">
+                                <i class="bi bi-telephone"></i> Teléfono:
+                            </dt>
+                            <dd class="col-sm-8">
+                                @if (!string.IsNullOrEmpty(Model.Telefono))
+                                {
+                                    <a href="tel:@Model.Telefono">@Model.Telefono</a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No registrado</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">
+                                <i class="bi bi-envelope"></i> Email:
+                            </dt>
+                            <dd class="col-sm-8">
+                                <a href="mailto:@Model.Email">@Model.Email</a>
+                            </dd>
+
+                            <dt class="col-sm-4">
+                                <i class="bi bi-shield"></i> Rol:
+                            </dt>
+                            <dd class="col-sm-8">
+                                @{
+                                    var badgeColor = Model.Rol switch
+                                    {
+                                        "Administrador" => "danger",
+                                        "JefeTaller" => "primary",
+                                        "Supervisor" => "warning",
+                                        "CoordinadorZona" => "info",
+                                        "Mecanico" => "secondary",
+                                        "Chofer" => "dark",
+                                        _ => "secondary"
+                                    };
+                                }
+                                <span class="badge bg-@badgeColor">@Model.Rol</span>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <hr />
+
+                <!-- Botones de Acción -->
+                <div class="d-flex gap-2 flex-wrap">
+                    <a asp-action="Editar" asp-route-id="@Model.Id" class="btn btn-primary">
+                        <i class="bi bi-pencil"></i> Editar Usuario
+                    </a>
+                    
+                    @if (Model.Rol != "Administrador")
+                    {
+                        <form asp-action="ActivarDesactivar" method="post" style="display:inline;">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" 
+                                    class="btn btn-@(Model.Activo ? "warning" : "success")"
+                                    onclick="return confirm('@(Model.Activo ? "¿Desactivar" : "¿Activar") usuario?')">
+                                <i class="bi bi-@(Model.Activo ? "x-circle" : "check-circle")"></i>
+                                @(Model.Activo ? "Desactivar" : "Activar")
+                            </button>
+                        </form>
+                    }
+                    
+                    <a asp-action="ListarUsuarios" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver a Lista
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas del Usuario -->
+        @{
+            var totalIngresos = 0;
+            var totalTareas = 0;
+
+            // Aquí podrías agregar lógica para contar ingresos y tareas del usuario
+            // Por ejemplo, si es mecánico, contar sus tareas
+            // Si es chofer, contar sus ingresos, etc.
+        }
+
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-graph-up"></i> Estadísticas de Actividad
+                </h6>
+            </div>
+            <div class="card-body">
+                @if (Model.Rol == "Mecanico")
+                {
+                    <div class="row text-center">
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-primary">
+                                <div class="card-body">
+                                    <i class="bi bi-list-task text-primary fs-1"></i>
+                                    <h3 class="mt-2">@totalTareas</h3>
+                                    <p class="text-muted mb-0">Tareas Asignadas</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-success">
+                                <div class="card-body">
+                                    <i class="bi bi-check-circle text-success fs-1"></i>
+                                    <h3 class="mt-2">-</h3>
+                                    <p class="text-muted mb-0">Tareas Completadas</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else if (Model.Rol == "Chofer")
+                {
+                    <div class="row text-center">
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-info">
+                                <div class="card-body">
+                                    <i class="bi bi-truck text-info fs-1"></i>
+                                    <h3 class="mt-2">@totalIngresos</h3>
+                                    <p class="text-muted mb-0">Ingresos Registrados</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-warning">
+                                <div class="card-body">
+                                    <i class="bi bi-calendar text-warning fs-1"></i>
+                                    <h3 class="mt-2">-</h3>
+                                    <p class="text-muted mb-0">Ingresos Pendientes</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        Las estadísticas de actividad varían según el rol del usuario.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

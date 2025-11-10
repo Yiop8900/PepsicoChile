@@ -1,0 +1,328 @@
+@model IngresoTaller
+@{
+    ViewData["Title"] = "Registrar Salida";
+    var tareas = ViewBag.Tareas as List<TareaTaller> ?? new List<TareaTaller>();
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-box-arrow-right"></i> Registrar Salida de la Instalación</h2>
+                <p class="text-muted mb-0">Registrar salida física del vehículo de la instalación</p>
+            </div>
+            <div>
+                <a asp-action="VehiculosEnTaller" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Cancelar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Columna Izquierda: Información del Vehículo -->
+    <div class="col-lg-5">
+        <!-- Información del Vehículo -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-truck"></i> Información del Vehículo</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="text-muted">Patente</label>
+                        <h3 class="text-primary mb-0">
+                            <i class="bi bi-truck-front"></i> @Model.Vehiculo?.Patente
+                        </h3>
+                        <small class="text-muted">@Model.Vehiculo?.Marca @Model.Vehiculo?.Modelo - @Model.Vehiculo?.Año</small>
+                    </div>
+                    <div class="col-12">
+                        <label class="text-muted">Chofer</label>
+                        <p class="mb-0">
+                            <strong>@Model.Chofer?.Nombre @Model.Chofer?.Apellido</strong>
+                            @if (!string.IsNullOrEmpty(Model.Chofer?.Telefono))
+                            {
+                                <br />
+                            
+                                <small><i class="bi bi-telephone"></i> @Model.Chofer.Telefono</small>
+                            }
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">Fecha Ingreso</label>
+                        <p class="mb-0">
+                            @if (Model.FechaIngresoReal.HasValue)
+                            {
+                                <strong>@Model.FechaIngresoReal.Value.ToString("dd/MM/yyyy HH:mm")</strong>
+                            }
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">Tiempo en Taller</label>
+                        <p class="mb-0">
+                            @if (Model.FechaIngresoReal.HasValue)
+                            {
+                                var tiempoEnTaller = (DateTime.Now - Model.FechaIngresoReal.Value).TotalHours;
+                                if (tiempoEnTaller < 24)
+                                {
+                                    <strong>@tiempoEnTaller.ToString("N1") horas</strong>
+                                }
+                                else
+                                {
+                                    var dias = (int)(tiempoEnTaller / 24);
+                                    var horas = tiempoEnTaller % 24;
+                                    <strong>@dias día(s) @horas.ToString("N0")h</strong>
+                                }
+                            }
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">Kilometraje Ingreso</label>
+                        <p class="mb-0">
+                            @if (Model.KilometrajeIngreso.HasValue)
+                            {
+                                <strong>@Model.KilometrajeIngreso.Value.ToString("N0") km</strong>
+                            }
+                            else
+                            {
+                                <span class="text-muted">No registrado</span>
+                            }
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">Estado</label>
+                        <p class="mb-0">
+                            <span class="badge bg-success">@Model.Estado</span>
+                        </p>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.NumeroOT))
+                    {
+                        <div class="col-12">
+                            <label class="text-muted">Número de OT</label>
+                            <p class="mb-0"><strong>@Model.NumeroOT</strong></p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Tareas Realizadas -->
+        @if (tareas.Any())
+        {
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-list-check"></i> Tareas Realizadas (@tareas.Count)</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var tarea in tareas)
+                        {
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>@tarea.Descripcion</strong>
+                                        <br />
+                                        <small class="text-muted">
+                                            Mecánico: @tarea.MecanicoAsignado?.Nombre
+                                        </small>
+                                        @if (tarea.TiempoRealHoras.HasValue)
+                                        {
+                                            <br />
+                                
+                                            <small class="text-muted">Tiempo: @tarea.TiempoRealHoras.Value h</small>
+                                        }
+                                    </div>
+                                    <span class="badge bg-@(tarea.Estado == "Completada" ? "success" : "warning")">
+                                        @tarea.Estado
+                                    </span>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Columna Derecha: Formulario de Salida -->
+    <div class="col-lg-7">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Formulario de Salida</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="RegistrarSalidaNuevo" method="post" enctype="multipart/form-data" id="formSalida">
+                    <input type="hidden" name="id" value="@Model.Id" />
+
+                    <div class="mb-4">
+                        <label for="kilometrajeSalida" class="form-label">
+                            <i class="bi bi-speedometer2"></i> Kilometraje de Salida <span class="text-danger">*</span>
+                        </label>
+                        <input type="number"
+                               name="kilometrajeSalida"
+                               id="kilometrajeSalida"
+                               class="form-control form-control-lg"
+                               min="@(Model.KilometrajeIngreso ?? 0)"
+                               value="@(Model.KilometrajeIngreso ?? 0)"
+                               required />
+                        @if (Model.KilometrajeIngreso.HasValue)
+                        {
+                            <small class="form-text text-muted">
+                                Kilometraje de ingreso: @Model.KilometrajeIngreso.Value.ToString("N0") km
+                            </small>
+                        }
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="observacionesSalida" class="form-label">
+                            <i class="bi bi-chat-left-text"></i> Observaciones de Salida
+                        </label>
+                        <textarea name="observacionesSalida"
+                                  id="observacionesSalida"
+                                  class="form-control"
+                                  rows="4"
+                                  placeholder="Observaciones sobre el estado del vehículo al salir, documentos entregados, etc."></textarea>
+                        <small class="form-text text-muted">
+                            Ej: "Vehículo entregado en buen estado. Se entregó factura y garantía de repuestos."
+                        </small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="imagenesSalida" class="form-label">
+                            <i class="bi bi-camera"></i> Imágenes del Vehículo (Salida)
+                        </label>
+                        <input type="file"
+                               name="imagenesSalida"
+                               id="imagenesSalida"
+                               class="form-control"
+                               accept="image/*"
+                               multiple />
+                        <small class="form-text text-muted">
+                            Puede adjuntar múltiples fotos del vehículo al momento de la salida (opcional).
+                            Formatos permitidos: JPG, PNG, GIF, BMP
+                        </small>
+                    </div>
+
+                    <!-- Vista previa de imágenes -->
+                    <div id="preview" class="row g-2 mb-4" style="display: none;">
+                        <div class="col-12">
+                            <label class="form-label"><i class="bi bi-eye"></i> Vista Previa:</label>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Importante:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Verifique que el vehículo esté en condiciones de circular</li>
+                            <li>Asegúrese de que el chofer reciba toda la documentación</li>
+                            <li>El chofer será notificado automáticamente de que el vehículo está listo</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-box-arrow-right"></i> Registrar Salida
+                        </button>
+                        <a asp-action="VehiculosEnTaller" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Información Adicional -->
+        @if (!string.IsNullOrEmpty(Model.DescripcionProblema) || !string.IsNullOrEmpty(Model.ObservacionesChofer))
+        {
+            <div class="card shadow mt-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información del Ingreso</h5>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.DescripcionProblema))
+                    {
+                        <div class="mb-3">
+                            <label class="text-muted">Descripción del Problema:</label>
+                            <p class="mb-0">@Model.DescripcionProblema</p>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.ObservacionesChofer))
+                    {
+                        <div>
+                            <label class="text-muted">Observaciones:</label>
+                            <pre class="mb-0 p-2 bg-light rounded" style="white-space: pre-wrap;">@Model.ObservacionesChofer</pre>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Vista previa de imágenes
+            $('#imagenesSalida').on('change', function(e) {
+                var files = e.target.files;
+                var preview = $('#preview');
+                preview.empty();
+
+                if (files.length > 0) {
+                    preview.append('<div class="col-12"><label class="form-label"><i class="bi bi-eye"></i> Vista Previa:</label></div>');
+                    preview.show();
+
+                    Array.from(files).forEach(function(file) {
+                        if (file.type.startsWith('image/')) {
+                            var reader = new FileReader();
+                            reader.onload = function(event) {
+                                var col = $('<div class="col-md-3 col-sm-6"></div>');
+                                var img = $('<img class="img-thumbnail" style="max-height: 150px; width: 100%; object-fit: cover;">');
+                                img.attr('src', event.target.result);
+                                col.append(img);
+                                preview.append(col);
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                } else {
+                    preview.hide();
+                }
+            });
+
+            // Validación del formulario
+            $('#formSalida').on('submit', function(e) {
+                var km = parseInt($('#kilometrajeSalida').val());
+                var kmIngreso = @(Model.KilometrajeIngreso ?? 0);
+
+                if (km < kmIngreso) {
+                    e.preventDefault();
+                    alert('El kilometraje de salida (' + km + ' km) no puede ser menor al kilometraje de ingreso (' + kmIngreso + ' km)');
+                    return false;
+                }
+
+                // Confirmación
+                if (!confirm('¿Está seguro de registrar la SALIDA de la instalación del vehículo @Model.Vehiculo?.Patente?\n\nEl chofer será notificado automáticamente de que puede retirar el vehículo.')) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Calcular diferencia de kilometraje
+            $('#kilometrajeSalida').on('input', function() {
+                var kmSalida = parseInt($(this).val()) || 0;
+                var kmIngreso = @(Model.KilometrajeIngreso ?? 0);
+                var diferencia = kmSalida - kmIngreso;
+
+                if (diferencia > 0) {
+                    $(this).next('small').html(
+                        'Kilometraje de ingreso: ' + kmIngreso.toLocaleString() + ' km - ' +
+                        '<span class="text-success">Diferencia: +' + diferencia.toLocaleString() + ' km</span>'
+                    );
+                }
+            });
+        });
+    </script>
+}

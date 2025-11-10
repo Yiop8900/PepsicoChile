@@ -22,6 +22,47 @@ namespace PepsicoChile.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("PepsicoChile.Models.AsignacionVehiculo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activa")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("AsignadoPorId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ChoferId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaAsignacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaDesasignacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("VehiculoId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AsignadoPorId");
+
+                    b.HasIndex("ChoferId");
+
+                    b.HasIndex("VehiculoId");
+
+                    b.ToTable("AsignacionesVehiculo");
+                });
+
             modelBuilder.Entity("PepsicoChile.Models.Documento", b =>
                 {
                     b.Property<int>("Id")
@@ -33,7 +74,13 @@ namespace PepsicoChile.Migrations
                     b.Property<string>("Descripcion")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("EstadoValidacion")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("FechaSubida")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaValidacion")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("IngresoTallerId")
@@ -41,6 +88,9 @@ namespace PepsicoChile.Migrations
 
                     b.Property<string>("NombreArchivo")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ObservacionesValidacion")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RutaArchivo")
@@ -119,6 +169,54 @@ namespace PepsicoChile.Migrations
                     b.ToTable("DocumentosVehiculo");
                 });
 
+            modelBuilder.Entity("PepsicoChile.Models.ImagenIngreso", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("FechaSubida")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("IngresoTallerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NombreArchivo")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("RutaArchivo")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<long>("TamañoBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("TipoImagen")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("UsuarioSubidaId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IngresoTallerId");
+
+                    b.HasIndex("UsuarioSubidaId");
+
+                    b.ToTable("ImagenesIngreso");
+                });
+
             modelBuilder.Entity("PepsicoChile.Models.IngresoTaller", b =>
                 {
                     b.Property<int>("Id")
@@ -152,11 +250,17 @@ namespace PepsicoChile.Migrations
                     b.Property<int?>("KilometrajeIngreso")
                         .HasColumnType("int");
 
+                    b.Property<int?>("KilometrajeSalida")
+                        .HasColumnType("int");
+
                     b.Property<int?>("MecanicoAsignadoId")
                         .HasColumnType("int");
 
                     b.Property<string>("MotivoIngreso")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NumeroOT")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ObservacionesChofer")
@@ -182,6 +286,69 @@ namespace PepsicoChile.Migrations
                     b.HasIndex("VehiculoId");
 
                     b.ToTable("IngresosTaller", (string)null);
+                });
+
+            modelBuilder.Entity("PepsicoChile.Models.MovimientoRepuesto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaMovimiento")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("MecanicoId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Motivo")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("RepuestoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StockAnterior")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StockNuevo")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TareaTallerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TipoMovimiento")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("UsuarioRegistroId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("VehiculoId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FechaMovimiento");
+
+                    b.HasIndex("MecanicoId");
+
+                    b.HasIndex("RepuestoId");
+
+                    b.HasIndex("TareaTallerId");
+
+                    b.HasIndex("TipoMovimiento");
+
+                    b.HasIndex("UsuarioRegistroId");
+
+                    b.HasIndex("VehiculoId");
+
+                    b.ToTable("MovimientosRepuesto", (string)null);
                 });
 
             modelBuilder.Entity("PepsicoChile.Models.Notificacion", b =>
@@ -245,9 +412,7 @@ namespace PepsicoChile.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.HasIndex("UsuarioId", "Leida");
-
-                    b.ToTable("Notificaciones", (string)null);
+                    b.ToTable("Notificaciones");
                 });
 
             modelBuilder.Entity("PepsicoChile.Models.Pausa", b =>
@@ -298,38 +463,116 @@ namespace PepsicoChile.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Cantidad")
-                        .HasColumnType("int");
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Categoria")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("CodigoRepuesto")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("Estado")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
-                    b.Property<DateTime?>("FechaRecepcion")
+                    b.Property<DateTime>("FechaActualizacion")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("FechaSolicitud")
+                    b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal?>("PrecioUnitario")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Proveedor")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("StockActual")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StockMinimo")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Ubicacion")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Categoria");
+
+                    b.HasIndex("CodigoRepuesto");
+
+                    b.HasIndex("Nombre", "Proveedor")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Repuestos_Nombre_Proveedor");
+
+                    b.ToTable("Repuestos", (string)null);
+                });
+
+            modelBuilder.Entity("PepsicoChile.Models.SolicitudRepuesto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CodigoRepuesto")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("FechaEntrega")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaSolicitud")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Proveedor")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("SolicitadoPorId")
+                        .HasColumnType("int");
 
                     b.Property<int>("TareaTallerId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Estado");
+
+                    b.HasIndex("FechaSolicitud");
+
+                    b.HasIndex("SolicitadoPorId");
+
                     b.HasIndex("TareaTallerId");
 
-                    b.ToTable("Repuestos", (string)null);
+                    b.ToTable("SolicitudesRepuesto", (string)null);
                 });
 
             modelBuilder.Entity("PepsicoChile.Models.TareaTaller", b =>
@@ -528,6 +771,31 @@ namespace PepsicoChile.Migrations
                     b.ToTable("Vehiculos", (string)null);
                 });
 
+            modelBuilder.Entity("PepsicoChile.Models.AsignacionVehiculo", b =>
+                {
+                    b.HasOne("PepsicoChile.Models.Usuario", "AsignadoPor")
+                        .WithMany()
+                        .HasForeignKey("AsignadoPorId");
+
+                    b.HasOne("PepsicoChile.Models.Usuario", "Chofer")
+                        .WithMany()
+                        .HasForeignKey("ChoferId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PepsicoChile.Models.Vehiculo", "Vehiculo")
+                        .WithMany()
+                        .HasForeignKey("VehiculoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AsignadoPor");
+
+                    b.Navigation("Chofer");
+
+                    b.Navigation("Vehiculo");
+                });
+
             modelBuilder.Entity("PepsicoChile.Models.Documento", b =>
                 {
                     b.HasOne("PepsicoChile.Models.IngresoTaller", "IngresoTaller")
@@ -563,6 +831,23 @@ namespace PepsicoChile.Migrations
                     b.Navigation("Vehiculo");
                 });
 
+            modelBuilder.Entity("PepsicoChile.Models.ImagenIngreso", b =>
+                {
+                    b.HasOne("PepsicoChile.Models.IngresoTaller", "IngresoTaller")
+                        .WithMany()
+                        .HasForeignKey("IngresoTallerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PepsicoChile.Models.Usuario", "UsuarioSubida")
+                        .WithMany()
+                        .HasForeignKey("UsuarioSubidaId");
+
+                    b.Navigation("IngresoTaller");
+
+                    b.Navigation("UsuarioSubida");
+                });
+
             modelBuilder.Entity("PepsicoChile.Models.IngresoTaller", b =>
                 {
                     b.HasOne("PepsicoChile.Models.Usuario", "Chofer")
@@ -591,6 +876,45 @@ namespace PepsicoChile.Migrations
                     b.Navigation("MecanicoAsignado");
 
                     b.Navigation("Supervisor");
+
+                    b.Navigation("Vehiculo");
+                });
+
+            modelBuilder.Entity("PepsicoChile.Models.MovimientoRepuesto", b =>
+                {
+                    b.HasOne("PepsicoChile.Models.Usuario", "Mecanico")
+                        .WithMany()
+                        .HasForeignKey("MecanicoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("PepsicoChile.Models.Repuesto", "Repuesto")
+                        .WithMany()
+                        .HasForeignKey("RepuestoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PepsicoChile.Models.TareaTaller", "TareaTaller")
+                        .WithMany()
+                        .HasForeignKey("TareaTallerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("PepsicoChile.Models.Usuario", "UsuarioRegistro")
+                        .WithMany()
+                        .HasForeignKey("UsuarioRegistroId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("PepsicoChile.Models.Vehiculo", "Vehiculo")
+                        .WithMany()
+                        .HasForeignKey("VehiculoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Mecanico");
+
+                    b.Navigation("Repuesto");
+
+                    b.Navigation("TareaTaller");
+
+                    b.Navigation("UsuarioRegistro");
 
                     b.Navigation("Vehiculo");
                 });
@@ -624,13 +948,20 @@ namespace PepsicoChile.Migrations
                     b.Navigation("UsuarioRegistro");
                 });
 
-            modelBuilder.Entity("PepsicoChile.Models.Repuesto", b =>
+            modelBuilder.Entity("PepsicoChile.Models.SolicitudRepuesto", b =>
                 {
+                    b.HasOne("PepsicoChile.Models.Usuario", "SolicitadoPor")
+                        .WithMany()
+                        .HasForeignKey("SolicitadoPorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("PepsicoChile.Models.TareaTaller", "TareaTaller")
                         .WithMany()
                         .HasForeignKey("TareaTallerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("SolicitadoPor");
 
                     b.Navigation("TareaTaller");
                 });

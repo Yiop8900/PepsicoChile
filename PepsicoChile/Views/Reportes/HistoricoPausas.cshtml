@@ -1,0 +1,574 @@
+@model PepsicoChile.Models.ViewModels.HistoricoPausasViewModel
+@{
+    ViewData["Title"] = "Histórico de Pausas";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-4">
+            <i class="bi bi-pause-circle"></i> Histórico de Pausas
+        </h1>
+        <p class="lead">Análisis de interrupciones en el proceso de mantenimiento</p>
+    </div>
+</div>
+
+@if (Model.TotalPausas == 0)
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> No hay datos de pausas para mostrar.
+        <br>
+        <small>Las pausas se registran cuando un ingreso se interrumpe temporalmente.</small>
+    </div>
+}
+else
+{
+    <!-- Resumen Principal -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-pause-btn fs-1 mb-2"></i>
+                    <h6 class="card-subtitle mb-2">Total Pausas</h6>
+                    <h2 class="card-title mb-0">@Model.TotalPausas</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-hourglass-split fs-1 mb-2"></i>
+                    <h6 class="card-subtitle mb-2">Activas</h6>
+                    <h2 class="card-title mb-0">@Model.PausasActivas</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-check-circle fs-1 mb-2"></i>
+                    <h6 class="card-subtitle mb-2">Finalizadas</h6>
+                    <h2 class="card-title mb-0">@Model.PausasFinalizadas</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-clock-history fs-1 mb-2"></i>
+                    <h6 class="card-subtitle mb-2">Tiempo Total</h6>
+                    <h2 class="card-title mb-0">@Model.TiempoTotalHoras.ToString("F0")h</h2>
+                    <small>@((Model.TiempoTotalHoras / 24).ToString("F1")) días</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-speedometer fs-1 mb-2"></i>
+                    <h6 class="card-subtitle mb-2">Promedio</h6>
+                    <h2 class="card-title mb-0">@Model.TiempoPromedioHoras.ToString("F1")h</h2>
+                    <small>por pausa</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Pausas por Motivo</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartMotivos" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Tendencia Temporal (6 meses)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartTendencia" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas Destacadas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Motivo Principal</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="bi bi-clipboard-data fs-1 text-warning mb-3"></i>
+                    <h3>@Model.MotivoPrincipal</h3>
+                    <p class="text-muted mb-0">Causa más frecuente de pausas</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-arrow-up-circle"></i> Pausa Más Larga</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="bi bi-hourglass-top fs-1 text-danger mb-3"></i>
+                    <h3>@Model.TiempoPausaMasLarga.ToString("F1")h</h3>
+                    <p class="text-muted mb-0">@((Model.TiempoPausaMasLarga / 24).ToString("F1")) días</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-arrow-down-circle"></i> Pausa Más Corta</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="bi bi-hourglass-bottom fs-1 text-success mb-3"></i>
+                    <h3>@Model.TiempoPausaMasCorta.ToString("F1")h</h3>
+                    <p class="text-muted mb-0">Tiempo mínimo registrado</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Análisis Detallado por Motivo -->
+    @if (Model.PausasPorMotivo.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-list-check"></i> Análisis Detallado por Motivo</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Motivo</th>
+                                        <th class="text-center">Cantidad</th>
+                                        <th class="text-end">Tiempo Total</th>
+                                        <th class="text-end">Promedio</th>
+                                        <th class="text-end">Mínimo</th>
+                                        <th class="text-end">Máximo</th>
+                                        <th style="width: 25%">Impacto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var motivo in Model.PausasPorMotivo)
+                                    {
+                                        var porcentaje = (motivo.TiempoTotal / Model.TiempoTotalHoras) * 100;
+                                        var colorImpacto = porcentaje >= 40 ? "danger" : 
+                                                          porcentaje >= 25 ? "warning" : "info";
+                                        
+                                        <tr>
+                                            <td>
+                                                <i class="bi bi-pause-fill text-warning"></i>
+                                                <strong>@motivo.Motivo</strong>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">@motivo.Cantidad</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <strong>@motivo.TiempoTotal.ToString("F1")h</strong>
+                                                <br>
+                                                <small class="text-muted">@((motivo.TiempoTotal / 24).ToString("F1")) días</small>
+                                            </td>
+                                            <td class="text-end">
+                                                @motivo.TiempoPromedio.ToString("F1")h
+                                            </td>
+                                            <td class="text-end text-success">
+                                                @motivo.TiempoMinimo.ToString("F1")h
+                                            </td>
+                                            <td class="text-end text-danger">
+                                                @motivo.TiempoMaximo.ToString("F1")h
+                                            </td>
+                                            <td>
+                                                <div class="progress" style="height: 25px;">
+                                                    <div class="progress-bar bg-@colorImpacto" role="progressbar" 
+                                                         style="width: @porcentaje.ToString("F1")%" 
+                                                         data-bs-toggle="tooltip" 
+                                                         title="@porcentaje.ToString("F1")% del tiempo total"
+                                                         aria-valuenow="@porcentaje" aria-valuemin="0" aria-valuemax="100">
+                                                        @porcentaje.ToString("F0")%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td><strong>TOTAL</strong></td>
+                                        <td class="text-center"><strong>@Model.PausasFinalizadas</strong></td>
+                                        <td class="text-end"><strong>@Model.TiempoTotalHoras.ToString("F1")h</strong></td>
+                                        <td class="text-end"><strong>@Model.TiempoPromedioHoras.ToString("F1")h</strong></td>
+                                        <td colspan="3"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Vehículos con Más Pausas -->
+    @if (Model.PausasPorVehiculo.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-truck"></i> Top 10 Vehículos con Más Pausas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Vehículo</th>
+                                        <th>Marca/Modelo</th>
+                                        <th class="text-center">Cantidad Pausas</th>
+                                        <th class="text-end">Tiempo Total</th>
+                                        <th style="width: 30%">Visualización</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        var ranking = 1;
+                                        var maxTiempo = Model.PausasPorVehiculo.Max(v => v.TiempoTotal);
+                                    }
+                                    @foreach (var vehiculo in Model.PausasPorVehiculo)
+                                    {
+                                        var porcentaje = (vehiculo.TiempoTotal / maxTiempo) * 100;
+                                        var medalColor = ranking == 1 ? "warning" : ranking == 2 ? "secondary" : ranking == 3 ? "info" : "light";
+                                        
+                                        <tr>
+                                            <td>
+                                                @if (ranking <= 3)
+                                                {
+                                                    <i class="bi bi-trophy-fill text-@medalColor fs-4"></i>
+                                                }
+                                                else
+                                                {
+                                                    <span>@ranking</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <strong>@vehiculo.Patente</strong>
+                                            </td>
+                                            <td>@vehiculo.MarcaModelo</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-warning">@vehiculo.CantidadPausas</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <strong>@vehiculo.TiempoTotal.ToString("F1")h</strong>
+                                                <br>
+                                                <small class="text-muted">@((vehiculo.TiempoTotal / 24).ToString("F1")) días</small>
+                                            </td>
+                                            <td>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar bg-@(ranking <= 3 ? medalColor : "primary")" 
+                                                         role="progressbar" 
+                                                         style="width: @porcentaje.ToString("F0")%" 
+                                                         aria-valuenow="@porcentaje" aria-valuemin="0" aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        ranking++;
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Duración por Tipo de Vehículo -->
+    @if (Model.DuracionPorTipoVehiculo.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Tiempo Promedio de Pausa por Tipo de Vehículo</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach (var tipo in Model.DuracionPorTipoVehiculo)
+                            {
+                                var maxDuracion = Model.DuracionPorTipoVehiculo.Max(x => x.Value);
+                                var porcentaje = (tipo.Value / maxDuracion) * 100;
+                                
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-primary">
+                                        <div class="card-body">
+                                            <h6 class="card-subtitle mb-2 text-muted">@tipo.Key</h6>
+                                            <h3 class="card-title">@tipo.Value.ToString("F1")h</h3>
+                                            <div class="progress" style="height: 10px;">
+                                                <div class="progress-bar bg-primary" role="progressbar" 
+                                                     style="width: @porcentaje.ToString("F0")%"
+                                                     aria-valuenow="@porcentaje" aria-valuemin="0" aria-valuemax="100">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Pausas Recientes -->
+    @if (Model.PausasRecientes.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Pausas Recientes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Vehículo</th>
+                                        <th>Motivo</th>
+                                        <th>Descripción</th>
+                                        <th>Fecha Inicio</th>
+                                        <th>Fecha Fin</th>
+                                        <th class="text-end">Duración</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var pausa in Model.PausasRecientes)
+                                    {
+                                        var duracion = pausa.FechaFin.HasValue 
+                                            ? (pausa.FechaFin.Value - pausa.FechaInicio).TotalHours 
+                                            : (DateTime.Now - pausa.FechaInicio).TotalHours;
+                                        
+                                        <tr class="@(pausa.FechaFin.HasValue ? "" : "table-warning")">
+                                            <td>
+                                                @if (pausa.IngresoTaller?.Vehiculo != null)
+                                                {
+                                                    <strong>@pausa.IngresoTaller.Vehiculo.Patente</strong>
+                                                    <br>
+                                                    <small class="text-muted">@pausa.IngresoTaller.Vehiculo.Marca</small>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-warning">@pausa.Motivo</span>
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(pausa.Descripcion))
+                                                {
+                                                    @pausa.Descripcion.Substring(0, Math.Min(50, pausa.Descripcion.Length))
+                                                    @if (pausa.Descripcion.Length > 50)
+                                                    {
+                                                        <text>...</text>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Sin descripción</span>
+                                                }
+                                            </td>
+                                            <td>@pausa.FechaInicio.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td>
+                                                @if (pausa.FechaFin.HasValue)
+                                                {
+                                                    @pausa.FechaFin.Value.ToString("dd/MM/yyyy HH:mm")
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-warning">En curso...</span>
+                                                }
+                                            </td>
+                                            <td class="text-end">
+                                                <strong>@duracion.ToString("F1")h</strong>
+                                                @if (!pausa.FechaFin.HasValue)
+                                                {
+                                                    <br>
+                                                    <small class="text-warning">(en curso)</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (pausa.FechaFin.HasValue)
+                                                {
+                                                    <span class="badge bg-success">
+                                                        <i class="bi bi-check-circle"></i> Finalizada
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning">
+                                                        <i class="bi bi-hourglass-split"></i> Activa
+                                                    </span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+<!-- Botones de Acción -->
+<div class="row mt-4">
+    <div class="col-12">
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver a Reportes
+        </a>
+        
+        @if (Model.TotalPausas > 0)
+        {
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="bi bi-printer"></i> Imprimir Reporte
+            </button>
+            
+            <button class="btn btn-success" onclick="exportarExcel()">
+                <i class="bi bi-file-earmark-excel"></i> Exportar a Excel
+            </button>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        // Gráfico de pausas por motivo
+        var ctxMotivos = document.getElementById('chartMotivos').getContext('2d');
+        var chartMotivos = new Chart(ctxMotivos, {
+            type: 'doughnut',
+            data: {
+                labels: [@Html.Raw(string.Join(",", Model.PausasPorMotivo.Select(p => $"'{p.Motivo}'")))],
+                datasets: [{
+                    data: [@string.Join(",", Model.PausasPorMotivo.Select(p => p.Cantidad))],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 206, 86, 0.8)',
+                        'rgba(75, 192, 192, 0.8)',
+                        'rgba(153, 102, 255, 0.8)',
+                        'rgba(255, 159, 64, 0.8)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { padding: 15, font: { size: 12 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                var label = context.label || '';
+                                var value = context.parsed || 0;
+                                var total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                var percentage = ((value / total) * 100).toFixed(1);
+                                return label + ': ' + value + ' pausas (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gráfico de tendencia temporal
+        var ctxTendencia = document.getElementById('chartTendencia').getContext('2d');
+        var chartTendencia = new Chart(ctxTendencia, {
+            type: 'line',
+            data: {
+                labels: [@Html.Raw(string.Join(",", Model.PausasPorMes.Select(p => $"'{p.NombreMes}'")))],
+                datasets: [{
+                    label: 'Cantidad de Pausas',
+                    data: [@string.Join(",", Model.PausasPorMes.Select(p => p.Cantidad))],
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'Tiempo Total (horas)',
+                    data: [@string.Join(",", Model.PausasPorMes.Select(p => p.TiempoTotal.ToString("F1")))],
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        function exportarExcel() {
+            alert('Función de exportación a Excel en desarrollo');
+        }
+
+        // Inicializar tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
+
+    <style>
+        @@media print {
+            .btn, canvas {
+                page-break-inside: avoid;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+}

@@ -1,0 +1,124 @@
+@model PepsicoChile.Models.ViewModels.EntregarRepuestoViewModel
+
+@{
+    ViewData["Title"] = "Entregar Repuesto";
+    var repuesto = ViewBag.Repuesto as PepsicoChile.Models.Repuesto;
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Información del Repuesto -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información del Repuesto</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Nombre:</strong> @repuesto?.Nombre</p>
+                            <p><strong>Código:</strong> <code>@repuesto?.CodigoRepuesto</code></p>
+                            @if (!string.IsNullOrEmpty(repuesto?.Categoria))
+                            {
+                                <p><strong>Categoría:</strong> <span class="badge bg-info">@repuesto.Categoria</span></p>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <p>
+                                <strong>Stock Disponible:</strong> 
+                                <span class="badge @(repuesto?.StockActual <= repuesto?.StockMinimo ? "bg-warning text-dark" : "bg-success") fs-5">
+                                    @repuesto?.StockActual unidades
+                                </span>
+                            </p>
+                            <p><strong>Stock Mínimo:</strong> @repuesto?.StockMinimo</p>
+                            @if (!string.IsNullOrEmpty(repuesto?.Ubicacion))
+                            {
+                                <p><strong>Ubicación:</strong> @repuesto.Ubicacion</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario de Entrega -->
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="bi bi-box-arrow-right"></i> Registrar Entrega
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Entregar" method="post">
+                        <input type="hidden" asp-for="RepuestoId" />
+                        
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-4">
+                            <label asp-for="Cantidad" class="form-label">
+                                <i class="bi bi-hash"></i> Cantidad a Entregar *
+                            </label>
+                            <input asp-for="Cantidad" type="number" class="form-control form-control-lg" 
+                                   min="1" max="@repuesto?.StockActual" 
+                                   placeholder="Ingrese la cantidad" />
+                            <span asp-validation-for="Cantidad" class="text-danger"></span>
+                            <small class="text-muted">Stock disponible: @repuesto?.StockActual unidades</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="MecanicoId" class="form-label">
+                                <i class="bi bi-person-gear"></i> Mecánico Receptor *
+                            </label>
+                            <select asp-for="MecanicoId" class="form-select">
+                                <option value="">Seleccione un mecánico</option>
+                                @foreach (var mecanico in Model.MecanicosDisponibles)
+                                {
+                                    <option value="@mecanico.Id">@mecanico.Nombre @mecanico.Apellido</option>
+                                }
+                            </select>
+                            <span asp-validation-for="MecanicoId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="VehiculoId" class="form-label">
+                                <i class="bi bi-truck"></i> Vehículo (Opcional)
+                            </label>
+                            <select asp-for="VehiculoId" class="form-select">
+                                <option value="">Seleccione un vehículo</option>
+                                @foreach (var vehiculo in Model.VehiculosDisponibles)
+                                {
+                                    <option value="@vehiculo.Id">@vehiculo.Patente - @vehiculo.Marca @vehiculo.Modelo</option>
+                                }
+                            </select>
+                            <span asp-validation-for="VehiculoId" class="text-danger"></span>
+                            <small class="text-muted">Solo vehículos en taller</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Motivo" class="form-label">
+                                <i class="bi bi-chat-left-text"></i> Motivo o Comentarios
+                            </label>
+                            <textarea asp-for="Motivo" class="form-control" rows="3" 
+                                      placeholder="Describa el motivo de la entrega o cualquier observación..."></textarea>
+                            <span asp-validation-for="Motivo" class="text-danger"></span>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-box-arrow-right"></i> Registrar Entrega
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

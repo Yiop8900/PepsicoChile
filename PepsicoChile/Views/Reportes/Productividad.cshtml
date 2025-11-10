@@ -1,0 +1,444 @@
+@model PepsicoChile.Models.ViewModels.ProductividadViewModel
+@{
+    ViewData["Title"] = "Productividad";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-4">
+            <i class="bi bi-graph-up"></i> Productividad
+        </h1>
+        <p class="lead">Análisis de rendimiento y eficiencia del taller</p>
+    </div>
+</div>
+
+@if (Model.TotalTareas == 0)
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> No hay datos de tareas para mostrar.
+        <br>
+        <small>Asigne tareas a los mecánicos para ver las estadísticas de productividad.</small>
+    </div>
+}
+else
+{
+    <!-- Resumen de Tareas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Completadas</h6>
+                            <h2 class="card-title mb-0">@Model.TareasCompletadas</h2>
+                            <small>@((Model.TotalTareas > 0 ? (double)Model.TareasCompletadas / Model.TotalTareas * 100 : 0).ToString("F0"))% del total</small>
+                        </div>
+                        <i class="bi bi-check-circle fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">En Proceso</h6>
+                            <h2 class="card-title mb-0">@Model.TareasEnProceso</h2>
+                            <small>@((Model.TotalTareas > 0 ? (double)Model.TareasEnProceso / Model.TotalTareas * 100 : 0).ToString("F0"))% del total</small>
+                        </div>
+                        <i class="bi bi-hourglass-split fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Pendientes</h6>
+                            <h2 class="card-title mb-0">@Model.TareasPendientes</h2>
+                            <small>@((Model.TotalTareas > 0 ? (double)Model.TareasPendientes / Model.TotalTareas * 100 : 0).ToString("F0"))% del total</small>
+                        </div>
+                        <i class="bi bi-clock-history fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Eficiencia Promedio</h6>
+                            <h2 class="card-title mb-0">@Model.EficienciaPromedio.ToString("F1")%</h2>
+                            <small>Tareas completadas</small>
+                        </div>
+                        <i class="bi bi-speedometer2 fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico de Distribución de Tareas -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Distribución de Tareas</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartDistribucion" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-trophy"></i> Estadísticas Destacadas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-12 mb-3">
+                            <i class="bi bi-star-fill text-warning fs-1"></i>
+                            <h4 class="mt-2">@Model.MecanicoMasProductivo</h4>
+                            <p class="text-muted mb-0">Mecánico Más Productivo</p>
+                        </div>
+                        <div class="col-6">
+                            <h3>@Model.TiempoPromedioCompletacion.ToString("F1")h</h3>
+                            <p class="text-muted mb-0">Tiempo Promedio</p>
+                            <small class="text-muted">por tarea</small>
+                        </div>
+                        <div class="col-6">
+                            <h3>@Model.TareasAltaPrioridadCompletadas / @Model.TareasAltaPrioridad</h3>
+                            <p class="text-muted mb-0">Alta Prioridad</p>
+                            <small class="text-muted">completadas</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Productividad por Mecánico -->
+    @if (Model.ProductividadMecanicos.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-people"></i> Productividad por Mecánico</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Mecánico</th>
+                                        <th class="text-center">Completadas</th>
+                                        <th class="text-center">En Proceso</th>
+                                        <th class="text-center">Pendientes</th>
+                                        <th class="text-center">Total</th>
+                                        <th style="width: 30%">Eficiencia</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var mecanico in Model.ProductividadMecanicos)
+                                    {
+                                        var colorEficiencia = mecanico.PorcentajeEficiencia >= 80 ? "success" : 
+                                                             mecanico.PorcentajeEficiencia >= 60 ? "info" : 
+                                                             mecanico.PorcentajeEficiencia >= 40 ? "warning" : "danger";
+                                        
+                                        <tr>
+                                            <td>
+                                                <i class="bi bi-person-circle text-primary"></i>
+                                                <strong>@mecanico.NombreCompleto</strong>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-success">@mecanico.TareasCompletadas</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary">@mecanico.TareasEnProceso</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-warning">@mecanico.TareasPendientes</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <strong>@mecanico.TareasTotal</strong>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="progress flex-grow-1" style="height: 25px;">
+                                                        <div class="progress-bar bg-@colorEficiencia" role="progressbar" 
+                                                             style="width: @mecanico.PorcentajeEficiencia.ToString("F0")%" 
+                                                             aria-valuenow="@mecanico.PorcentajeEficiencia" aria-valuemin="0" aria-valuemax="100">
+                                                            @mecanico.PorcentajeEficiencia.ToString("F0")%
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Tareas por Prioridad -->
+    @if (Model.TareasPorPrioridad.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-bar-chart-steps"></i> Tareas por Prioridad</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Prioridad</th>
+                                        <th class="text-center">Completadas</th>
+                                        <th class="text-center">En Proceso</th>
+                                        <th class="text-center">Pendientes</th>
+                                        <th class="text-center">Total</th>
+                                        <th style="width: 35%">Distribución</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var prioridad in Model.TareasPorPrioridad)
+                                    {
+                                        var colorPrioridad = prioridad.Prioridad == "Alta" ? "danger" : 
+                                                           prioridad.Prioridad == "Media" ? "warning" : "info";
+                                        var iconoPrioridad = prioridad.Prioridad == "Alta" ? "exclamation-circle" : 
+                                                            prioridad.Prioridad == "Media" ? "dash-circle" : "info-circle";
+                                        
+                                        <tr>
+                                            <td>
+                                                <i class="bi bi-@iconoPrioridad text-@colorPrioridad"></i>
+                                                <strong>@prioridad.Prioridad</strong>
+                                            </td>
+                                            <td class="text-center">@prioridad.Completadas</td>
+                                            <td class="text-center">@prioridad.EnProceso</td>
+                                            <td class="text-center">@prioridad.Pendientes</td>
+                                            <td class="text-center"><strong>@prioridad.Total</strong></td>
+                                            <td>
+                                                <div class="progress" style="height: 25px;">
+                                                    @if (prioridad.Total > 0)
+                                                    {
+                                                        var pctCompletadas = (double)prioridad.Completadas / prioridad.Total * 100;
+                                                        var pctEnProceso = (double)prioridad.EnProceso / prioridad.Total * 100;
+                                                        var pctPendientes = (double)prioridad.Pendientes / prioridad.Total * 100;
+                                                        
+                                                        <div class="progress-bar bg-success" style="width: @pctCompletadas.ToString("F0")%"
+                                                             data-bs-toggle="tooltip" title="@prioridad.Completadas completadas">
+                                                            @if (pctCompletadas > 10) { @pctCompletadas.ToString("F0")<text>%</text> }
+                                                        </div>
+                                                        <div class="progress-bar bg-primary" style="width: @pctEnProceso.ToString("F0")%"
+                                                             data-bs-toggle="tooltip" title="@prioridad.EnProceso en proceso">
+                                                            @if (pctEnProceso > 10) { @pctEnProceso.ToString("F0")<text>%</text> }
+                                                        </div>
+                                                        <div class="progress-bar bg-warning" style="width: @pctPendientes.ToString("F0")%"
+                                                             data-bs-toggle="tooltip" title="@prioridad.Pendientes pendientes">
+                                                            @if (pctPendientes > 10) { @pctPendientes.ToString("F0")<text>%</text> }
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Tareas Recientes -->
+    @if (Model.TareasRecientes.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Últimas Tareas Completadas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Tarea</th>
+                                        <th>Vehículo</th>
+                                        <th>Mecánico</th>
+                                        <th>Prioridad</th>
+                                        <th>Fecha Completado</th>
+                                        <th class="text-end">Tiempo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var tarea in Model.TareasRecientes)
+                                    {
+                                        var tiempoTranscurrido = tarea.FechaFinalizacion.HasValue 
+                                            ? (tarea.FechaFinalizacion.Value - tarea.FechaAsignacion).TotalHours 
+                                            : 0;
+                                        
+                                        <tr>
+                                            <td>
+                                                <i class="bi bi-check-circle text-success"></i>
+                                                @tarea.Descripcion
+                                            </td>
+                                            <td>
+                                                @if (tarea.IngresoTaller?.Vehiculo != null)
+                                                {
+                                                    <strong>@tarea.IngresoTaller.Vehiculo.Patente</strong>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (tarea.MecanicoAsignado != null)
+                                                {
+                                                    @tarea.MecanicoAsignado.Nombre @tarea.MecanicoAsignado.Apellido
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (tarea.Prioridad == "Alta")
+                                                {
+                                                    <span class="badge bg-danger">Alta</span>
+                                                }
+                                                else if (tarea.Prioridad == "Media")
+                                                {
+                                                    <span class="badge bg-warning">Media</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-info">Baja</span>
+                                                }
+                                            </td>
+                                            <td>@tarea.FechaFinalizacion?.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td class="text-end">
+                                                <strong>@tiempoTranscurrido.ToString("F1")h</strong>
+                                                <br>
+                                                <small class="text-muted">@((tiempoTranscurrido / 24).ToString("F1")) días</small>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+<!-- Botones de Acción -->
+<div class="row mt-4">
+    <div class="col-12">
+        
+        @if (Model.TotalTareas > 0)
+        {
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="bi bi-printer"></i> Imprimir Reporte
+            </button>
+            
+            <button class="btn btn-success" onclick="exportarExcel()">
+                <i class="bi bi-file-earmark-excel"></i> Exportar a Excel
+            </button>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        // Gráfico de distribución de tareas
+        var ctx = document.getElementById('chartDistribucion').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Completadas', 'En Proceso', 'Pendientes'],
+                datasets: [{
+                    data: [@Model.TareasCompletadas, @Model.TareasEnProceso, @Model.TareasPendientes],
+                    backgroundColor: [
+                        'rgba(25, 135, 84, 0.8)',   // Verde
+                        'rgba(13, 110, 253, 0.8)',  // Azul
+                        'rgba(255, 193, 7, 0.8)'    // Amarillo
+                    ],
+                    borderColor: [
+                        'rgba(25, 135, 84, 1)',
+                        'rgba(13, 110, 253, 1)',
+                        'rgba(255, 193, 7, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 14
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                var label = context.label || '';
+                                var value = context.parsed || 0;
+                                var total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                var percentage = ((value / total) * 100).toFixed(1);
+                                return label + ': ' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        function exportarExcel() {
+            alert('Función de exportación a Excel en desarrollo');
+        }
+
+        // Inicializar tooltips de Bootstrap
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
+
+    <style>
+        @@media print {
+            .btn, #chartDistribucion { 
+                page-break-inside: avoid; 
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+}

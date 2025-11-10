@@ -1,279 +1,1416 @@
-@model DashboardViewModel
+﻿@model DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
+    var esMecanico = Model.RolUsuario == "Mecanico";
+    var esChofer = Model.RolUsuario == "Chofer";
+    var esSupervisor = Model.RolUsuario == "Supervisor" || Model.RolUsuario == "CoordinadorZona";
+    var esAdmin = Model.RolUsuario == "Administrador" || Model.RolUsuario == "JefeTaller";
+    var esAsistenteRepuestos = Model.RolUsuario == "AsistenteRepuestos";
+    var esGuardiaAcceso = Model.RolUsuario == "GuardiaAcceso";
+    var esRecepcionista = Model.RolUsuario == "RecepcionistaVehiculos";
 }
 
+<!-- Header Personalizado -->
 <div class="row mb-4">
     <div class="col-12">
-        <h1 class="display-4">
-  <i class="bi bi-speedometer2"></i> Dashboard PepsiCo Chile
-  </h1>
-        <p class="lead">
-  Bienvenido, <strong>@Model.NombreUsuario</strong> 
-  <span class="badge bg-primary">@Model.RolUsuario</span>
-   <span class="text-muted ms-3"><i class="bi bi-calendar"></i> @DateTime.Now.ToString("dddd, dd MMMM yyyy")</span>
- </p>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="display-5 mb-2">
+                    @if (esAdmin)
+                    {
+                        <i class="bi bi-shield-check text-primary"></i><text> Panel de Control</text>
+                    }
+                    else if (esSupervisor)
+                    {
+                        <i class="bi bi-clipboard-check text-success"></i><text> Panel de Supervisión</text>
+                    }
+                    else if (esMecanico)
+                    {
+                        <i class="bi bi-wrench-adjustable text-warning"></i><text> Mi Área de Trabajo</text>
+                    }
+                    else if (esChofer)
+                    {
+                        <i class="bi bi-truck text-info"></i><text> Mis Vehículos</text>
+                    }
+                    else if (esAsistenteRepuestos)
+                    {
+                        <i class="bi bi-box-seam text-primary"></i><text> Gestión de Repuestos</text>
+                    }
+                    else if (esGuardiaAcceso)
+                    {
+                        <i class="bi bi-door-open text-success"></i><text> Control de Acceso</text>
+                    }
+                    else if (esRecepcionista)
+                    {
+                        <i class="bi bi-clipboard2-check text-info"></i><text> Recepción de Vehículos</text>
+                    }
+                    else
+                    {
+                        <i class="bi bi-speedometer2"></i><text> Dashboard</text>
+                    }
+                </h1>
+                <p class="lead mb-0">
+                    Bienvenido, <strong>@Model.NombreUsuario</strong>
+                    <span class="badge bg-primary ms-2">@Model.RolUsuario</span>
+                </p>
+                <small class="text-muted">
+                    <i class="bi bi-calendar3"></i> @DateTime.Now.ToString("dddd, dd 'de' MMMM 'de' yyyy", new System.Globalization.CultureInfo("es-ES"))
+                    <i class="bi bi-clock ms-3"></i> @DateTime.Now.ToString("HH:mm")
+                </small>
+            </div>
+            @* @if (Model.NotificacionesNoLeidas > 0)
+            {
+                <div>
+                    <a asp-controller="Mecanico" asp-action="Notificaciones" class="btn btn-warning btn-lg">
+                        <i class="bi bi-bell-fill"></i>
+                        <span class="badge bg-danger">@Model.NotificacionesNoLeidas</span>
+                    </a>
+                </div>
+            } *@
+        </div>
     </div>
 </div>
 
-<!-- Tarjetas de Resumen -->
+<!-- Cards de Estadísticas según Rol -->
 <div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-white bg-info mb-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title">Veh�culos en Taller</h5>
-                        <p class="display-4 mb-0">@Model.VehiculosEnTaller</p>
+    @if (esAdmin || esSupervisor)
+    {
+        <!-- Dashboard Administrativo -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Vehículos en Taller
+                            </div>
+                            <div class="h2 mb-0 font-weight-bold text-gray-800">@Model.VehiculosEnTaller</div>
+                            <small class="text-muted">@Model.VehiculosDisponibles disponibles</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-truck fs-1 text-primary opacity-50"></i>
+                        </div>
                     </div>
-                    <i class="bi bi-truck display-1 opacity-50"></i>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-warning mb-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title">Programados</h5>
-                        <p class="display-4 mb-0">@Model.VehiculosProgramados</p>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Programados
+                            </div>
+                            <div class="h2 mb-0 font-weight-bold text-gray-800">@Model.VehiculosProgramados</div>
+                            <small class="text-muted">@Model.IngresosEnProceso in proceso</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-calendar3 fs-1 text-warning opacity-50"></i>
+                        </div>
                     </div>
-                    <i class="bi bi-calendar3 display-1 opacity-50"></i>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-danger mb-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title">Tareas Pendientes</h5>
-                        <p class="display-4 mb-0">@Model.TareasPendientes</p>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-danger shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Tareas Pendientes
+                            </div>
+                            <div class="h2 mb-0 font-weight-bold text-gray-800">@Model.TareasPendientes</div>
+                            <small class="text-muted">@Model.TareasEnProceso en proceso</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-exclamation-triangle fs-1 text-danger opacity-50"></i>
+                        </div>
                     </div>
-                    <i class="bi bi-exclamation-triangle display-1 opacity-50"></i>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-success mb-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title">En Proceso</h5>
-                        <p class="display-4 mb-0">@Model.TareasEnProceso</p>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Pausas Activas
+                            </div>
+                            <div class="h2 mb-0 font-weight-bold text-gray-800">@Model.PausasActivas</div>
+                            <small class="text-muted">requieren atención</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-pause-circle fs-1 text-info opacity-50"></i>
+                        </div>
                     </div>
-                    <i class="bi bi-gear-fill display-1 opacity-50"></i>
                 </div>
             </div>
         </div>
-    </div>
+    }
+    else if (esMecanico)
+    {
+        <!-- Dashboard Mecánico -->
+        <div class="col-md-4 mb-3">
+            <div class="card bg-warning text-white shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Mis Tareas Pendientes</h6>
+                            <h1 class="card-title mb-0 display-4">@Model.TareasPendientes</h1>
+                        </div>
+                        <i class="bi bi-clipboard-x fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card bg-primary text-white shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">En Proceso</h6>
+                            <h1 class="card-title mb-0 display-4">@Model.TareasEnProceso</h1>
+                        </div>
+                        <i class="bi bi-gear-fill fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card bg-success text-white shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Completadas Hoy</h6>
+                            <h1 class="card-title mb-0 display-4">@Model.TareasCompletadasHoy</h1>
+                        </div>
+                        <i class="bi bi-check-circle fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (esChofer)
+    {
+        <!-- Dashboard Chofer -->
+        <div class="col-md-6 mb-3">
+            <div class="card bg-info text-white shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Programados</h6>
+                            <h1 class="card-title mb-0 display-3">@Model.VehiculosProgramados</h1>
+                            <small>mantenimientos programados</small>
+                        </div>
+                        <i class="bi bi-calendar-check fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="card bg-warning text-white shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">En Taller</h6>
+                            <h1 class="card-title mb-0 display-3">@Model.IngresosEnProceso</h1>
+                            <small>vehículos en mantenimiento</small>
+                        </div>
+                        <i class="bi bi-wrench fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (esAsistenteRepuestos)
+    {
+        <!-- Dashboard Asistente de Repuestos -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Repuestos
+                            </div>
+                            <div class="h2 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalRepuestos</div>
+                            <small class="text-muted">@Model.VehiculosDisponibles activos</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-box-seam fs-1 text-primary opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Solicitudes Pendientes
+                            </div>
+                            <div class="h2 mb-0 font-weight-bold text-gray-800">@ViewBag.SolicitudesPendientes</div>
+                            <small class="text-muted">@ViewBag.SolicitudesEnTransito in tránsito</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-cart-plus fs-1 text-warning opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-danger shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Bajo Stock / Sin Stock
+                            </div>
+                            <div class="h2 mb-0 font-weight-bold text-gray-800">@ViewBag.RepuestosBajoStock / @ViewBag.RepuestosSinStock</div>
+                            <small class="text-muted">requieren atención</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-exclamation-triangle fs-1 text-danger opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Solicitudes Entregadas
+                            </div>
+                            <div class="h2 mb-0 font-weight-bold text-gray-800">@ViewBag.SolicitudesEntregadas</div>
+                            <small class="text-muted">listas para instalar</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-hand-thumbs-up fs-1 text-success opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (esGuardiaAcceso)
+    {
+        <!-- Dashboard Guardia de Acceso -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Llegadas Hoy
+                            </div>
+                            <div class="h2 mb-0 font-weight-bold text-gray-800">@ViewBag.LlegadasHoy</div>
+                            <small class="text-muted">Turno: @ViewBag.TurnoActual</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-truck-front fs-1 text-success opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Programados Hoy
+                            </div>
+                            <div class="h2 mb-0 font-weight-bold text-gray-800">@ViewBag.ProgramadosHoy</div>
+                            <small class="text-muted">@ViewBag.EsperandoEntrada esperando</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-calendar-check fs-1 text-warning opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Vehículos en Taller
+                            </div>
+                            <div class="h2 mb-0 font-weight-bold text-gray-800">@ViewBag.VehiculosEnTaller</div>
+                            <small class="text-muted">actualmente</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-gear fs-1 text-info opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Llegadas por Turno
+                            </div>
+                            <div class="d-flex justify-content-between mt-2">
+                                <div class="text-center">
+                                    <i class="bi bi-sunrise text-warning"></i>
+                                    <div><small class="font-weight-bold">@ViewBag.LlegadasManana</small></div>
+                                    <div><small class="text-muted">Mañana</small></div>
+                                </div>
+                                <div class="text-center">
+                                    <i class="bi bi-sun text-primary"></i>
+                                    <div><small class="font-weight-bold">@ViewBag.LlegadasTarde</small></div>
+                                    <div><small class="text-muted">Tarde</small></div>
+                                </div>
+                                <div class="text-center">
+                                    <i class="bi bi-moon text-secondary"></i>
+                                    <div><small class="font-weight-bold">@ViewBag.LlegadasNoche</small></div>
+                                    <div><small class="text-muted">Noche</small></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (esRecepcionista)
+    {
+        <!-- Dashboard Recepcionista de Vehículos -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Vehículos en Taller
+                            </div>
+                            <div class="h2 mb-0 font-weight-bold text-gray-800">@Model.VehiculosEnTaller</div>
+                            <small class="text-muted">@Model.IngresosEnProceso en proceso</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-truck-front fs-1 text-primary opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                OTs Registradas Hoy
+                            </div>
+                            <div class="h2 mb-0 font-weight-bold text-gray-800">@ViewBag.OTsHoy</div>
+                            <small class="text-muted">órdenes de trabajo</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-file-earmark-text fs-1 text-success opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Doc. Pendientes
+                            </div>
+                            <div class="h2 mb-0 font-weight-bold text-gray-800">@ViewBag.DocsPendientes</div>
+                            <small class="text-muted">requieren validación</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-file-earmark-excel fs-1 text-warning opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Imágenes Subidas
+                            </div>
+                            <div class="h2 mb-0 font-weight-bold text-gray-800">@ViewBag.ImagenesHoy</div>
+                            <small class="text-muted">hoy</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-camera fs-1 text-info opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
-<!-- Ingresos Recientes y Tareas Urgentes -->
+<!-- Contenido Principal según Rol -->
 <div class="row">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Ingresos Recientes</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Patente</th>
-                                <th>Modelo</th>
-                                <th>Motivo</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var ingreso in Model.IngresosRecientes)
-                            {
-                                <tr>
-                                    <td><strong>@ingreso.Vehiculo?.Patente</strong></td>
-                                    <td>@ingreso.Vehiculo?.Marca @ingreso.Vehiculo?.Modelo</td>
-                                    <td>@ingreso.MotivoIngreso</td>
-                                    <td>
-                                        @if (ingreso.Estado == "En Proceso")
-                                        {
-                                            <span class="badge bg-warning">@ingreso.Estado</span>
-                                        }
-                                        else if (ingreso.Estado == "Programado")
-                                        {
-                                            <span class="badge bg-info">@ingreso.Estado</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-secondary">@ingreso.Estado</span>
-                                        }
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+    @if (esAdmin || esSupervisor)
+    {
+        <!-- Vista Administrativa/Supervisión -->
+        <div class="col-lg-7 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-clock-history"></i> Ingresos Activos
+                    </h6>
+                    <a asp-controller="Supervisor" asp-action="Agenda" class="btn btn-sm btn-primary">
+                        Ver Todos <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if (Model.IngresosRecientes.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Vehículo</th>
+                                        <th>Chofer</th>
+                                        <th>Mecánico</th>
+                                        <th>Estado</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var ingreso in Model.IngresosRecientes)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@ingreso.Vehiculo?.Patente</strong>
+                                                <br>
+                                                <small class="text-muted">@ingreso.Vehiculo?.Marca</small>
+                                            </td>
+                                            <td>
+                                                @if (ingreso.Chofer != null)
+                                                {
+                                                    @ingreso.Chofer.Nombre @ingreso.Chofer.Apellido
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (ingreso.MecanicoAsignado != null)
+                                                {
+                                                    <span class="badge bg-info">
+                                                        @ingreso.MecanicoAsignado.Nombre
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">Sin asignar</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (ingreso.Estado == "En Proceso")
+                                                {
+                                                    <span class="badge bg-warning">En Proceso</span>
+                                                }
+                                                else if (ingreso.Estado == "Programado")
+                                                {
+                                                    <span class="badge bg-info">Programado</span>
+                                                }
+                                                else if (ingreso.Estado == "Pausado")
+                                                {
+                                                    <span class="badge bg-danger">Pausado</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <a asp-controller="Supervisor" asp-action="GestionarIngreso" asp-route-id="@ingreso.Id" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-gear"></i> Gestionar
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> No hay ingresos activos en este momento.
+                        </div>
+                    }
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-danger text-white">
-                <h5 class="mb-0"><i class="bi bi-exclamation-circle"></i> Tareas Urgentes</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Descripci�n</th>
-                                <th>Prioridad</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+        <div class="col-lg-5 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 bg-danger text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="bi bi-exclamation-triangle"></i> Tareas Urgentes
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.TareasUrgentes.Any())
+                    {
+                        <div class="list-group">
                             @foreach (var tarea in Model.TareasUrgentes)
                             {
-                                <tr>
-                                    <td>@tarea.Descripcion</td>
-                                    <td><span class="badge bg-danger">@tarea.Prioridad</span></td>
-                                    <td>
-                                        @if (tarea.Estado == "En Proceso")
+                                <div class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">@tarea.Descripcion</h6>
+                                        <span class="badge bg-danger">Alta</span>
+                                    </div>
+                                    <p class="mb-1">
+                                        <small>
+                                            <i class="bi bi-truck"></i> @tarea.IngresoTaller?.Vehiculo?.Patente
+                                            @if (tarea.MecanicoAsignado != null)
+                                            {
+                                                <span class="ms-2">
+                                                    <i class="bi bi-person"></i> @tarea.MecanicoAsignado.Nombre
+                                                </span>
+                                            }
+                                        </small>
+                                    </p>
+                                    <small class="text-muted">
+                                        @if (tarea.Estado == "Pendiente")
                                         {
-                                            <span class="badge bg-warning">@tarea.Estado</span>
+                                            <i class="bi bi-clock"></i> <text>Pendiente</text>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-secondary">@tarea.Estado</span>
+                                            <i class="bi bi-gear"></i> <text>En Proceso</text>
                                         }
-                                    </td>
-                                </tr>
+                                    </small>
+                                </div>
                             }
-                        </tbody>
-                    </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i> No hay tareas urgentes pendientes.
+                        </div>
+                    }
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
-<!-- Accesos R�pidos seg�n Rol -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0"><i class="bi bi-lightning-fill"></i> Accesos R�pidos</h5>
+    }
+    else if (esMecanico)
+    {
+        <!-- Vista Mecánico -->
+        <div class="col-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="bi bi-list-task"></i> Mis Tareas Urgentes
+                    </h6>
+                    <a asp-controller="Mecanico" asp-action="MisTareas" class="btn btn-sm btn-light">
+                        Ver Todas <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if (Model.TareasUrgentes.Any())
+                    {
+                        <div class="row">
+                            @foreach (var tarea in Model.TareasUrgentes)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-danger">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h5 class="card-title mb-0">
+                                                    <i class="bi bi-exclamation-circle text-danger"></i>
+                                                    @tarea.Descripcion
+                                                </h5>
+                                                <span class="badge bg-danger">Alta</span>
+                                            </div>
+                                            <p class="card-text">
+                                                <i class="bi bi-truck"></i> <strong>@tarea.IngresoTaller?.Vehiculo?.Patente</strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    <i class="bi bi-calendar"></i> @tarea.FechaAsignacion.ToString("dd/MM/yyyy HH:mm")
+                                                </small>
+                                            </p>
+                                            <div class="d-flex justify-content-between">
+                                                @if (tarea.Estado == "Pendiente")
+                                                {
+                                                    <span class="badge bg-warning">Pendiente</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-info">En Proceso</span>
+                                                }
+                                                <a asp-controller="Mecanico" asp-action="DetalleTarea" asp-route-id="@tarea.Id" 
+                                                   class="btn btn-sm btn-primary">
+                                                    Ver Detalles <i class="bi bi-arrow-right"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i> ¡Excelente! No tienes tareas urgentes pendientes.
+                        </div>
+                    }
+                </div>
             </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    @if (Model.RolUsuario == "Chofer")
+        </div>
+    }
+    else if (esChofer)
+    {
+        <!-- Vista Chofer -->
+        <div class="col-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 bg-info text-white d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="bi bi-truck"></i> Mis Vehículos en Taller
+                    </h6>
+                    <a asp-controller="Chofer" asp-action="RegistrarLlegada" class="btn btn-sm btn-light">
+                        <i class="bi bi-plus-circle"></i> Registrar Llegada
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if (Model.IngresosRecientes.Any())
                     {
-                        <div class="col-md-4 mb-3">
-                            <a asp-controller="Chofer" asp-action="RegistrarLlegada" class="btn btn-lg btn-primary w-100">
-                                <i class="bi bi-box-arrow-in-down display-4 d-block mb-2"></i>
-                                Registrar Llegada
-                            </a>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Vehículo</th>
+                                        <th>Motivo</th>
+                                        <th>Mecánico</th>
+                                        <th>Fecha Programada</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var ingreso in Model.IngresosRecientes)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@ingreso.Vehiculo?.Patente</strong>
+                                                <br>
+                                                <small class="text-muted">@ingreso.Vehiculo?.Marca @ingreso.Vehiculo?.Modelo</small>
+                                            </td>
+                                            <td>@ingreso.MotivoIngreso</td>
+                                            <td>
+                                                @if (ingreso.MecanicoAsignado != null)
+                                                {
+                                                    @ingreso.MecanicoAsignado.Nombre @ingreso.MecanicoAsignado.Apellido
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Por asignar</span>
+                                                }
+                                            </td>
+                                            <td>@ingreso.FechaProgramada.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td>
+                                                @if (ingreso.Estado == "Programado")
+                                                {
+                                                    <span class="badge bg-info">Programado</span>
+                                                }
+                                                else if (ingreso.Estado == "En Proceso")
+                                                {
+                                                    <span class="badge bg-warning">En Proceso</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">@ingreso.Estado</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <a asp-controller="Chofer" asp-action="MisIngresos" class="btn btn-lg btn-info w-100">
-                                <i class="bi bi-list-check display-4 d-block mb-2"></i>
-                                Mis Ingresos
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> No tienes vehículos en taller actualmente.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    else if (esAsistenteRepuestos)
+    {
+        <!-- Vista Asistente de Repuestos -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-warning">
+                        <i class="bi bi-bell-fill"></i> Solicitudes Pendientes (Últimas 24h)
+                    </h6>
+                    <a asp-controller="SolicitudesRepuesto" asp-action="Index" class="btn btn-sm btn-warning">
+                        Ver Todas <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.SolicitudesUrgentes != null && ViewBag.SolicitudesUrgentes.Count > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Repuesto</th>
+                                        <th>Cantidad</th>
+                                        <th>Vehículo</th>
+                                        <th>Solicitado por</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var solicitud in ViewBag.SolicitudesUrgentes)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <small>@solicitud.FechaSolicitud.ToString("dd/MM HH:mm")</small>
+                                            </td>
+                                            <td>
+                                                <strong>@solicitud.Nombre</strong>
+                                                @if (!string.IsNullOrEmpty(solicitud.CodigoRepuesto))
+                                                {
+                                                    <br/><small><code>@solicitud.CodigoRepuesto</code></small>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary">@solicitud.Cantidad</span>
+                                            </td>
+                                            <td>
+                                                @if (solicitud.TareaTaller?.IngresoTaller?.Vehiculo != null)
+                                                {
+                                                    <strong>@solicitud.TareaTaller.IngresoTaller.Vehiculo.Patente</strong>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (solicitud.SolicitadoPor != null)
+                                                {
+                                                    <small>@solicitud.SolicitadoPor.Nombre</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                <a asp-controller="SolicitudesRepuesto" asp-action="Detalle" asp-route-id="@solicitud.Id" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> Ver
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i> No hay solicitudes urgentes en las últimas 24 horas.
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Movimientos Recientes -->
+            <div class="card shadow mt-4">
+                <div class="card-header py-3 bg-info text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="bi bi-arrow-left-right"></i> Últimos Movimientos de Inventario
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.MovimientosRecientes != null && ViewBag.MovimientosRecientes.Count > 0)
+                    {
+                        <div class="list-group">
+                            @foreach (var movimiento in ViewBag.MovimientosRecientes)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">
+                                                @if (movimiento.TipoMovimiento == "Entrada")
+                                                {
+                                                    <i class="bi bi-arrow-down-circle text-success"></i>
+                                                }
+                                                else if (movimiento.TipoMovimiento == "Salida")
+                                                {
+                                                    <i class="bi bi-arrow-up-circle text-danger"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-arrow-left-right text-info"></i>
+                                                }
+                                                @movimiento.Repuesto?.Nombre
+                                            </h6>
+                                            <p class="mb-1">
+                                                <small class="text-muted">
+                                                    Cantidad: <strong>@movimiento.Cantidad</strong> |
+                                                    Stock: @movimiento.StockAnterior → @movimiento.StockNuevo
+                                                    @if (!string.IsNullOrEmpty(movimiento.Motivo))
+                                                    {
+                                                        <br/>@movimiento.Motivo
+                                                    }
+                                                </small>
+                                            </p>
+                                            <small class="text-muted">
+                                                <i class="bi bi-clock"></i> @movimiento.FechaMovimiento.ToString("dd/MM/yyyy HH:mm")
+                                                @if (movimiento.UsuarioRegistro != null)
+                                                {
+                                                    <span class="ms-2">
+                                                        <i class="bi bi-person"></i> @movimiento.UsuarioRegistro.Nombre
+                                                    </span>
+                                                }
+                                            </small>
+                                        </div>
+                                        <span class="badge @(movimiento.TipoMovimiento == "Entrada" ? "bg-success" : movimiento.TipoMovimiento == "Salida" ? "bg-danger" : "bg-info")">
+                                            @movimiento.TipoMovimiento
+                                        </span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> No hay movimientos recientes registrados.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Lateral - Repuestos Críticos -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 bg-danger text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Repuestos Críticos
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.RepuestosCriticos != null && ViewBag.RepuestosCriticos.Count > 0)
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var repuesto in ViewBag.RepuestosCriticos)
+                            {
+                                <div class="list-group-item px-0 @(repuesto.StockActual == 0 ? "border-danger" : "")">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">
+                                                @if (repuesto.StockActual == 0)
+                                                {
+                                                    <i class="bi bi-x-circle-fill text-danger"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-exclamation-circle-fill text-warning"></i>
+                                                }
+                                                @repuesto.Nombre
+                                            </h6>
+                                            <p class="mb-1">
+                                                <small class="text-muted">
+                                                    <code>@repuesto.CodigoRepuesto</code>
+                                                </small>
+                                            </p>
+                                            <div class="d-flex justify-content-between">
+                                                <small>
+                                                    Stock: 
+                                                    <span class="badge @(repuesto.StockActual == 0 ? "bg-danger" : "bg-warning")">
+                                                        @repuesto.StockActual
+                                                    </span>
+                                                </small>
+                                                <small class="text-muted">
+                                                    Mín: @repuesto.StockMinimo
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div class="mt-3">
+                            <a asp-controller="Repuestos" asp-action="Index" class="btn btn-danger w-100">
+                                <i class="bi bi-box-arrow-up-right"></i> Gestionar Inventario
                             </a>
                         </div>
                     }
-                    @if (Model.RolUsuario == "Supervisor")
+                    else
                     {
-                        <div class="col-md-4 mb-3">
-                            <a asp-controller="Supervisor" asp-action="MonitoreoGeneral" class="btn btn-lg btn-primary w-100">
-                                <i class="bi bi-display display-4 d-block mb-2"></i>
-                                Monitoreo General
-                            </a>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <a asp-controller="Reportes" asp-action="VehiculosEstado" class="btn btn-lg btn-info w-100">
-                                <i class="bi bi-truck display-4 d-block mb-2"></i>
-                                Estado Veh�culos
-                            </a>
+                        <div class="alert alert-success mb-0">
+                            <i class="bi bi-check-circle"></i> Todos los repuestos tienen stock adecuado.
                         </div>
                     }
-                    @if (Model.RolUsuario == "Administrador")
-                    {
-                        <div class="col-md-4 mb-3">
-                            <a asp-controller="Account" asp-action="ListarUsuarios" class="btn btn-lg btn-primary w-100">
-                                <i class="bi bi-people display-4 d-block mb-2"></i>
-                                Gesti�n de Usuarios
-                            </a>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <a asp-controller="Account" asp-action="Register" class="btn btn-lg btn-success w-100">
-                                <i class="bi bi-person-plus display-4 d-block mb-2"></i>
-                                Registrar Usuario
-                            </a>
-                        </div>
-                    }
-                    @if (Model.RolUsuario == "Mecanico")
-                    {
-                        <div class="col-md-6 mb-3">
-                            <a asp-controller="Mecanico" asp-action="MisTareas" class="btn btn-lg btn-primary w-100">
-                                <i class="bi bi-list-task display-4 d-block mb-2"></i>
-                                Mis Tareas
-                            </a>
-                        </div>
-                    }
-                    @if (Model.RolUsuario == "JefeTaller")
-                    {
-                        <div class="col-md-3 mb-3">
-                            <a asp-controller="Supervisor" asp-action="ProgramarIngreso" class="btn btn-lg btn-success w-100">
-                                <i class="bi bi-calendar-plus display-4 d-block mb-2"></i>
-                                Programar Ingreso
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a asp-controller="Supervisor" asp-action="Agenda" class="btn btn-lg btn-primary w-100">
-                                <i class="bi bi-calendar3 display-4 d-block mb-2"></i>
-                                Ver Agenda
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a asp-controller="Supervisor" asp-action="MonitoreoGeneral" class="btn btn-lg btn-warning w-100">
-                                <i class="bi bi-display display-4 d-block mb-2"></i>
-                                Monitoreo
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a asp-controller="Reportes" asp-action="TiemposProceso" class="btn btn-lg btn-info w-100">
-                                <i class="bi bi-graph-up display-4 d-block mb-2"></i>
-                                Reportes
-                            </a>
-                        </div>
-                    }
-                    @if (Model.RolUsuario == "Recepcionista")
-                    {
-                        <div class="col-md-6 mb-3">
-                            <a asp-controller="Chofer" asp-action="RegistrarLlegada" class="btn btn-lg btn-primary w-100">
-                                <i class="bi bi-box-arrow-in-down display-4 d-block mb-2"></i>
-                                Registrar Ingreso
-                            </a>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <a asp-controller="Chofer" asp-action="MisIngresos" class="btn btn-lg btn-info w-100">
-                                <i class="bi bi-list-check display-4 d-block mb-2"></i>
-                                Ver Ingresos
-                            </a>
-                        </div>
-                    }
-                    <div class="col-md-@(Model.RolUsuario == "JefeTaller" ? "12" : Model.RolUsuario == "Supervisor" || Model.RolUsuario == "Administrador" ? "4" : "6") mb-3">
-                        <a asp-controller="Vehiculos" asp-action="Index" class="btn btn-lg btn-secondary w-100">
-                            <i class="bi bi-truck-front display-4 d-block mb-2"></i>
-                            Ver Veh�culos
+                </div>
+            </div>
+
+            <!-- Widget de Acciones Rápidas -->
+            <div class="card shadow mt-4">
+                <div class="card-header py-3 bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="bi bi-lightning-fill"></i> Acciones Rápidas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a asp-controller="SolicitudesRepuesto" asp-action="Index" class="btn btn-warning">
+                            <i class="bi bi-cart-plus"></i> Ver Solicitudes
+                        </a>
+                        <a asp-controller="Repuestos" asp-action="Crear" class="btn btn-success">
+                            <i class="bi bi-plus-circle"></i> Nuevo Repuesto
+                        </a>
+                        <a asp-controller="Repuestos" asp-action="Index" class="btn btn-info">
+                            <i class="bi bi-box-seam"></i> Inventario Completo
+                        </a>
+                        <a asp-controller="Repuestos" asp-action="Movimientos" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left-right"></i> Historial Movimientos
                         </a>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    }
+    else if (esGuardiaAcceso)
+    {
+        <!-- Vista Guardia de Acceso -->
+        <div class="col-lg-7 mb-4">
+            <!-- Vehículos Programados Pendientes -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-warning text-white d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="bi bi-clock-history"></i> Vehículos Programados - Esperando Llegada
+                    </h6>
+                    <span class="badge bg-light text-dark">@ViewBag.EsperandoEntrada pendientes</span>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.ProgramadosPendientes != null && ViewBag.ProgramadosPendientes.Count > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Hora Programada</th>
+                                        <th>Vehículo</th>
+                                        <th>Chofer</th>
+                                        <th>Motivo</th>
+                                        <th class="text-center">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var ingreso in ViewBag.ProgramadosPendientes)
+                                    {
+                                        var esRetrasado = ingreso.FechaProgramada < DateTime.Now;
+                                        <tr class="@(esRetrasado ? "table-warning" : "")">
+                                            <td>
+                                                <strong>@ingreso.FechaProgramada.ToString("dd/MM HH:mm")</strong>
+                                                @if (esRetrasado)
+                                                {
+                                                    <br/><small class="text-danger"><i class="bi bi-exclamation-triangle"></i> Retrasado</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                <strong>@ingreso.Vehiculo?.Patente</strong>
+                                                <br/>
+                                                <small class="text-muted">@ingreso.Vehiculo?.Marca @ingreso.Vehiculo?.Modelo</small>
+                                            </td>
+                                            <td>
+                                                @if (ingreso.Chofer != null)
+                                                {
+                                                    <span>@ingreso.Chofer.Nombre @ingreso.Chofer.Apellido</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">@ingreso.MotivoIngreso</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <a asp-controller="Chofer" asp-action="RegistrarLlegada" asp-route-id="@ingreso.Id" 
+                                                   class="btn btn-sm btn-success">
+                                                    <i class="bi bi-box-arrow-in-down"></i> Registrar Llegada
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-success mb-0">
+                            <i class="bi bi-check-circle"></i> No hay vehículos programados pendientes de llegada.
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Últimas Llegadas del Día -->
+            <div class="card shadow">
+                <div class="card-header py-3 bg-success text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="bi bi-check2-circle"></i> Últimas Llegadas Registradas Hoy
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.UltimasLlegadas != null && ViewBag.UltimasLlegadas.Count > 0)
+                    {
+                        <div class="timeline">
+                            @foreach (var ingreso in ViewBag.UltimasLlegadas)
+                            {
+                                <div class="timeline-item mb-3 pb-3 border-bottom">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                <h6 class="mb-0">
+                                                    <strong>@ingreso.Vehiculo?.Patente</strong> 
+                                                    <small class="text-muted">- @ingreso.Vehiculo?.Marca @ingreso.Vehiculo?.Modelo</small>
+                                                </h6>
+                                            </div>
+                                            <div class="ms-4">
+                                                <p class="mb-1">
+                                                    <i class="bi bi-person"></i> <strong>Chofer:</strong> @ingreso.Chofer?.Nombre @ingreso.Chofer?.Apellido
+                                                </p>
+                                                <p class="mb-1">
+                                                    <i class="bi bi-wrench"></i> <strong>Motivo:</strong> @ingreso.MotivoIngreso
+                                                </p>
+                                                @if (ingreso.KilometrajeIngreso != null && ingreso.KilometrajeIngreso > 0)
+                                                {
+                                                    <p class="mb-1">
+                                                        <i class="bi bi-speedometer2"></i> <strong>Kilometraje:</strong> @ingreso.KilometrajeIngreso.ToString("N0") km
+                                                    </p>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="text-muted">
+                                                <i class="bi bi-clock"></i> @ingreso.FechaIngresoReal?.ToString("HH:mm")
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle"></i> No se han registrado llegadas hoy.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Lateral - Acciones Rápidas y Estadísticas -->
+        <div class="col-lg-5 mb-4">
+            <!-- Botón Grande de Registro -->
+            <div class="card shadow mb-4 border-success">
+                <div class="card-body text-center p-4 bg-light">
+                    <i class="bi bi-truck-front-fill text-success" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3 mb-3">Nuevo Ingreso</h4>
+                    <p class="text-muted">Registra la llegada de un vehículo al taller</p>
+                    <a asp-controller="Chofer" asp-action="RegistrarLlegada" class="btn btn-success btn-lg w-100 py-3">
+                        <i class="bi bi-plus-circle-fill"></i> Registrar Llegada de Vehículo
+                    </a>
+                </div>
+            </div>
+
+            <!-- Estadísticas del Día -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="bi bi-bar-chart-fill"></i> Estadísticas del Día
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span><i class="bi bi-check-circle text-success"></i> Llegadas Registradas</span>
+                            <strong class="badge bg-success fs-6">@ViewBag.LlegadasHoy</strong>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: @(ViewBag.ProgramadosHoy > 0 ? (ViewBag.LlegadasHoy * 100 / ViewBag.ProgramadosHoy) : 0)%"></div>
+                        </div>
+                        <small class="text-muted">de @ViewBag.ProgramadosHoy programadas</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span><i class="bi bi-hourglass-split text-warning"></i> Pendientes de Llegada</span>
+                            <strong class="badge bg-warning fs-6">@ViewBag.EsperandoEntrada</strong>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span><i class="bi bi-gear-fill text-info"></i> En Taller Ahora</span>
+                            <strong class="badge bg-info fs-6">@ViewBag.VehiculosEnTaller</strong>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <h6 class="mb-3">Distribución por Turno</h6>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="p-2 rounded" style="background-color: #fff3cd;">
+                                <i class="bi bi-sunrise text-warning d-block" style="font-size: 2rem;"></i>
+                                <strong class="d-block mt-2">@ViewBag.LlegadasManana</strong>
+                                <small class="text-muted">Mañana</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 rounded" style="background-color: #cfe2ff;">
+                                <i class="bi bi-sun text-primary d-block" style="font-size: 2rem;"></i>
+                                <strong class="d-block mt-2">@ViewBag.LlegadasTarde</strong>
+                                <small class="text-muted">Tarde</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 rounded" style="background-color: #e2e3e5;">
+                                <i class="bi bi-moon text-secondary d-block" style="font-size: 2rem;"></i>
+                                <strong class="d-block mt-2">@ViewBag.LlegadasNoche</strong>
+                                <small class="text-muted">Noche</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acciones Adicionales -->
+            <div class="card shadow">
+                <div class="card-header py-3 bg-secondary text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="bi bi-list-check"></i> Acciones Rápidas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a asp-controller="GuardiaAcceso" asp-action="Agenda" class="btn btn-outline-primary">
+                            <i class="bi bi-calendar3"></i> Ver Agenda Completa
+                        </a>
+                        <a asp-controller="Vehiculos" asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-truck-front"></i> Consultar Vehículos
+                        </a>
+                        <a asp-controller="GuardiaAcceso" asp-action="HistorialLlegadas" class="btn btn-outline-info">
+                            <i class="bi bi-clock-history"></i> Historial de Llegadas
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
+
+<!-- Accesos Rápidos según Rol -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3 bg-secondary text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-lightning-fill"></i> Accesos Rápidos
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center g-3">
+                    @if (esAdmin || esSupervisor)
+                    {
+                        <div class="col-md-3">
+                            <a asp-controller="Supervisor" asp-action="ProgramarIngreso" class="btn btn-outline-success btn-lg w-100 p-4">
+                                <i class="bi bi-calendar-plus d-block fs-1 mb-2"></i>
+                                <span>Programar<br/>Ingreso</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-controller="Supervisor" asp-action="Agenda" class="btn btn-outline-primary btn-lg w-100 p-4">
+                                <i class="bi bi-calendar3 d-block fs-1 mb-2"></i>
+                                <span>Ver<br/>Agenda</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-controller="Supervisor" asp-action="MonitoreoGeneral" class="btn btn-outline-warning btn-lg w-100 p-4">
+                                <i class="bi bi-display d-block fs-1 mb-2"></i>
+                                <span>Monitoreo<br/>General</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-controller="Reportes" asp-action="Index" class="btn btn-outline-info btn-lg w-100 p-4">
+                                <i class="bi bi-graph-up d-block fs-1 mb-2"></i>
+                                <span>Ver<br/>Reportes</span>
+                            </a>
+                        </div>
+                    }
+                    
+                    @if (esAdmin)
+                    {
+                        <div class="col-md-6">
+                            <a asp-controller="Account" asp-action="ListarUsuarios" class="btn btn-outline-primary btn-lg w-100 p-4">
+                                <i class="bi bi-people d-block fs-1 mb-2"></i>
+                                <span>Gestión de<br/>Usuarios</span>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a asp-controller="Account" asp-action="Register" class="btn btn-outline-success btn-lg w-100 p-4">
+                                <i class="bi bi-person-plus d-block fs-1 mb-2"></i>
+                                <span>Nuevo<br/>Usuario</span>
+                            </a>
+                        </div>
+                    }
+                    
+                    @if (esMecanico)
+                    {
+                        <div class="col-md-6">
+                            <a asp-controller="Mecanico" asp-action="MisTareas" class="btn btn-outline-primary btn-lg w-100 p-4">
+                                <i class="bi bi-list-task d-block fs-1 mb-2"></i>
+                                <span>Todas Mis<br/>Tareas</span>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a asp-controller="Vehiculos" asp-action="Index" class="btn btn-outline-secondary btn-lg w-100 p-4">
+                                <i class="bi bi-truck-front d-block fs-1 mb-2"></i>
+                                <span>Ver<br/>Vehículos</span>
+                            </a>
+                        </div>
+                    }
+                    
+                    @if (esChofer)
+                    {
+                        <div class="col-md-4">
+                            <a asp-controller="Chofer" asp-action="RegistrarLlegada" class="btn btn-outline-primary btn-lg w-100 p-4">
+                                <i class="bi bi-box-arrow-in-down d-block fs-1 mb-2"></i>
+                                <span>Registrar<br/>Llegada</span>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a asp-controller="Chofer" asp-action="MisIngresos" class="btn btn-outline-info btn-lg w-100 p-4">
+                                <i class="bi bi-list-check d-block fs-1 mb-2"></i>
+                                <span>Mis<br/>Ingresos</span>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a asp-controller="Vehiculos" asp-action="Index" class="btn btn-outline-secondary btn-lg w-100 p-4">
+                                <i class="bi bi-truck-front d-block fs-1 mb-2"></i>
+                                <span>Ver<br/>Vehículos</span>
+                            </a>
+                        </div>
+                    }
+                    
+                    @if (esAsistenteRepuestos)
+                    {
+                        <div class="col-md-3">
+                            <a asp-controller="SolicitudesRepuesto" asp-action="Index" class="btn btn-outline-warning btn-lg w-100 p-4">
+                                <i class="bi bi-cart-plus d-block fs-1 mb-2"></i>
+                                <span>Gestionar<br/>Solicitudes</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-controller="Repuestos" asp-action="Index" class="btn btn-outline-primary btn-lg w-100 p-4">
+                                <i class="bi bi-box-seam d-block fs-1 mb-2"></i>
+                                <span>Inventario<br/>Completo</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-controller="Repuestos" asp-action="Crear" class="btn btn-outline-success btn-lg w-100 p-4">
+                                <i class="bi bi-plus-circle d-block fs-1 mb-2"></i>
+                                <span>Nuevo<br/>Repuesto</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-controller="Repuestos" asp-action="Movimientos" class="btn btn-outline-info btn-lg w-100 p-4">
+                                <i class="bi bi-arrow-left-right d-block fs-1 mb-2"></i>
+                                <span>Historial<br/>Movimientos</span>
+                            </a>
+                        </div>
+                    }
+                    
+                    @if (esGuardiaAcceso)
+                    {
+                        <div class="col-md-4">
+                            <a asp-controller="Chofer" asp-action="RegistrarLlegada" class="btn btn-outline-success btn-lg w-100 p-4">
+                                <i class="bi bi-plus-circle d-block fs-1 mb-2"></i>
+                                <span>Registrar<br/>Llegada</span>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a asp-controller="GuardiaAcceso" asp-action="Agenda" class="btn btn-outline-primary btn-lg w-100 p-4">
+                                <i class="bi bi-calendar3 d-block fs-1 mb-2"></i>
+                                <span>Ver<br/>Agenda</span>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a asp-controller="Vehiculos" asp-action="Index" class="btn btn-outline-secondary btn-lg w-100 p-4">
+                                <i class="bi bi-truck-front d-block fs-1 mb-2"></i>
+                                <span>Consultar<br/>Vehículos</span>
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+</div>
+
+<style>
+    .border-left-primary {
+        border-left: 4px solid #4e73df !important;
+    }
+    .border-left-success {
+        border-left: 4px solid #28a745 !important;
+    }
+    .border-left-warning {
+        border-left: 4px solid #f6c23e !important;
+    }
+    .border-left-danger {
+        border-left: 4px solid #e74a3b !important;
+    }
+    .border-left-info {
+        border-left: 4px solid #36b9cc !important;
+    }
+    .card {
+        border-radius: 0.5rem;
+    }
+    .btn-lg i {
+        font-size: 2.5rem;
+    }
+</style>

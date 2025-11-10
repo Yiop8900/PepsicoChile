@@ -331,6 +331,48 @@
             </div>
         </div>
 
+        <!-- Imágenes del Ingreso -->
+        @{
+            var imagenesIngreso = ViewBag.ImagenesIngreso as List<ImagenIngreso> ?? new List<ImagenIngreso>();
+        }
+        @if (imagenesIngreso.Any())
+        {
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-camera"></i> Imágenes del Ingreso (@imagenesIngreso.Count)
+                    </h5>
+                    <small>Fotos tomadas al momento de la llegada del vehículo</small>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach (var imagen in imagenesIngreso)
+                        {
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card">
+                                    <img src="@imagen.RutaArchivo" class="card-img-top" style="height: 200px; object-fit: cover; cursor: pointer;" 
+                                         onclick="verImagen('@imagen.RutaArchivo', '@imagen.NombreArchivo')" />
+                                    <div class="card-body p-2">
+                                        <small class="text-muted d-block">@imagen.NombreArchivo</small>
+                                        <small class="text-muted">
+                                            <i class="bi bi-calendar"></i> @imagen.FechaSubida.ToString("dd/MM/yyyy HH:mm")
+                                        </small>
+                                        @if (imagen.UsuarioSubida != null)
+                                        {
+                                            <br />
+                                            <small class="text-muted">
+                                                <i class="bi bi-person"></i> @imagen.UsuarioSubida.Nombre
+                                            </small>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
         <!-- Acciones -->
         @if (puedeEditar)
         {

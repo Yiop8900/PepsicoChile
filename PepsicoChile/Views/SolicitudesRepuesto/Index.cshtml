@@ -1,0 +1,336 @@
+﻿@model List<PepsicoChile.Models.SolicitudRepuesto>
+
+@{
+    ViewData["Title"] = "Solicitudes de Repuestos";
+    var usuarioRol = Context.Session.GetString("UsuarioRol");
+}
+
+<div class="container-fluid">
+    <!-- Dashboard de Indicadores -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Total Solicitudes</h6>
+                            <h2 class="mb-0 text-primary">@ViewBag.TotalSolicitudes</h2>
+                        </div>
+                        <div class="text-primary">
+                            <i class="bi bi-cart-plus fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 border-warning">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Solicitadas</h6>
+                    <h2 class="mb-0 text-warning">@ViewBag.Solicitadas</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 border-info">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">En Tránsito</h6>
+                    <h2 class="mb-0 text-info">@ViewBag.EnTransito</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 border-success">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Entregadas</h6>
+                    <h2 class="mb-0 text-success">@ViewBag.Entregadas</h2>
+                </div>
+            </div>
+        </div>
+        
+       @*  <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="mb-3">Acción Rápida</h6>
+                    <a asp-action="Crear" class="btn btn-light w-100">
+                        <i class="bi bi-plus-circle"></i> Nueva Solicitud
+                    </a>
+                </div>
+            </div>
+        </div> *@
+    </div>
+
+    <!-- Filtros -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" id="searchInput" class="form-control" placeholder="Buscar por nombre o código...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select id="estadoFilter" class="form-select">
+                        <option value="">Todos los estados</option>
+                        <option value="Solicitado">Solicitado</option>
+                        <option value="En Tránsito">En Tránsito</option>
+                        <option value="Entregado">Entregado</option>
+                        <option value="Instalado">Instalado</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="date" id="fechaFilter" class="form-control" placeholder="Filtrar por fecha">
+                </div>
+                <div class="col-md-2">
+                    <button id="clearFilters" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-x-circle"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Solicitudes -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+            @* <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-list-ul"></i> Solicitudes de Repuestos</h5>
+                <a asp-action="Crear" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Nueva Solicitud
+                </a>
+            </div> *@
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="solicitudesTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Código</th>
+                            <th>Repuesto</th>
+                            <th>Cantidad</th>
+                            <th>Tarea/Vehículo</th>
+                            <th>Solicitado por</th>
+                            <th>Proveedor</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var solicitud in Model)
+                        {
+                            <tr data-nombre="@solicitud.Nombre.ToLower()" 
+                                data-codigo="@(solicitud.CodigoRepuesto?.ToLower() ?? "")" 
+                                data-estado="@solicitud.Estado"
+                                data-fecha="@solicitud.FechaSolicitud.ToString("yyyy-MM-dd")">
+                                <td>
+                                    <small>
+                                        @solicitud.FechaSolicitud.ToString("dd/MM/yyyy")<br/>
+                                        @solicitud.FechaSolicitud.ToString("HH:mm")
+                                    </small>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(solicitud.CodigoRepuesto))
+                                    {
+                                        <code>@solicitud.CodigoRepuesto</code>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td><strong>@solicitud.Nombre</strong></td>
+                                <td><span class="badge bg-primary fs-6">@solicitud.Cantidad</span></td>
+                                <td>
+                                    @if (solicitud.TareaTaller?.IngresoTaller?.Vehiculo != null)
+                                    {
+                                        <small>
+                                            <i class="bi bi-truck"></i> @solicitud.TareaTaller.IngresoTaller.Vehiculo.Patente<br/>
+                                            <span class="text-muted">@solicitud.TareaTaller.Descripcion</span>
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (solicitud.SolicitadoPor != null)
+                                    {
+                                        <small>@solicitud.SolicitadoPor.Nombre @solicitud.SolicitadoPor.Apellido</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>@(solicitud.Proveedor ?? "-")</td>
+                                <td class="text-center">
+                                    @switch (solicitud.Estado)
+                                    {
+                                        case "Solicitado":
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="bi bi-clock"></i> Solicitado
+                                            </span>
+                                            break;
+                                        case "En Tránsito":
+                                            <span class="badge bg-info">
+                                                <i class="bi bi-truck"></i> En Tránsito
+                                            </span>
+                                            break;
+                                        case "Entregado":
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-hand-thumbs-up"></i> Entregado
+                                            </span>
+                                            break;
+                                        case "Instalado":
+                                            <span class="badge bg-primary">
+                                                <i class="bi bi-check-circle"></i> Instalado
+                                            </span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">@solicitud.Estado</span>
+                                            break;
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a asp-action="Detalle" asp-route-id="@solicitud.Id" 
+                                           class="btn btn-outline-info" 
+                                           title="Ver Detalle">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        
+                                        @if (usuarioRol == "Administrador" || usuarioRol == "JefeTaller" || usuarioRol == "Supervisor")
+                                        {
+                                            @* Roles administrativos pueden cambiar a cualquier estado *@
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-arrow-repeat"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="#" onclick="cambiarEstado(@solicitud.Id, 'Solicitado')">Solicitado</a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="cambiarEstado(@solicitud.Id, 'En Tránsito')">En Tránsito</a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="cambiarEstado(@solicitud.Id, 'Entregado')">Entregado</a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="cambiarEstado(@solicitud.Id, 'Instalado')">Instalado</a></li>
+                                                </ul>
+                                            </div>
+                                        }
+                                        else if (usuarioRol == "AsistenteRepuestos")
+                                        {
+                                            @* AsistenteRepuestos solo hasta Entregado *@
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-arrow-repeat"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="#" onclick="cambiarEstado(@solicitud.Id, 'Solicitado')">Solicitado</a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="cambiarEstado(@solicitud.Id, 'En Tránsito')">En Tránsito</a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="cambiarEstado(@solicitud.Id, 'Entregado')">Entregado</a></li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><span class="dropdown-item-text text-muted"><small>Solo mecánico puede marcar como Instalado</small></span></li>
+                                                </ul>
+                                            </div>
+                                        }
+                                        else if (usuarioRol == "Mecanico" && solicitud.Estado == "Entregado")
+                                        {
+                                            @* Mecánico solo puede marcar como Instalado cuando está Entregado *@
+                                            <button type="button" class="btn btn-outline-success btn-sm" onclick="cambiarEstado(@solicitud.Id, 'Instalado')" title="Marcar como Instalado">
+                                                <i class="bi bi-check-circle"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-inbox fs-1 text-muted"></i>
+            <p class="text-muted mt-3">No hay solicitudes de repuestos registradas.</p>
+            <a asp-action="Crear" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Crear Primera Solicitud
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    @Html.AntiForgeryToken()
+    <script>
+        function cambiarEstado(id, nuevoEstado) {
+            if (confirm(`¿Cambiar estado a '${nuevoEstado}'?`)) {
+                var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                
+                fetch('@Url.Action("CambiarEstado", "SolicitudesRepuesto")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({ id: id, nuevoEstado: nuevoEstado })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert('✓ ' + data.message);
+                        location.reload();
+                    } else {
+                        alert('✗ ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al cambiar el estado: ' + error.message);
+                });
+            }
+        }
+
+        $(document).ready(function() {
+            function filtrarSolicitudes() {
+                var searchText = $('#searchInput').val().toLowerCase();
+                var estadoSeleccionado = $('#estadoFilter').val();
+                var fechaSeleccionada = $('#fechaFilter').val();
+
+                $('#solicitudesTable tbody tr').each(function() {
+                    var $row = $(this);
+                    var nombre = $row.data('nombre');
+                    var codigo = $row.data('codigo');
+                    var estado = $row.data('estado');
+                    var fecha = $row.data('fecha');
+
+                    var mostrarPorTexto = searchText === '' || nombre.includes(searchText) || codigo.includes(searchText);
+                    var mostrarPorEstado = estadoSeleccionado === '' || estado === estadoSeleccionado;
+                    var mostrarPorFecha = fechaSeleccionada === '' || fecha === fechaSeleccionada;
+
+                    if (mostrarPorTexto && mostrarPorEstado && mostrarPorFecha) {
+                        $row.show();
+                    } else {
+                        $row.hide();
+                    }
+                });
+            }
+
+            $('#searchInput, #estadoFilter, #fechaFilter').on('change keyup', filtrarSolicitudes);
+            $('#clearFilters').on('click', function() {
+                $('#searchInput, #estadoFilter, #fechaFilter').val('');
+                filtrarSolicitudes();
+            });
+        });
+    </script>
+}

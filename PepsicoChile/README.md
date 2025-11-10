@@ -85,12 +85,20 @@ Todos los usuarios tienen la contraseña: **123456**
 
 ## ?? Funcionalidades por Rol
 
-### ????? Chofer
+### ???? Chofer
 - Registrar llegada de vehículos
 - Ver mis ingresos históricos
 - Consultar estado de vehículos
 
-### ????? Supervisor
+### ??? Guardia de Acceso
+- Registrar llegadas de vehículos al taller
+- Ver vehículos programados del día
+- Consultar agenda de ingresos
+- Historial de llegadas
+- Estadísticas por turno (mañana/tarde/noche)
+- Control de acceso vehicular
+
+### ???? Supervisor
 - Programar ingresos al taller
 - Gestionar agenda de ingresos
 - Asignar tareas a mecánicos
@@ -98,12 +106,19 @@ Todos los usuarios tienen la contraseña: **123456**
 - Ver monitoreo general
 - Generar reportes
 
-### ????? Mecánico
+### ???? Mecánico
 - Ver mis tareas asignadas
 - Iniciar y finalizar tareas
 - Subir documentos y fotografías
 - Solicitar repuestos
 - Agregar observaciones
+
+### ?? Asistente de Repuestos
+- Gestionar solicitudes de repuestos
+- Control de inventario
+- Registrar movimientos de stock
+- Ver repuestos críticos
+- Gestionar proveedores
 
 ## ?? Estructura del Proyecto
 

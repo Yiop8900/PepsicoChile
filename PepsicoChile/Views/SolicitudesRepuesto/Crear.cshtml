@@ -1,0 +1,112 @@
+@model PepsicoChile.Models.SolicitudRepuesto
+
+@{
+    ViewData["Title"] = "Nueva Solicitud de Repuesto";
+    var tareasDisponibles = ViewBag.TareasDisponibles as List<PepsicoChile.Models.TareaTaller>;
+    var tareaSeleccionada = ViewBag.TareaSeleccionada as int?;
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-cart-plus"></i> Nueva Solicitud de Repuesto
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Crear" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="TareaTallerId" class="form-label">
+                                <i class="bi bi-wrench"></i> Tarea Asociada *
+                            </label>
+                            <select asp-for="TareaTallerId" class="form-select">
+                                <option value="">Seleccione una tarea</option>
+                                @if (tareasDisponibles != null)
+                                {
+                                    @foreach (var tarea in tareasDisponibles)
+                                    {
+                                        <option value="@tarea.Id" selected="@(tareaSeleccionada == tarea.Id)">
+                                            @tarea.IngresoTaller?.Vehiculo?.Patente - @tarea.Descripcion
+                                        </option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="TareaTallerId" class="text-danger"></span>
+                            <small class="text-muted">Seleccione la tarea para la cual necesita el repuesto</small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label asp-for="Nombre" class="form-label">
+                                        <i class="bi bi-tag"></i> Nombre del Repuesto *
+                                    </label>
+                                    <input asp-for="Nombre" class="form-control" placeholder="Ej: Filtro de aceite" />
+                                    <span asp-validation-for="Nombre" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="Cantidad" class="form-label">
+                                        <i class="bi bi-hash"></i> Cantidad *
+                                    </label>
+                                    <input asp-for="Cantidad" type="number" min="1" class="form-control" />
+                                    <span asp-validation-for="Cantidad" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="CodigoRepuesto" class="form-label">
+                                        <i class="bi bi-upc-scan"></i> Código (Opcional)
+                                    </label>
+                                    <input asp-for="CodigoRepuesto" class="form-control" placeholder="Ej: MOT-0001" />
+                                    <span asp-validation-for="CodigoRepuesto" class="text-danger"></span>
+                                    <small class="text-muted">Si conoce el código del repuesto en inventario</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Proveedor" class="form-label">
+                                        <i class="bi bi-building"></i> Proveedor/Marca
+                                    </label>
+                                    <input asp-for="Proveedor" class="form-control" placeholder="Nombre del proveedor" />
+                                    <span asp-validation-for="Proveedor" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Nota:</strong> La solicitud será enviada al equipo de gestión de repuestos para su procesamiento. 
+                            Recibirás una notificación cuando el estado de la solicitud cambie.
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Crear Solicitud
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

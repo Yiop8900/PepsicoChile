@@ -1,0 +1,325 @@
+@model PepsicoChile.Models.ViewModels.GestionRepuestosViewModel
+
+@{
+    ViewData["Title"] = "Gestión de Repuestos";
+}
+
+<div class="container-fluid">
+    <!-- Dashboard de Indicadores -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Total Repuestos</h6>
+                            <h2 class="mb-0 text-primary">@Model.TotalRepuestos</h2>
+                        </div>
+                        <div class="text-primary">
+                            <i class="bi bi-boxes fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Stock Bajo</h6>
+                            <h2 class="mb-0 text-warning">@Model.RepuestosBajoStockCount</h2>
+                        </div>
+                        <div class="text-warning">
+                            <i class="bi bi-exclamation-triangle fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Valor Inventario</h6>
+                            <h2 class="mb-0 text-success">$@Model.ValorTotalInventario.ToString("N0")</h2>
+                        </div>
+                        <div class="text-success">
+                            <i class="bi bi-currency-dollar fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="mb-3">Acciones Rápidas</h6>
+                    <div class="d-grid gap-2">
+                        <a asp-action="Agregar" class="btn btn-light btn-sm">
+                            <i class="bi bi-plus-circle"></i> Agregar Repuesto
+                        </a>
+                        <a asp-action="Historial" class="btn btn-outline-light btn-sm">
+                            <i class="bi bi-clock-history"></i> Ver Historial
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Alertas de Stock Bajo *@
+    @if (Model.RepuestosBajoStockCount > 0)
+    {
+        <div class="alert alert-warning alert-dismissible fade show shadow-sm mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>Atención:</strong> Hay @Model.RepuestosBajoStockCount repuesto(s) con stock bajo o crítico.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Filtros y Búsqueda -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" id="searchInput" class="form-control" placeholder="Buscar por nombre o código...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select id="categoriaFilter" class="form-select">
+                        <option value="">Todas las categorías</option>
+                        @foreach (var categoria in Model.Repuestos.Select(r => r.Categoria).Distinct().Where(c => !string.IsNullOrEmpty(c)))
+                        {
+                            <option value="@categoria">@categoria</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="stockFilter" class="form-select">
+                        <option value="">Todos los stocks</option>
+                        <option value="bajo">Stock Bajo</option>
+                        <option value="normal">Stock Normal</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button id="clearFilters" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-x-circle"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Repuestos -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-list-ul"></i> Listado de Repuestos</h5>
+                <a asp-action="Agregar" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Agregar Repuesto
+                </a>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="repuestosTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Stock Actual</th>
+                            <th>Stock Mínimo</th>
+                            <th>Ubicación</th>
+                            <th>Precio Unit.</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var repuesto in Model.Repuestos)
+                        {
+                            var stockBajo = repuesto.StockActual <= repuesto.StockMinimo;
+                            var stockCritico = repuesto.StockActual < (repuesto.StockMinimo * 0.5);
+                            
+                            <tr data-nombre="@repuesto.Nombre.ToLower()" 
+                                data-codigo="@repuesto.CodigoRepuesto.ToLower()" 
+                                data-categoria="@(repuesto.Categoria ?? "")"
+                                data-stock-bajo="@(stockBajo ? "true" : "false")">
+                                <td><code>@repuesto.CodigoRepuesto</code></td>
+                                <td>
+                                    <strong>@repuesto.Nombre</strong>
+                                    @if (!string.IsNullOrEmpty(repuesto.Descripcion))
+                                    {
+                                        <br /><small class="text-muted">@repuesto.Descripcion</small>
+                                    }
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(repuesto.Categoria))
+                                    {
+                                        <span class="badge bg-info">@repuesto.Categoria</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge @(stockCritico ? "bg-danger" : stockBajo ? "bg-warning" : "bg-success") fs-6">
+                                        @repuesto.StockActual
+                                    </span>
+                                </td>
+                                <td>@repuesto.StockMinimo</td>
+                                <td>@(repuesto.Ubicacion ?? "-")</td>
+                                <td>
+                                    @if (repuesto.PrecioUnitario.HasValue)
+                                    {
+                                        <span>$@repuesto.PrecioUnitario.Value.ToString("N0")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (stockCritico)
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-exclamation-triangle-fill"></i> Crítico
+                                        </span>
+                                    }
+                                    else if (stockBajo)
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-exclamation-circle-fill"></i> Bajo
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle-fill"></i> Normal
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a asp-action="Detalle" asp-route-id="@repuesto.Id" 
+                                           class="btn btn-outline-info" 
+                                           title="Ver Detalle">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Entregar" asp-route-id="@repuesto.Id" 
+                                           class="btn btn-outline-warning" 
+                                           title="Entregar">
+                                            <i class="bi bi-box-arrow-right"></i>
+                                        </a>
+                                        <a asp-action="RecibirStock" asp-route-id="@repuesto.Id" 
+                                           class="btn btn-outline-success" 
+                                           title="Recibir Stock">
+                                            <i class="bi bi-box-arrow-in-down"></i>
+                                        </a>
+                                        <a asp-action="Editar" asp-route-id="@repuesto.Id" 
+                                           class="btn btn-outline-primary" 
+                                           title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.Repuestos.Any())
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-inbox fs-1 text-muted"></i>
+            <p class="text-muted mt-3">No hay repuestos registrados en el sistema.</p>
+            <a asp-action="Agregar" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Agregar Primer Repuesto
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Función de filtrado
+            function filtrarRepuestos() {
+                var searchText = $('#searchInput').val().toLowerCase();
+                var categoriaSeleccionada = $('#categoriaFilter').val().toLowerCase();
+                var stockSeleccionado = $('#stockFilter').val();
+
+                $('#repuestosTable tbody tr').each(function() {
+                    var $row = $(this);
+                    var nombre = $row.data('nombre');
+                    var codigo = $row.data('codigo');
+                    var categoria = $row.data('categoria').toLowerCase();
+                    var stockBajo = $row.data('stock-bajo') === true || $row.data('stock-bajo') === 'true';
+
+                    var mostrarPorTexto = searchText === '' || 
+                                         nombre.includes(searchText) || 
+                                         codigo.includes(searchText);
+                    
+                    var mostrarPorCategoria = categoriaSeleccionada === '' || 
+                                             categoria === categoriaSeleccionada;
+                    
+                    var mostrarPorStock = true;
+                    if (stockSeleccionado === 'bajo') {
+                        mostrarPorStock = stockBajo;
+                    } else if (stockSeleccionado === 'normal') {
+                        mostrarPorStock = !stockBajo;
+                    }
+
+                    if (mostrarPorTexto && mostrarPorCategoria && mostrarPorStock) {
+                        $row.show();
+                    } else {
+                        $row.hide();
+                    }
+                });
+            }
+
+            // Event listeners
+            $('#searchInput').on('keyup', filtrarRepuestos);
+            $('#categoriaFilter').on('change', filtrarRepuestos);
+            $('#stockFilter').on('change', filtrarRepuestos);
+
+            $('#clearFilters').on('click', function() {
+                $('#searchInput').val('');
+                $('#categoriaFilter').val('');
+                $('#stockFilter').val('');
+                filtrarRepuestos();
+            });
+        });
+    </script>
+}
+
+<style>
+    .card {
+        border-radius: 10px;
+        transition: transform 0.2s;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .btn-group-sm > .btn {
+        padding: 0.25rem 0.5rem;
+    }
+</style>

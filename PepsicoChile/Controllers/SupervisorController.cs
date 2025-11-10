@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
-using PepsicoChile.Models;
-using PepsicoChile.Models.ViewModels;
-using PepsicoChile.Filters;
 using Microsoft.EntityFrameworkCore;
 using PepsicoChile.Data;
+using PepsicoChile.Filters;
+using PepsicoChile.Models;
+using PepsicoChile.Models.ViewModels;
 using PepsicoChile.Services;
+using System.Threading;
 
 namespace PepsicoChile.Controllers
 {
@@ -30,8 +31,8 @@ namespace PepsicoChile.Controllers
         {
             // Obtener ingresos activos (programados, en proceso, pausados)
             var ingresosActivos = await _context.IngresosTaller
-                       .Include(i => i.Vehiculo)
-                       .Include(i => i.Chofer)
+                .Include(i => i.Vehiculo)
+                .Include(i => i.Chofer)
                 .Include(i => i.Supervisor)
                 .Include(i => i.MecanicoAsignado)
                 .Where(i => i.Estado == "Programado" || i.Estado == "En Proceso" || i.Estado == "Pausado")
@@ -39,18 +40,18 @@ namespace PepsicoChile.Controllers
                 .ToListAsync();
 
             // Obtener ingresos completados recientes (últimos 30 días)
+            // Ahora solo se consideran "completados" cuando tienen FechaSalidaReal (salieron de la instalación)
             var fechaLimite = DateTime.Now.AddDays(-30);
             var ingresosCompletados = await _context.IngresosTaller
-               .Include(i => i.Vehiculo)
-            .Include(i => i.Chofer)
-           .Include(i => i.Supervisor)
+                .Include(i => i.Vehiculo)
+                .Include(i => i.Chofer)
+                .Include(i => i.Supervisor)
                 .Include(i => i.MecanicoAsignado)
-          .Where(i => (i.Estado == "Completado" || i.Estado == "Cancelado")
-          && i.FechaSalidaReal.HasValue
-            && i.FechaSalidaReal.Value >= fechaLimite)
-          .OrderByDescending(i => i.FechaSalidaReal)
-                    .Take(20)
-         .ToListAsync();
+                .Where(i => i.FechaSalidaReal.HasValue 
+                    && i.FechaSalidaReal.Value >= fechaLimite)
+                .OrderByDescending(i => i.FechaSalidaReal)
+                .Take(20)
+                .ToListAsync();
 
             var model = new AgendaViewModel
             {
@@ -67,21 +68,21 @@ namespace PepsicoChile.Controllers
             var model = new ProgramarIngresoViewModel
             {
                 VehiculosDisponibles = await _context.Vehiculos
-                 .Where(v => v.Estado == "Disponible" || v.Estado == "En Ruta")
-                        .OrderBy(v => v.Patente)
-                     .ToListAsync(),
+                    .Where(v => v.Estado == "Disponible" || v.Estado == "En Ruta")
+                    .OrderBy(v => v.Patente)
+                    .ToListAsync(),
                 ChofersDisponibles = await _context.Usuarios
-          .Where(u => u.Rol == "Chofer" && u.Activo)
-  .OrderBy(u => u.Nombre)
-       .ToListAsync(),
+                    .Where(u => u.Rol == "Chofer" && u.Activo)
+                    .OrderBy(u => u.Nombre)
+                    .ToListAsync(),
 
                 MecanicosDisponibles = await _context.Usuarios
-     .Where(u => u.Rol == "Mecanico" && u.Activo)
-   .OrderBy(u => u.Nombre)
-         .ToListAsync(),
+                    .Where(u => u.Rol == "Mecanico" && u.Activo)
+                    .OrderBy(u => u.Nombre)
+                    .ToListAsync(),
 
-                FechaProgramada = DateTime.Now.AddDays(1),
-                FechaSalidaEstimada = DateTime.Now.AddDays(2)
+                FechaProgramada = DateTime.Now.AddHours(3),
+                FechaSalidaEstimada = DateTime.Now.AddDays(1)
             };
 
             return View(model);
@@ -91,6 +92,12 @@ namespace PepsicoChile.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ProgramarIngreso(ProgramarIngresoViewModel model)
         {
+            // Validar que la fecha programada sea al menos 3 horas después de ahora
+            if (model.FechaProgramada < DateTime.Now.AddHours(3))
+            {
+                ModelState.AddModelError("FechaProgramada", "La fecha programada debe ser al menos 3 horas después de la hora actual");
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -125,7 +132,89 @@ namespace PepsicoChile.Controllers
 
                     await _context.SaveChangesAsync();
 
-                    TempData["Mensaje"] = $"Ingreso programado exitosamente para el {model.FechaProgramada:dd/MM/yyyy HH:mm}";
+                    // Obtener información completa para las notificaciones
+                    ingreso = await _context.IngresosTaller
+                        .Include(i => i.Vehiculo)
+                        .Include(i => i.Chofer)
+                        .FirstOrDefaultAsync(i => i.Id == ingreso.Id);
+
+                    if (ingreso != null)
+                    {
+                        // 1. NOTIFICAR AL GUARDIA DE ACCESO (importante para control de ingreso)
+                        var guardias = await _context.Usuarios
+                            .Where(u => u.Rol == "GuardiaAcceso" && u.Activo)
+                            .ToListAsync();
+
+                        foreach (var guardia in guardias)
+                        {
+                            var mensajeGuardia = $"*Nuevo Ingreso Programado*\n\n" +
+                                $"Vehículo: *{ingreso.Vehiculo?.Patente}* - {ingreso.Vehiculo?.Marca} {ingreso.Vehiculo?.Modelo}\n" +
+                                $"Chofer: {ingreso.Chofer?.Nombre} {ingreso.Chofer?.Apellido}\n" +
+                                $"Fecha programada: {model.FechaProgramada:dd/MM/yyyy HH:mm}\n" +
+                                $"Motivo: {model.MotivoIngreso}\n\n" +
+                                $"Esté preparado para registrar la llegada del vehículo.";
+
+                            await _notificacionService.CrearNotificacion(
+                                usuarioId: guardia.Id,
+                                titulo: "Nuevo Ingreso Programado",
+                                mensaje: mensajeGuardia,
+                                tipo: "Info",
+                                ingresoId: ingreso.Id,
+                                vehiculoId: ingreso.VehiculoId,
+                                urlAccion: $"/GuardiaAcceso/Agenda"
+                            );
+
+                            Console.WriteLine($"[NOTIFICACION] Notificación enviada al guardia: {guardia.Nombre} {guardia.Apellido}");
+                        }
+
+                        // 2. NOTIFICAR AL CHOFER
+                        var mensajeChofer = $"*Ingreso al Taller Programado*\n\n" +
+                            $"Su vehículo *{ingreso.Vehiculo?.Patente}* ha sido programado para ingreso al taller.\n\n" +
+                            $"Fecha: {model.FechaProgramada:dd/MM/yyyy HH:mm}\n" +
+                            $"Motivo: {model.MotivoIngreso}\n" +
+                            $"Lugar: Taller PepsiCo Chile\n\n" +
+                            $"Por favor, llegue puntualmente a la hora programada.";
+
+                        await _notificacionService.CrearNotificacion(
+                            usuarioId: ingreso.ChoferId,
+                            titulo: "Ingreso al Taller Programado",
+                            mensaje: mensajeChofer,
+                            tipo: "Info",
+                            ingresoId: ingreso.Id,
+                            vehiculoId: ingreso.VehiculoId,
+                            urlAccion: $"/Chofer/DetalleIngreso/{ingreso.Id}"
+                        );
+
+                        // 3. NOTIFICAR AL MECÁNICO ASIGNADO (si hay uno)
+                        if (model.MecanicoAsignadoId.HasValue)
+                        {
+                            var mecanico = await _context.Usuarios.FindAsync(model.MecanicoAsignadoId.Value);
+                            if (mecanico != null)
+                            {
+                                var mensajeMecanico = $"*Nuevo Trabajo Asignado*\n\n" +
+                                    $"Se te ha asignado un nuevo trabajo:\n" +
+                                    $"Vehículo: *{ingreso.Vehiculo?.Patente}*\n" +
+                                    $"Fecha programada: {model.FechaProgramada:dd/MM/yyyy HH:mm}\n" +
+                                    $"Motivo: {model.MotivoIngreso}\n" +
+                                    $"Requiere repuestos: {(model.RequiereRepuestos ? "Sí" : "No")}\n\n" +
+                                    $"Prepárate para recibir el vehículo.";
+
+                                await _notificacionService.CrearNotificacion(
+                                    usuarioId: mecanico.Id,
+                                    titulo: "Nuevo Trabajo Asignado",
+                                    mensaje: mensajeMecanico,
+                                    tipo: "Tarea",
+                                    ingresoId: ingreso.Id,
+                                    vehiculoId: ingreso.VehiculoId,
+                                    urlAccion: $"/Mecanico/MisTareas"
+                                );
+
+                                Console.WriteLine($"[NOTIFICACION] Notificación enviada al mecánico: {mecanico.Nombre} {mecanico.Apellido}");
+                            }
+                        }
+                    }
+
+                    TempData["Mensaje"] = $"Ingreso programado exitosamente para el {model.FechaProgramada:dd/MM/yyyy HH:mm}. Se han notificado a todos los involucrados.";
                     return RedirectToAction("Agenda");
                 }
                 catch (Exception ex)
@@ -135,48 +224,47 @@ namespace PepsicoChile.Controllers
             }
 
             model.VehiculosDisponibles = await _context.Vehiculos
-  .Where(v => v.Estado == "Disponible" || v.Estado == "En Ruta")
-     .OrderBy(v => v.Patente)
-  .ToListAsync();
+                .Where(v => v.Estado == "Disponible" || v.Estado == "En Ruta")
+                .OrderBy(v => v.Patente)
+                .ToListAsync();
 
             model.ChofersDisponibles = await _context.Usuarios
-            .Where(u => u.Rol == "Chofer" && u.Activo)
-         .OrderBy(u => u.Nombre)
-          .ToListAsync();
+                .Where(u => u.Rol == "Chofer" && u.Activo)
+                .OrderBy(u => u.Nombre)
+                .ToListAsync();
 
             model.MecanicosDisponibles = await _context.Usuarios
-            .Where(u => u.Rol == "Mecanico" && u.Activo)
-           .OrderBy(u => u.Nombre)
-          .ToListAsync();
+                .Where(u => u.Rol == "Mecanico" && u.Activo)
+                .OrderBy(u => u.Nombre)
+                .ToListAsync();
 
             return View(model);
         }
 
         public async Task<IActionResult> MonitoreoGeneral()
         {
-            // Obtener ingresos activos
+            // Obtener ingresos activos (incluye "Completado" porque aún no han salido de la instalación)
             var ingresosActivos = await _context.IngresosTaller
-              .Include(i => i.Vehiculo)
-              .Include(i => i.Chofer)
-              .Include(i => i.Supervisor)
-              .Include(i => i.MecanicoAsignado)
-              .Where(i => i.Estado != "Completado" && i.Estado != "Cancelado")
-              .OrderByDescending(i => i.FechaProgramada)
-              .ToListAsync();
+                .Include(i => i.Vehiculo)
+                .Include(i => i.Chofer)
+                .Include(i => i.Supervisor)
+                .Include(i => i.MecanicoAsignado)
+                .Where(i => !i.FechaSalidaReal.HasValue && i.Estado != "Cancelado")
+                .OrderByDescending(i => i.FechaProgramada)
+                .ToListAsync();
 
-            // Obtener ingresos completados recientes (últimos 15 días)
+            // Obtener ingresos que ya salieron (últimos 15 días)
             var fechaLimite = DateTime.Now.AddDays(-15);
             var ingresosCompletados = await _context.IngresosTaller
-                 .Include(i => i.Vehiculo)
-                 .Include(i => i.Chofer)
-                 .Include(i => i.Supervisor)
-                 .Include(i => i.MecanicoAsignado)
-                 .Where(i => (i.Estado == "Completado" || i.Estado == "Cancelado")
-                    && i.FechaSalidaReal.HasValue
+                .Include(i => i.Vehiculo)
+                .Include(i => i.Chofer)
+                .Include(i => i.Supervisor)
+                .Include(i => i.MecanicoAsignado)
+                .Where(i => i.FechaSalidaReal.HasValue 
                     && i.FechaSalidaReal.Value >= fechaLimite)
-                    .OrderByDescending(i => i.FechaSalidaReal)
-                    .Take(15)
-                    .ToListAsync();
+                .OrderByDescending(i => i.FechaSalidaReal)
+                .Take(15)
+                .ToListAsync();
 
             var model = new MonitoreoGeneralViewModel
             {
@@ -191,11 +279,11 @@ namespace PepsicoChile.Controllers
         public async Task<IActionResult> GestionarIngreso(int id)
         {
             var ingreso = await _context.IngresosTaller
-            .Include(i => i.Vehiculo)
-                  .Include(i => i.Chofer)
-           .Include(i => i.Supervisor)
-            .Include(i => i.MecanicoAsignado)
-            .FirstOrDefaultAsync(i => i.Id == id);
+                .Include(i => i.Vehiculo)
+                .Include(i => i.Chofer)
+                .Include(i => i.Supervisor)
+                .Include(i => i.MecanicoAsignado)
+                .FirstOrDefaultAsync(i => i.Id == id);
 
             if (ingreso == null)
             {
@@ -203,26 +291,33 @@ namespace PepsicoChile.Controllers
             }
 
             var tareas = await _context.TareasTaller
-                    .Include(t => t.MecanicoAsignado)
-              .Where(t => t.IngresoTallerId == id)
+                .Include(t => t.MecanicoAsignado)
+                .Where(t => t.IngresoTallerId == id)
                 .OrderByDescending(t => t.FechaAsignacion)
-                   .ToListAsync();
+                .ToListAsync();
 
             var pausas = await _context.Pausas
-                  .Where(p => p.IngresoTallerId == id)
-                            .OrderByDescending(p => p.FechaInicio)
-               .ToListAsync();
+                .Where(p => p.IngresoTallerId == id)
+                .OrderByDescending(p => p.FechaInicio)
+                .ToListAsync();
 
             var documentos = await _context.Documentos
                 .Include(d => d.UsuarioSubida)
-                 .Where(d => d.IngresoTallerId == id)
-                   .OrderByDescending(d => d.FechaSubida)
-                  .ToListAsync();
+                .Where(d => d.IngresoTallerId == id)
+                .OrderByDescending(d => d.FechaSubida)
+                .ToListAsync();
+
+            // Obtener imágenes del ingreso subidas por el guardia
+            var imagenesIngreso = await _context.ImagenesIngreso
+                .Include(i => i.UsuarioSubida)
+                .Where(i => i.IngresoTallerId == id)
+                .OrderByDescending(i => i.FechaSubida)
+                .ToListAsync();
 
             var mecanicos = await _context.Usuarios
                 .Where(u => u.Rol == "Mecanico" && u.Activo)
-                 .OrderBy(u => u.Nombre)
-                 .ToListAsync();
+                .OrderBy(u => u.Nombre)
+                .ToListAsync();
 
             var model = new GestionarIngresoViewModel
             {
@@ -233,6 +328,8 @@ namespace PepsicoChile.Controllers
                 MecanicosDisponibles = mecanicos,
                 PuedeEditarTareas = ingreso.Estado != "Completado" && ingreso.Estado != "Cancelado"
             };
+
+            ViewBag.ImagenesIngreso = imagenesIngreso;
 
             return View(model);
         }
@@ -401,8 +498,9 @@ namespace PepsicoChile.Controllers
         public async Task<IActionResult> FinalizarIngreso(int id, GestionarIngresoViewModel model)
         {
             var ingreso = await _context.IngresosTaller
-        .Include(i => i.Vehiculo)
-       .FirstOrDefaultAsync(i => i.Id == id);
+                .Include(i => i.Vehiculo)
+                .Include(i => i.Chofer)
+                .FirstOrDefaultAsync(i => i.Id == id);
 
             if (ingreso == null)
             {
@@ -411,8 +509,8 @@ namespace PepsicoChile.Controllers
 
             // Verificar que todas las tareas estén completadas
             var tareasIncompletas = await _context.TareasTaller
-  .Where(t => t.IngresoTallerId == id && t.Estado != "Completada")
-.CountAsync();
+                .Where(t => t.IngresoTallerId == id && t.Estado != "Completada")
+                .CountAsync();
 
             if (tareasIncompletas > 0)
             {
@@ -420,7 +518,8 @@ namespace PepsicoChile.Controllers
                 return RedirectToAction("GestionarIngreso", new { id });
             }
 
-            ingreso.FechaSalidaReal = DateTime.Now;
+            // IMPORTANTE: Solo cambiar el estado a Completado
+            // NO establecer FechaSalidaReal aquí - eso lo hace el guardia cuando el vehículo sale físicamente
             ingreso.Estado = "Completado";
 
             if (!string.IsNullOrEmpty(model.ObservacionesFinales))
@@ -428,20 +527,23 @@ namespace PepsicoChile.Controllers
                 ingreso.DescripcionProblema += "\n\nObservaciones finales: " + model.ObservacionesFinales;
             }
 
-            if (ingreso.Vehiculo != null)
-            {
-                ingreso.Vehiculo.Estado = "Disponible";
-                ingreso.Vehiculo.FechaActualizacion = DateTime.Now;
-
-                if (model.KilometrajeSalida.HasValue)
-                {
-                    ingreso.Vehiculo.KilometrajeActual = model.KilometrajeSalida.Value;
-                }
-            }
+            // El vehículo sigue en taller hasta que el guardia registre la salida
+            // No cambiamos el estado del vehículo aquí
 
             await _context.SaveChangesAsync();
 
-            TempData["Mensaje"] = "Ingreso finalizado exitosamente";
+            // Notificar al chofer que el trabajo está completo pero el vehículo aún está en instalación
+            await _notificacionService.CrearNotificacion(
+                usuarioId: ingreso.ChoferId,
+                titulo: "Trabajo completado",
+                mensaje: $"El trabajo en su vehículo {ingreso.Vehiculo?.Patente} ha sido completado. El vehículo está listo, espere a que el guardia registre la salida.",
+                tipo: "Info",
+                ingresoId: ingreso.Id,
+                vehiculoId: ingreso.VehiculoId,
+                urlAccion: $"/Chofer/DetalleIngreso/{ingreso.Id}"
+            );
+
+            TempData["Mensaje"] = "Trabajo finalizado exitosamente. El vehículo permanece en instalación hasta que el guardia registre la salida.";
             return RedirectToAction("MonitoreoGeneral");
         }
 
@@ -474,8 +576,8 @@ namespace PepsicoChile.Controllers
         public async Task<IActionResult> CancelarIngreso(int id, string motivo)
         {
             var ingreso = await _context.IngresosTaller
-    .Include(i => i.Vehiculo)
-                 .FirstOrDefaultAsync(i => i.Id == id);
+                .Include(i => i.Vehiculo)
+                .FirstOrDefaultAsync(i => i.Id == id);
 
             if (ingreso == null)
             {

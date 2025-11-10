@@ -21,5 +21,9 @@ namespace PepsicoChile.Models
         public Usuario? MecanicoAsignado { get; set; }
         public bool RequiereRepuestos { get; set; }
         public int? KilometrajeIngreso { get; set; }
+        public int? KilometrajeSalida { get; set; }
+        
+        // Nueva propiedad para Recepcionista
+        public string? NumeroOT { get; set; } // Número de Orden de Trabajo
     }
 }
